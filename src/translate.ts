@@ -1,5 +1,8 @@
 import { parseCssSelector, groupCompoundSelectors, CompoundSelector } from '@tokey/css-selector-parser';
 
+const ERRORS = {
+    TWO_IDS: 'An element cannot have two ids',
+};
 const COMPOUND_SELECTOR = 'compound_selector';
 const CLASS = 'class';
 const UNIVERSAL = 'universal';
@@ -8,9 +11,10 @@ const TYPE = 'type';
 const capitalizeFirstLetter = (str: string) => (str?.length ? str.charAt(0).toUpperCase() + str.slice(1) : str);
 const addSingleQuotes = (items: string[]) => items.map((item) => `'${item}'`);
 const isVowelPrefix = (str: string) => ['a', 'e', 'o', 'i', 'u'].includes(str[0]);
-const getClassesString = (cls: string[]) => (cls.length > 1 ? `classes ${joiner(cls)}` : `class ${cls[0]}`);
+const getClassesString = (cls: string[]) => (cls.length > 1 ? `classes ${joiner(cls)}` : `a class of ${cls[0]}`);
 
 export function translate(selector: string) {
+    const errors: string[] = [];
     const selectorList = parseCssSelector(selector);
     const compoundSelectorList = groupCompoundSelectors(selectorList);
     const translations: string[] = [];
@@ -18,21 +22,24 @@ export function translate(selector: string) {
         const translation: string[] = [];
         for (const selector of topLevelSelectors.nodes.reverse()) {
             if (selector.type === COMPOUND_SELECTOR) {
-                const { classes, hasUniversal, element } = iterateCompoundSelector(selector);
-
+                const { classes, hasUniversal, element, id } = iterateCompoundSelector(selector);
+                if (id.length > 1) {
+                    errors.push(ERRORS.TWO_IDS);
+                }
                 if (element) {
                     isVowelPrefix(element) ? translation.push('An') : translation.push('A');
                     translation.push(`'<${element}>' element`);
+                } else if (hasUniversal) {
+                    translation.push('any element');
+                } else {
+                    translation.push('an element');
                 }
-                if (classes.length) {
-                    if (!element) {
-                        translation.push('an element');
-                    }
-                    translation.push(`with ${getClassesString(addSingleQuotes(classes))}`);
+                if (id.length) {
+                    translation.push(`with the id of '${id}'`);
                 }
 
-                if (hasUniversal) {
-                    translation.push('any element');
+                if (classes.length) {
+                    translation.push(`with ${getClassesString(addSingleQuotes(classes))}`);
                 }
             }
 
@@ -42,12 +49,12 @@ export function translate(selector: string) {
         }
         translations.push(translation.join(' '));
     }
-    return capitalizeFirstLetter(joiner(translations));
+    return errors.length ? `Error: ${errors[0]}` : capitalizeFirstLetter(joiner(translations));
 }
 
 function iterateCompoundSelector(compoundSelector: CompoundSelector) {
     const classes = new Set<string>();
-    let id: string | undefined;
+    let id: string[] = [];
     let hasUniversal = false;
     let element: string | undefined;
     for (const node of compoundSelector.nodes) {
@@ -58,13 +65,13 @@ function iterateCompoundSelector(compoundSelector: CompoundSelector) {
             element = node.value;
         }
         if (node.type === 'id') {
-            id = node.value;
+            id.push(node.value);
         }
         if (node.type === UNIVERSAL) {
             hasUniversal = true;
         }
     }
-    return { classes: Array.from(classes), hasUniversal, element };
+    return { classes: Array.from(classes), hasUniversal, element, id };
 }
 
 function joiner(items: string[]) {
