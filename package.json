@@ -6,7 +6,7 @@
   "scripts": {
     "clean": "rimraf \"dist/*\" \"lib/*\"",
     "start": "webpack-dev-server --open",
-    "test": "mocha \"src/test/*.ts\"",
+    "test": "mocha \"src/test/*.test.ts\"",
     "test:browser": "mocha-play \"src/test/*.ts\" -c webpack.config.js",
     "build": "tsc",
     "bundle": "webpack"
