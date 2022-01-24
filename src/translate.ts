@@ -9,7 +9,6 @@ const ERRORS = {
 
 const capitalizeFirstLetter = (str: string) => (str?.length ? str.charAt(0).toUpperCase() + str.slice(1) : str);
 const addSingleQuotes = (items: string[]) => items.map((item) => `'${item}'`);
-const isVowelPrefix = (str: string) => ['a', 'e', 'o', 'i', 'u'].includes(str[0]);
 const getClassesString = (cls: string[]) => (cls.length > 1 ? `classes ${joiner(cls)}` : `a class of ${cls[0]}`);
 const getPseudoClassesString = (pseudoClasses: PseudoClass[]) => {
     const stateName = pseudoClasses.map((pClass) => {
@@ -40,7 +39,7 @@ export function translate(selector: string) {
                     errors.push(ERRORS.TWO_IDS);
                 }
                 if (element) {
-                    isVowelPrefix(element) ? translation.push('An') : translation.push('A');
+                    isVowelPrefix(element) ? translation.push('an') : translation.push('a');
                     translation.push(`'<${element}>' element`);
                 } else if (hasUniversal) {
                     translation.push('any element');
@@ -116,6 +115,7 @@ function iterateCompoundSelector(compoundSelector: CompoundSelector) {
         }
 
         if (node.type === 'pseudo_class') {
+            // TODO: handle nth child formulas
             if (node.nodes?.[0].nodes[0].type == 'type') {
                 pseudoClasses.push({ name: node.value as PseudoClassName, value: node.nodes?.[0].nodes[0].value });
                 continue;
@@ -135,4 +135,11 @@ function joiner(items: string[]) {
     }
 
     return items[0];
+}
+
+function isVowelPrefix(str: string) {
+    if (['ul'].includes(str)) {
+        return false;
+    }
+    return ['li'].includes(str) || ['a', 'e', 'o', 'i', 'u'].includes(str[0]);
 }

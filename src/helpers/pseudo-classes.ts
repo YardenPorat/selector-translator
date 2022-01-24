@@ -1,4 +1,4 @@
-import { PseudoClassName } from '../types';
+import type { PseudoClass } from '../types';
 
 export const PSEUDO_CLASS_STATE = {
     hover: 'hovered',
@@ -20,13 +20,18 @@ export const PSEUDO_CLASS_STATE = {
     'in-range': 'in-range',
     'out-of-range': 'out-of-range',
     lang: 'language',
+    'last-child': 'the last child of its parent',
+    'first-child': 'the first child of its parent',
+    'only-child': 'the only child of its parent',
+    'nth-child': 'the nth child (formula) of its parent',
+    'nth-last-child': 'the nth (formula) child from the end of its parent',
+    'last-of-type': 'the last of its type in its parent',
+    'first-of-type': 'the first of its type in its parent',
+    'only-of-type': 'the only of its type in its parent',
+    'nth-of-type': 'the nth (formula) of its type in its parent',
+    'nth-last-of-type': 'the nth (formula) of its type in its parent, from the end',
 };
 
-interface PseudoClassDescOptions {
-    name: PseudoClassName;
-    value: string;
-}
-
-export function pseudoClassDescriptor({ name, value }: PseudoClassDescOptions) {
+export function pseudoClassDescriptor({ name, value }: PseudoClass) {
     return `${PSEUDO_CLASS_STATE[name]} is '${value}'`;
 }

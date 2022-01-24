@@ -101,4 +101,72 @@ describe('Pseudo Class', () => {
         const selector = 'input:out-of-range';
         expect(translate(selector), selector).to.eq(`An '<input>' element when its out-of-range`);
     });
+
+    it('element + last-child', function () {
+        const selector = 'li:last-child';
+        expect(translate(selector), selector).to.eq(`An '<li>' element when its the last child of its parent`);
+    });
+
+    it('element + first-child', function () {
+        const selector = 'li:first-child';
+        expect(translate(selector), selector).to.eq(`An '<li>' element when its the first child of its parent`);
+    });
+
+    it('element + only-child', function () {
+        const selector = 'li:only-child';
+        expect(translate(selector), selector).to.eq(`An '<li>' element when its the only child of its parent`);
+    });
+
+    it('element + nth-child', function () {
+        const selector = 'li:nth-child(3)';
+        expect(translate(selector), selector).to.eq(`An '<li>' element when its the nth child (formula) of its parent`);
+    });
+
+    it('element + nth-last-child', function () {
+        const selector = 'li:nth-last-child(3)';
+        expect(translate(selector), selector).to.eq(
+            `An '<li>' element when its the nth (formula) child from the end of its parent`
+        );
+    });
+
+    it('element + first-of-type', function () {
+        const selector = 'li:first-of-type';
+        expect(translate(selector), selector).to.eq(`An '<li>' element when its the first of its type in its parent`);
+    });
+
+    it('element + last-of-type', function () {
+        const selector = 'li:last-of-type';
+        expect(translate(selector), selector).to.eq(`An '<li>' element when its the last of its type in its parent`);
+    });
+
+    it('element + only-of-type', function () {
+        const selector = 'li:only-of-type';
+        expect(translate(selector), selector).to.eq(`An '<li>' element when its the only of its type in its parent`);
+    });
+
+    it('element + nth-of-type', function () {
+        const selector = 'li:nth-of-type';
+        expect(translate(selector), selector).to.eq(
+            `An '<li>' element when its the nth (formula) of its type in its parent`
+        );
+    });
+
+    it('element + nth-last-of-type', function () {
+        const selector = 'li:nth-last-of-type';
+        expect(translate(selector), selector).to.eq(
+            `An '<li>' element when its the nth (formula) of its type in its parent, from the end`
+        );
+    });
+
+    it('element + Multiple pseudo classes', function () {
+        const selector = 'a:active:hover';
+        expect(translate(selector), selector).to.eq(`An '<a>' element when its active and hovered`);
+    });
+
+    it('element + + class Multiple pseudo classes', function () {
+        const selector = 'ul.phone_numbers li:last-child:hover';
+        expect(translate(selector), selector).to.eq(
+            `An '<li>' element when its the last child of its parent and hovered within a '<ul>' element with a class of 'phone_numbers'`
+        );
+    });
 });
