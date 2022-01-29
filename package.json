@@ -1,8 +1,7 @@
 {
   "name": "selectors-translated",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Translates CSS Selectors to plain English",
   "scripts": {
     "clean": "rimraf \"dist/*\" \"lib/*\"",
     "start": "webpack-dev-server --open",
