@@ -13,8 +13,7 @@
     "typecheck": "tsc --noEmit",
     "bundle": "webpack",
     "prerelease": "run-s lint test test:browser build bundle",
-    "release": "git add . && git commit -m \"release\" && git subtree push --prefix lib origin gh-pages && git push",
-    "rzelease": "git commit -am release\" \"git subtree push --prefix lib origin gh-pages\" git push && git push --tags && npm publish"
+    "release": "git add . && git commit -m \"release\" && git subtree push --prefix lib origin gh-pages --force && git push"
   },
   "keywords": [],
   "author": "",
