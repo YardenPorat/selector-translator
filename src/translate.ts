@@ -54,7 +54,7 @@ export function translate(selector: string) {
                     translation.push('an element');
                 }
                 if (id.length) {
-                    translation.push(`with the id of '${id}'`);
+                    translation.push(`with the id of '${id[0]}'`);
                 }
 
                 if (classes.length) {
@@ -134,7 +134,7 @@ function iterateCompoundSelector(compoundSelector: CompoundSelector) {
                 pseudoClasses.push({ name: node.value as PseudoClassName, value: node.nodes?.[0].nodes[0].value });
                 continue;
             }
-            pseudoClasses.push({ name: node.value as PseudoClassName });
+            pseudoClasses.push({ name: node.value as PseudoClassName, value: '' });
         }
     }
     return { classes: Array.from(classes), hasUniversal, element, id, attributes, pseudoClasses, pseudoElement };
@@ -145,7 +145,7 @@ function joiner(items: string[]) {
         return `${items[0]} and ${items[1]}`;
     }
     if (items.length > 2) {
-        return `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
+        return `${items.slice(0, -1).join(', ')} and ${items.at(-1)!}`;
     }
 
     return items[0];
