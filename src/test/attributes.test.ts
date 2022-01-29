@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import { translate } from '../translate';
 
 describe('Attributes', () => {
-    it('has attribute', function () {
+    it('Has attribute', function () {
         const selector = '[href]';
-        expect(translate(selector), selector).to.eq(`An element with an attribute of 'href'`);
+        expect(translate(selector), selector).to.eq(`Any element with an attribute of 'href'`);
     });
 
     it('Specific element that has an attribute', function () {
@@ -20,13 +20,13 @@ describe('Attributes', () => {
 
         it('Handles an empty attribute', function () {
             const selector = '[href=""]';
-            expect(translate(selector), selector).to.eq(`An element with an attribute of 'href' whose value is empty`);
+            expect(translate(selector), selector).to.eq(`Any element with an attribute of 'href' whose value is empty`);
         });
 
         it('Handles attribute = value', function () {
             const selector = '[target="_blank"]';
             expect(translate(selector), selector).to.eq(
-                `An element with an attribute of 'target' whose value is '_blank'`
+                `Any element with an attribute of 'target' whose value is '_blank'`
             );
         });
 
@@ -106,7 +106,7 @@ describe('Attributes', () => {
         it('Handles attribute = value', function () {
             const selector = '[target=_blank]';
             expect(translate(selector), selector).to.eq(
-                `An element with an attribute of 'target' whose value is '_blank'`
+                `Any element with an attribute of 'target' whose value is '_blank'`
             );
         });
 

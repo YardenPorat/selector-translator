@@ -2,6 +2,7 @@ import { parseCssSelector, groupCompoundSelectors, CompoundSelector } from '@tok
 import { pseudoClassDescriptor, PSEUDO_CLASS_STATE } from './helpers/pseudo-classes';
 import { ERROR, EXIST, FULL, parseAttribute } from './helpers/parse-attribute';
 import { PseudoClass, PseudoClassName } from './types';
+import { PseudoElement, PSEUDO_ELEMENTS_DESCRIPTORS } from './helpers/pseudo-elements';
 
 const ERRORS = {
     TWO_IDS: 'An element cannot have two ids',
@@ -33,17 +34,23 @@ export function translate(selector: string) {
         const translation: string[] = [];
         for (const selector of topLevelSelectors.nodes.reverse()) {
             if (selector.type === 'compound_selector') {
-                const { classes, hasUniversal, element, id, attributes, pseudoClasses } =
+                const { classes, hasUniversal, element, id, attributes, pseudoClasses, pseudoElement } =
                     iterateCompoundSelector(selector);
                 if (id.length > 1) {
                     errors.push(ERRORS.TWO_IDS);
                 }
+                if (pseudoElement) {
+                    translation.push(PSEUDO_ELEMENTS_DESCRIPTORS[pseudoElement]);
+                }
                 if (element) {
                     isVowelPrefix(element) ? translation.push('an') : translation.push('a');
                     translation.push(`'<${element}>' element`);
-                } else if (hasUniversal) {
+                } else if (
+                    hasUniversal ||
+                    (!element && topLevelSelectors.nodes.length === 1 && id.length + classes.length === 0)
+                ) {
                     translation.push('any element');
-                } else {
+                } else if (!pseudoElement) {
                     translation.push('an element');
                 }
                 if (id.length) {
@@ -78,7 +85,10 @@ export function translate(selector: string) {
             }
 
             if (selector.type === 'combinator') {
-                translation.push('within');
+                if (selector.value === '>') translation.push('directly within');
+                else if (selector.value === '+') translation.push('directly adjacent to');
+                else if (selector.value === '~') translation.push('after a sibling which is');
+                else translation.push('within');
             }
         }
         translations.push(translation.join(' '));
@@ -93,7 +103,11 @@ function iterateCompoundSelector(compoundSelector: CompoundSelector) {
     const pseudoClasses: PseudoClass[] = [];
     let hasUniversal = false;
     let element: string | undefined;
+    let pseudoElement: PseudoElement | undefined;
     for (const node of compoundSelector.nodes) {
+        if (node.type === 'pseudo_element') {
+            pseudoElement = node.value as PseudoElement;
+        }
         if (node.type === 'class') {
             classes.add(node.value);
         }
@@ -123,7 +137,7 @@ function iterateCompoundSelector(compoundSelector: CompoundSelector) {
             pseudoClasses.push({ name: node.value as PseudoClassName });
         }
     }
-    return { classes: Array.from(classes), hasUniversal, element, id, attributes, pseudoClasses };
+    return { classes: Array.from(classes), hasUniversal, element, id, attributes, pseudoClasses, pseudoElement };
 }
 
 function joiner(items: string[]) {
