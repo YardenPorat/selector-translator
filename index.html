@@ -1,1 +1,20 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Selectors Translated</title><script defer="defer" src="main.js"></script></head><body><form id="form"><input id="selector-input"/><div id="result"></div>2</form></body></html>
+<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><meta name="viewport" content="width=device-width,initial-scale=1"/><style>html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: black;
+      }
+      .background {
+        position: absolute;
+        display: block;
+        top: 0;
+        left: 0;
+        z-index: 0;
+      }</style><script src="https://cdnjs.cloudflare.com/ajax/libs/particlesjs/2.2.2/particles.min.js"></script><script>window.onload = function () {
+        Particles.init({
+          selector: '#background',
+          color: ['#DA0463', '#404B69', '#DBEDF3'],
+          connectParticles: true,
+          maxParticles: 300,
+        });
+      };</script><title>Selectors Translated</title><script defer="defer" src="main.js"></script></head><body><form id="form"><input id="selector-input"/><div id="result"></div>2</form><canvas id="background"></canvas></body></html>
