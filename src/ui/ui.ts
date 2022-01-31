@@ -10,7 +10,12 @@ export class App {
         this.fillInputFromURL();
         this.form.addEventListener('submit', (event) => {
             event.preventDefault();
-            this.translate(this.input.value);
+
+            if (this.input.value) {
+                this.translate(this.input.value);
+            } else {
+                this.clear();
+            }
         });
     }
 
@@ -31,6 +36,7 @@ export class App {
 
     private clear() {
         this.input.value = '';
+        this.result.innerText = '';
         this.updateQueryParam('');
     }
 
