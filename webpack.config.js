@@ -15,6 +15,10 @@ module.exports = {
                 test: /\.tsx?$/,
                 loader: '@ts-tools/webpack-loader',
             },
+            {
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader'],
+            },
         ],
     },
     resolve: {
@@ -22,7 +26,7 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: './src/template.html',
+            template: './src/ui/template.html',
         }),
     ],
 };

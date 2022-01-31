@@ -1,4 +1,5 @@
-import { translate } from './translate';
+import { translate } from '../translate';
+import './style.css';
 
 export class App {
     private form = document.querySelector('#form')!;

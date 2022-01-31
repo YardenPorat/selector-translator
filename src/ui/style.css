@@ -1,0 +1,90 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: black;
+  color: white;
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#background {
+  position: absolute;
+  display: block;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+.container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+  padding: 0 10px;
+}
+
+label,
+#result,
+h1,
+h3 {
+  margin: 10px 0;
+  text-shadow: rgba(0, 0, 0, 0.5) 0px 5px 15px;
+}
+
+h1,
+h3 {
+  text-align: center;
+}
+
+#form {
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-width: 300px;
+}
+
+.input-group {
+  display: grid;
+  grid-template-columns: 1fr 30px;
+  align-items: center;
+  margin: 10px 0;
+  width: 90%;
+}
+
+label {
+  display: block;
+  grid-column: span 2;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 0;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+button {
+  height: 24px;
+  width: 24px;
+  -webkit-filter: invert(100%); /* safari 6.0 - 9.0 */
+  filter: invert(100%);
+  border: 0;
+  margin-left: 10px;
+}
+
+#result {
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 10px;
+}
