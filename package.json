@@ -9,6 +9,7 @@
     "test:browser": "mocha-play \"src/test/*.ts\" -c webpack.config.js",
     "lint": "eslint .",
     "build": "tsc",
+    "watch": "npm run build -- -w",
     "typecheck": "tsc --noEmit",
     "bundle": "webpack",
     "prerelease": "run-s lint test test:browser build bundle",
