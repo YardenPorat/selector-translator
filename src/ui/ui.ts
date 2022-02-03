@@ -2,22 +2,21 @@ import { translate } from '../translate';
 import './style.css';
 
 export class App {
-    private form = document.querySelector('#form')!;
     private input = document.querySelector('#selector-input') as HTMLInputElement;
     private result = document.querySelector('#result') as HTMLDivElement;
 
     constructor() {
         this.fillInputFromURL();
-        this.form.addEventListener('submit', (event) => {
-            event.preventDefault();
-
-            if (this.input.value) {
-                this.translate(this.input.value);
-            } else {
-                this.clear();
-            }
-        });
+        this.input.addEventListener('input', this.initiate);
     }
+
+    private initiate = () => {
+        if (this.input.value) {
+            this.translate(this.input.value);
+        } else {
+            this.clear();
+        }
+    };
 
     private translate(value: string) {
         this.result.innerText = translate(value);

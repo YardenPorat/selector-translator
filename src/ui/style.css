@@ -8,7 +8,7 @@ html,
 body {
   background: black;
   color: white;
-  font-family: Roboto, Arial, Helvetica, sans-serif;
+  font-family: 'Roboto', Arial, Helvetica;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -23,7 +23,7 @@ body {
 .container {
   display: flex;
   width: 100vw;
-  height: 100vh;
+  height: 70vh;
   justify-content: center;
   align-items: center;
   padding: 0 10px;
@@ -37,8 +37,13 @@ h3 {
   text-shadow: rgba(0, 0, 0, 0.5) 0px 5px 15px;
 }
 
-h1,
+h1 {
+  font-size: 3rem;
+  text-align: center;
+}
+
 h3 {
+  font-size: 1.5rem;
   text-align: center;
 }
 
@@ -48,12 +53,10 @@ h3 {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 300px;
+  width: clamp(300px, 50vw, 600px);
 }
 
 .input-group {
-  display: grid;
-  grid-template-columns: 1fr 30px;
   align-items: center;
   margin: 10px 0;
   width: 90%;
@@ -61,7 +64,6 @@ h3 {
 
 label {
   display: block;
-  grid-column: span 2;
 }
 
 input {
@@ -70,18 +72,15 @@ input {
   border-radius: 5px;
   border: 0;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  font-size: 1.5rem;
 }
 
-button {
-  height: 24px;
-  width: 24px;
-  -webkit-filter: invert(100%); /* safari 6.0 - 9.0 */
-  filter: invert(100%);
-  border: 0;
-  margin-left: 10px;
+input:focus {
+  outline: none;
 }
 
 #result {
+  font-size: 1.5rem;
   text-align: center;
   background-color: rgba(0, 0, 0, 0.4);
   border-radius: 10px;
