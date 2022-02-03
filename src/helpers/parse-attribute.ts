@@ -1,28 +1,17 @@
-// interface AttributeExist {
-//     action: string;
-//     attribute: string;
-//     error?: string;
-// }
+export type Exist = 'exist';
+export type AttributeAction = Exist | 'start' | 'end' | 'hyphen-list' | 'space-list' | 'equal' | 'contain';
 
-type Exist = 'exist';
-type AttributeAction = Exist | 'start' | 'end' | 'hyphen-list' | 'space-list' | 'equal' | 'contain';
-
-interface AttributeExist {
-    type: Exist;
-    action: Exist;
-    name: string;
-}
-interface AttributeError {
+export interface AttributeError {
     type: 'error';
     error: string;
 }
-type AttributeDescriptor = (value: string) => string;
-interface Attribute {
-    type: 'full';
+export type AttributeDescriptor = (value: string) => string;
+export interface Attribute {
+    type: 'full' | Exist;
     action: AttributeAction;
-    descriptor: AttributeDescriptor;
     name: string;
-    value: string;
+    descriptor?: AttributeDescriptor;
+    value?: string;
     casing?: boolean;
 }
 
@@ -32,7 +21,7 @@ export const FULL = 'full';
 const EQUAL = 'equal';
 const EMPTY = 'empty';
 
-export function parseAttribute(unparsedAttribute: string): AttributeExist | AttributeError | Attribute {
+export function parseAttribute(unparsedAttribute: string): AttributeError | Attribute {
     const splitterLocation = unparsedAttribute.indexOf('=');
     if (splitterLocation === -1) {
         return { type: EXIST, action: EXIST, name: unparsedAttribute };
@@ -65,7 +54,11 @@ function getModifierType(modifier: string): { action: AttributeAction; descripto
     if (modifier === '^')
         return { action: 'start', descriptor: (value: string) => `whose value starts with '${value}'` };
 
-    if (modifier === '$') return { action: 'end', descriptor: (value: string) => `whose value ends with '${value}'` };
+    if (modifier === '$')
+        return {
+            action: 'end',
+            descriptor: (value: string) => `whose value ends with '${value}'`,
+        };
 
     if (modifier === '|')
         return {
@@ -78,7 +71,10 @@ function getModifierType(modifier: string): { action: AttributeAction; descripto
             descriptor: (value: string) => `whose value '${value}' is included in a space separated list`,
         };
     if (modifier === '*')
-        return { action: 'contain', descriptor: (value: string) => `whose value contains '${value}'` };
+        return {
+            action: 'contain',
+            descriptor: (value: string) => `whose value contains '${value}'`,
+        };
 
     return {
         action: EQUAL,

@@ -8,4 +8,4 @@ export const PSEUDO_ELEMENTS_DESCRIPTORS = {
     backdrop: `The backdrop of`,
     selection: `The highlighted selection of`,
 };
-export type PseudoElement = keyof typeof PSEUDO_ELEMENTS_DESCRIPTORS;
+export type PseudoElement = keyof typeof PSEUDO_ELEMENTS_DESCRIPTORS | undefined;

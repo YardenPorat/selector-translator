@@ -66,4 +66,11 @@ describe('Classes', () => {
             expect(translate(selector), selector).to.eq(`A '<div>' element with a class of 'a'`);
         });
     });
+
+    describe('Errors', () => {
+        it('Missing class', function () {
+            const selector = 'div.';
+            expect(translate(selector), selector).to.eq(`Error: You specified an empty class`);
+        });
+    });
 });

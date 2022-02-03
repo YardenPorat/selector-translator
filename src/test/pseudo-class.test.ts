@@ -169,4 +169,23 @@ describe('Pseudo Class', () => {
             `An '<li>' element when its the last child of its parent and hovered within a '<ul>' element with a class of 'phone_numbers'`
         );
     });
+
+    it('Unknown pseudo-class', function () {
+        const selector = 'div:a';
+        expect(translate(selector), selector).to.eq(`A '<div>' element when its when it is 'a' (unknown pseudo class)`);
+    });
+
+    describe('Errors', () => {
+        it('Missing pseudo-class', function () {
+            const selector = 'div:';
+            expect(translate(selector), selector).to.eq(`Error: You specified an empty pseudo class`);
+        });
+
+        it('Pseudo-class which is suppose to be a pseudo element', function () {
+            const selector = 'div:after';
+            expect(translate(selector), selector).to.eq(
+                `Error: You specified a pseudo element (after) as a pseudo class`
+            );
+        });
+    });
 });

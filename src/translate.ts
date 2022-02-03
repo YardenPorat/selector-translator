@@ -1,29 +1,20 @@
 import { parseCssSelector, groupCompoundSelectors, CompoundSelector } from '@tokey/css-selector-parser';
-import { pseudoClassDescriptor, PSEUDO_CLASS_STATE } from './helpers/pseudo-classes';
-import { ERROR, EXIST, FULL, parseAttribute } from './helpers/parse-attribute';
+import { Attribute, ERROR, EXIST, FULL, parseAttribute } from './helpers/parse-attribute';
 import { PseudoClass, PseudoClassName } from './types';
 import { PseudoElement, PSEUDO_ELEMENTS_DESCRIPTORS } from './helpers/pseudo-elements';
+import { getPseudoClassesString } from './helpers/pseudo-classes';
+import { joiner } from './helpers/joiner';
 
 const ERRORS = {
     TWO_IDS: 'An element cannot have two ids',
+    EMPTY_CLASS: 'You specified an empty class',
+    EMPTY_PSEUDO_CLASS: 'You specified an empty pseudo class',
+    PSEUDO_ELEMENT_AS_PSEUDO_CLASS: (el: string) => `You specified a pseudo element (${el}) as a pseudo class`,
 };
 
 const capitalizeFirstLetter = (str: string) => (str?.length ? str.charAt(0).toUpperCase() + str.slice(1) : str);
 const addSingleQuotes = (items: string[]) => items.map((item) => `'${item}'`);
 const getClassesString = (cls: string[]) => (cls.length > 1 ? `classes ${joiner(cls)}` : `a class of ${cls[0]}`);
-const getPseudoClassesString = (pseudoClasses: PseudoClass[]) => {
-    const stateName = pseudoClasses.map((pClass) => {
-        if (pClass.value) {
-            return pseudoClassDescriptor(pClass);
-        }
-        return PSEUDO_CLASS_STATE[pClass.name];
-    });
-
-    if (stateName.length > 1) {
-        return joiner(stateName);
-    }
-    return stateName[0];
-};
 
 export function translate(selector: string) {
     const errors: string[] = [];
@@ -33,12 +24,11 @@ export function translate(selector: string) {
     for (const topLevelSelectors of compoundSelectorList) {
         const translation: string[] = [];
         for (const selector of topLevelSelectors.nodes.reverse()) {
+            if (errors.length) break;
             if (selector.type === 'compound_selector') {
-                const { classes, hasUniversal, element, id, attributes, pseudoClasses, pseudoElement } =
+                const { classes, hasUniversal, element, id, attributes, pseudoClasses, pseudoElement, err } =
                     iterateCompoundSelector(selector);
-                if (id.length > 1) {
-                    errors.push(ERRORS.TWO_IDS);
-                }
+                if (err) errors.push(err);
                 if (pseudoElement) {
                     translation.push(PSEUDO_ELEMENTS_DESCRIPTORS[pseudoElement]);
                 }
@@ -47,7 +37,7 @@ export function translate(selector: string) {
                     translation.push(`'<${element}>' element`);
                 } else if (
                     hasUniversal ||
-                    (!element && topLevelSelectors.nodes.length === 1 && id.length + classes.length === 0)
+                    (!element && topLevelSelectors.nodes.length === 1 && id.length + classes.size === 0)
                 ) {
                     translation.push('any element');
                 } else if (!pseudoElement) {
@@ -57,8 +47,8 @@ export function translate(selector: string) {
                     translation.push(`with the id of '${id[0]}'`);
                 }
 
-                if (classes.length) {
-                    translation.push(`with ${getClassesString(addSingleQuotes(classes))}`);
+                if (classes.size) {
+                    translation.push(`with ${getClassesString(addSingleQuotes([...classes]))}`);
                 }
 
                 if (pseudoClasses.length) {
@@ -68,17 +58,13 @@ export function translate(selector: string) {
                 if (attributes.length) {
                     for (const attribute of attributes) {
                         const { type } = attribute;
-                        if (type === ERROR) {
-                            errors.push(attribute.error);
-                        } else if (type === EXIST) {
+                        if (type === EXIST) {
                             translation.push(`with an attribute of '${attribute.name}'`);
                         } else if (type === FULL) {
                             const { value, descriptor, name, casing } = attribute;
-                            translation.push(
-                                `with an attribute of '${name}' ${descriptor(value)}${
-                                    casing ? ' (case insensitive)' : ''
-                                }`
-                            );
+                            translation.push(`with an attribute of '${name}'`);
+                            if (descriptor) translation.push(descriptor(value!));
+                            if (casing) translation.push('(case insensitive)');
                         }
                     }
                 }
@@ -97,58 +83,74 @@ export function translate(selector: string) {
 }
 
 function iterateCompoundSelector(compoundSelector: CompoundSelector) {
-    const classes = new Set<string>();
-    const id: string[] = [];
-    const attributes = [];
-    const pseudoClasses: PseudoClass[] = [];
-    let hasUniversal = false;
-    let element: string | undefined;
-    let pseudoElement: PseudoElement | undefined;
+    const result = {
+        attributes: <Attribute[]>[],
+        err: '',
+        pseudoElement: <PseudoElement>undefined,
+        classes: new Set<string>(),
+        pseudoClasses: <PseudoClass[]>[],
+        element: '',
+        id: '',
+        hasUniversal: false,
+    };
     for (const node of compoundSelector.nodes) {
         if (node.type === 'pseudo_element') {
-            pseudoElement = node.value as PseudoElement;
+            result.pseudoElement = node.value as PseudoElement;
         }
         if (node.type === 'class') {
-            classes.add(node.value);
+            if (node.value === '') {
+                result.err = ERRORS.EMPTY_CLASS;
+                break;
+            }
+            result.classes.add(node.value);
         }
-
         if (node.type === 'type') {
-            element = node.value;
+            result.element = node.value;
         }
 
         if (node.type === 'id') {
-            id.push(node.value);
+            if (result.id) {
+                result.err = ERRORS.TWO_IDS;
+                break;
+            }
+            result.id = node.value;
         }
 
         if (node.type === 'attribute') {
-            attributes.push(parseAttribute(node.value));
+            const attr = parseAttribute(node.value);
+            if (attr.type === ERROR) {
+                result.err = attr.error;
+                break;
+            }
+            result.attributes.push(attr);
         }
 
         if (node.type === 'universal') {
-            hasUniversal = true;
+            result.hasUniversal = true;
         }
 
         if (node.type === 'pseudo_class') {
+            if (!node.value) {
+                result.err = ERRORS.EMPTY_PSEUDO_CLASS;
+                break;
+            }
+            if (Object.keys(PSEUDO_ELEMENTS_DESCRIPTORS).includes(node.value)) {
+                result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(node.value);
+                break;
+            }
+
             // TODO: handle nth child formulas
             if (node.nodes?.[0].nodes[0].type == 'type') {
-                pseudoClasses.push({ name: node.value as PseudoClassName, value: node.nodes?.[0].nodes[0].value });
+                result.pseudoClasses.push({
+                    name: node.value as PseudoClassName,
+                    value: node.nodes?.[0].nodes[0].value,
+                });
                 continue;
             }
-            pseudoClasses.push({ name: node.value as PseudoClassName, value: '' });
+            result.pseudoClasses.push({ name: node.value as PseudoClassName, value: '' });
         }
     }
-    return { classes: Array.from(classes), hasUniversal, element, id, attributes, pseudoClasses, pseudoElement };
-}
-
-function joiner(items: string[]) {
-    if (items.length === 2) {
-        return `${items[0]} and ${items[1]}`;
-    }
-    if (items.length > 2) {
-        return `${items.slice(0, -1).join(', ')} and ${items.at(-1)!}`;
-    }
-
-    return items[0];
+    return result;
 }
 
 function isVowelPrefix(str: string) {

@@ -1,3 +1,4 @@
+import { joiner } from './joiner';
 import type { PseudoClass } from '../types';
 
 export const PSEUDO_CLASS_STATE = {
@@ -34,4 +35,20 @@ export const PSEUDO_CLASS_STATE = {
 
 export function pseudoClassDescriptor({ name, value }: PseudoClass) {
     return `${PSEUDO_CLASS_STATE[name]} is '${value}'`;
+}
+
+export function getPseudoClassesString(pseudoClasses: PseudoClass[]) {
+    const state = pseudoClasses.map(({ name, value }) => {
+        if (value) {
+            return pseudoClassDescriptor({ name, value });
+        }
+        if (PSEUDO_CLASS_STATE[name]) {
+            return PSEUDO_CLASS_STATE[name];
+        }
+
+        return `when it is '${name}' (unknown pseudo class)`;
+    });
+
+    if (state.length > 1) return joiner(state);
+    return state[0];
 }
