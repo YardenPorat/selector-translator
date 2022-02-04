@@ -159,4 +159,11 @@ describe('Attributes', () => {
             );
         });
     });
+
+    describe('Errors', function () {
+        it('Empty attribute', function () {
+            expect(translate('[]')).to.eq(`Error: Empty attribute selector: '[]'`);
+            expect(translate('[ ]')).to.eq(`Error: Empty attribute selector: '[ ]'`);
+        });
+    });
 });

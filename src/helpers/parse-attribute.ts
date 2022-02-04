@@ -22,6 +22,10 @@ const EQUAL = 'equal';
 const EMPTY = 'empty';
 
 export function parseAttribute(unparsedAttribute: string): AttributeError | Attribute {
+    if (unparsedAttribute.trim() === '') {
+        return { type: ERROR, error: `Empty attribute selector: '[${unparsedAttribute}]'` };
+    }
+
     const splitterLocation = unparsedAttribute.indexOf('=');
     if (splitterLocation === -1) {
         return { type: EXIST, action: EXIST, name: unparsedAttribute };
