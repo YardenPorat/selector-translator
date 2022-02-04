@@ -1,3 +1,8 @@
+:root {
+  --primary: deeppink;
+  --secondary: #48f2e3;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -27,6 +32,20 @@ body {
   justify-content: center;
   align-items: center;
   padding: 0 10px;
+}
+
+header {
+  position: relative;
+}
+header::after {
+  content: '';
+  position: absolute;
+  width: 10em;
+  height: 2px;
+  background-image: linear-gradient(to right, rgba(255, 20, 147, 0), deeppink, rgba(255, 20, 147, 0));
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -15px;
 }
 
 label,
@@ -81,9 +100,28 @@ input:focus {
 
 #result {
   font-size: 1.5rem;
+  line-height: 1.3;
   text-align: center;
   background-color: rgba(0, 0, 0, 0.4);
   border-radius: 10px;
   padding: 10px;
   height: 30px;
+}
+
+#result mark {
+  background-color: deeppink;
+  padding: 0 5px;
+  border-radius: 5px;
+  box-shadow: rgb(0 0 0 / 35%) 0px -50px 36px -28px inset;
+}
+
+@media screen and (max-width: 768px) {
+  header::after {
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(255, 20, 147, 0), var(--secondary), rgba(255, 20, 147, 0));
+  }
+
+  #result mark {
+    background-color: var(--secondary);
+  }
 }

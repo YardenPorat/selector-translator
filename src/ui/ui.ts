@@ -19,7 +19,10 @@ export class App {
     };
 
     private translate(value: string) {
-        this.result.innerText = translate(value);
+        const translation = translate(value);
+        const withTags = this.getTags(translation);
+
+        this.result.innerHTML = withTags;
         this.updateQueryParam(value);
     }
 
@@ -46,6 +49,16 @@ export class App {
             this.input.value = value;
             this.translate(value);
         }
+    }
+
+    private getTags(value: string) {
+        const tagged = [];
+
+        const escaped = value.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+        for (const [index, part] of escaped.split("'").entries()) {
+            tagged.push(index % 2 ? `<mark>${part}</mark>` : part);
+        }
+        return tagged.join('');
     }
 }
 
