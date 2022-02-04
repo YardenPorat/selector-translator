@@ -125,3 +125,9 @@ input:focus {
     background-color: var(--secondary);
   }
 }
+@media screen and (max-width: 530px) {
+  .container {
+    height: unset;
+    margin-top: 1rem;
+  }
+}
