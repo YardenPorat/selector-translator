@@ -21,7 +21,7 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: npm run test:browser
-      - run: npm run bundle
+      - run: npm run build:prod
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.2.3
         with:
