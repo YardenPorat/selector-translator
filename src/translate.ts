@@ -44,7 +44,7 @@ export function translate(selector: string) {
                     translation.push('an element');
                 }
                 if (id.length) {
-                    translation.push(`with the id of '${id[0]}'`);
+                    translation.push(`with the id of '${id}'`);
                 }
 
                 if (classes.size) {
@@ -96,40 +96,30 @@ function iterateCompoundSelector(compoundSelector: CompoundSelector) {
     for (const node of compoundSelector.nodes) {
         if (node.type === 'pseudo_element') {
             result.pseudoElement = node.value as PseudoElement;
-        }
-        if (node.type === 'class') {
+        } else if (node.type === 'class') {
             if (node.value === '') {
                 result.err = ERRORS.EMPTY_CLASS;
                 break;
             }
             result.classes.add(node.value);
-        }
-        if (node.type === 'type') {
+        } else if (node.type === 'type') {
             result.element = node.value;
-        }
-
-        if (node.type === 'id') {
+        } else if (node.type === 'id') {
             if (result.id) {
                 result.err = ERRORS.TWO_IDS;
                 break;
             }
             result.id = node.value;
-        }
-
-        if (node.type === 'attribute') {
+        } else if (node.type === 'attribute') {
             const attr = parseAttribute(node.value);
             if (attr.type === ERROR) {
                 result.err = attr.error;
                 break;
             }
             result.attributes.push(attr);
-        }
-
-        if (node.type === 'universal') {
+        } else if (node.type === 'universal') {
             result.hasUniversal = true;
-        }
-
-        if (node.type === 'pseudo_class') {
+        } else if (node.type === 'pseudo_class') {
             if (!node.value) {
                 result.err = ERRORS.EMPTY_PSEUDO_CLASS;
                 break;

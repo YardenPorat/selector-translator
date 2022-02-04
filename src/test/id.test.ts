@@ -3,8 +3,8 @@ import { translate } from '../translate';
 
 describe('Ids', () => {
     it('A single id', function () {
-        const selector = '#a';
-        expect(translate(selector), selector).to.eq(`An element with the id of 'a'`);
+        expect(translate('#a')).to.eq(`An element with the id of 'a'`);
+        expect(translate('#abcde')).to.eq(`An element with the id of 'abcde'`);
     });
 
     it('2 ids', function () {
