@@ -117,18 +117,6 @@ describe('Pseudo Class', () => {
         expect(translate(selector), selector).to.eq(`An '<li>' element when its the only child of its parent`);
     });
 
-    it('element + nth-child', function () {
-        const selector = 'li:nth-child(3)';
-        expect(translate(selector), selector).to.eq(`An '<li>' element when its the nth child (formula) of its parent`);
-    });
-
-    it('element + nth-last-child', function () {
-        const selector = 'li:nth-last-child(3)';
-        expect(translate(selector), selector).to.eq(
-            `An '<li>' element when its the nth (formula) child from the end of its parent`
-        );
-    });
-
     it('element + first-of-type', function () {
         const selector = 'li:first-of-type';
         expect(translate(selector), selector).to.eq(`An '<li>' element when its the first of its type in its parent`);
@@ -144,20 +132,6 @@ describe('Pseudo Class', () => {
         expect(translate(selector), selector).to.eq(`An '<li>' element when its the only of its type in its parent`);
     });
 
-    it('element + nth-of-type', function () {
-        const selector = 'li:nth-of-type';
-        expect(translate(selector), selector).to.eq(
-            `An '<li>' element when its the nth (formula) of its type in its parent`
-        );
-    });
-
-    it('element + nth-last-of-type', function () {
-        const selector = 'li:nth-last-of-type';
-        expect(translate(selector), selector).to.eq(
-            `An '<li>' element when its the nth (formula) of its type in its parent, from the end`
-        );
-    });
-
     it('element + Multiple pseudo classes', function () {
         const selector = 'a:active:hover';
         expect(translate(selector), selector).to.eq(`An '<a>' element when its active and hovered`);
@@ -170,22 +144,132 @@ describe('Pseudo Class', () => {
         );
     });
 
-    it('Unknown pseudo-class', function () {
-        const selector = 'div:a';
-        expect(translate(selector), selector).to.eq(`A '<div>' element when its when it is 'a' (unknown pseudo class)`);
+    describe('Unknown pseudo-classes', () => {
+        it('without formula', function () {
+            const selector = 'div:a';
+            expect(translate(selector), selector).to.eq(`A '<div>' element when its 'a' (unknown pseudo class)`);
+        });
+
+        it('with formula', function () {
+            expect(translate('li:nth-last-chid(2n+1)')).to.eq(
+                `An '<li>' element when its 'nth-last-chid' (unknown pseudo class)`
+            );
+        });
+    });
+    describe('Formulas', () => {
+        describe('Offset only', () => {
+            it('element + nth-child(1)', function () {
+                expect(translate('li:nth-child(1)')).to.eq(`An '<li>' element when its the 1st child of its parent`);
+            });
+
+            it('element + nth-last-child(2)', function () {
+                expect(translate('li:nth-last-child(2)')).to.eq(
+                    `An '<li>' element when its the 2nd child from the end of its parent`
+                );
+            });
+
+            it('element + nth-of-type(3)', function () {
+                const selector = 'li:nth-of-type(3)';
+                expect(translate(selector), selector).to.eq(
+                    `An '<li>' element when its the 3rd of its type in his parent`
+                );
+            });
+
+            it('element + nth-last-of-type(4)', function () {
+                expect(translate('li:nth-last-of-type(4)')).to.eq(
+                    `An '<li>' element when its the 4th of its type from the end in his parent`
+                );
+            });
+
+            it('element + nth-child(30)', function () {
+                const selector = 'li:nth-child(30)';
+                expect(translate(selector), selector).to.eq(`An '<li>' element when its the 30th child of its parent`);
+            });
+        });
+        describe('Offset and Step', () => {
+            it('element + nth-child(-n+Y)', function () {
+                const selector = 'li:nth-child(-n+3)';
+                expect(translate(selector), selector).to.eq(
+                    `An '<li>' element when its every child starting with the 3rd child of its parent (inclusive), going down`
+                );
+            });
+
+            it('element + nth-child(-Xn+Y)', function () {
+                expect(translate('li:nth-child(-2n+3)')).to.eq(
+                    `An '<li>' element when its every 2nd child starting with the 3rd child of its parent (inclusive), going down`
+                );
+            });
+
+            it('element + nth-of-type(-Xn+Y)', function () {
+                expect(translate('li:nth-of-type(-2n+4)')).to.eq(
+                    `An '<li>' element when its every 2nd child of type starting with the 4th of its type in his parent (inclusive), going down`
+                );
+            });
+
+            describe('nth-last-child', () => {
+                it('element + nth-last-child: n+Y', function () {
+                    expect(translate('li:nth-last-child(n+3)')).to.eq(
+                        `An '<li>' element when its every child starting with the 3rd child from the end of its parent (inclusive), going down`
+                    );
+                });
+            });
+
+            describe('nth-last-of-type', () => {
+                it('n+Y', function () {
+                    expect(translate('li:nth-last-of-type(n+3)')).to.eq(
+                        `An '<li>' element when its every child of type starting with the 3rd of its type from the end in his parent (inclusive), going down`
+                    );
+                });
+
+                it('-n+Y', function () {
+                    expect(translate('li:nth-last-of-type(-n+3)')).to.eq(
+                        `An '<li>' element when its every child of type starting with the 3rd of its type from the end in his parent (inclusive)`
+                    );
+                });
+
+                it('Xn+Y', function () {
+                    const selector = 'li:nth-last-of-type(3n+5)';
+                    expect(translate(selector), selector).to.eq(
+                        `An '<li>' element when its every 3rd child of type starting with the 5th of its type from the end in his parent (inclusive), going down`
+                    );
+                });
+
+                it('-Xn+Y', function () {
+                    const selector = 'li:nth-last-of-type(-3n+5)';
+                    expect(translate(selector), selector).to.eq(
+                        `An '<li>' element when its every 3rd child of type starting with the 5th of its type from the end in his parent (inclusive)`
+                    );
+                });
+            });
+        });
+
+        describe('Step only', () => {
+            it('element + nth-child(even)', function () {
+                const selector = 'li:nth-child(even)';
+                expect(translate(selector), selector).to.eq(
+                    `An '<li>' element when its every even child of its parent`
+                );
+            });
+
+            it('element + nth-child(odd)', function () {
+                const selector = 'li:nth-child(odd)';
+                expect(translate(selector), selector).to.eq(`An '<li>' element when its every odd child of its parent`);
+            });
+
+            it('element + nth-child(2n)', function () {
+                const selector = 'li:nth-child(2n)';
+                expect(translate(selector), selector).to.eq(`An '<li>' element when its every 2nd child of its parent`);
+            });
+        });
     });
 
     describe('Errors', () => {
         it('Missing pseudo-class', function () {
-            const selector = 'div:';
-            expect(translate(selector), selector).to.eq(`Error: You specified an empty pseudo class`);
+            expect(translate('div:')).to.eq(`Error: You specified an empty pseudo class`);
         });
 
         it('Pseudo-class which is suppose to be a pseudo element', function () {
-            const selector = 'div:after';
-            expect(translate(selector), selector).to.eq(
-                `Error: You specified a pseudo element (after) as a pseudo class`
-            );
+            expect(translate('div:after')).to.eq(`Error: You specified the pseudo element 'after' as a pseudo class`);
         });
     });
 });

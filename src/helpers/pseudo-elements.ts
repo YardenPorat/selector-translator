@@ -8,4 +8,6 @@ export const PSEUDO_ELEMENTS_DESCRIPTORS = {
     backdrop: `The backdrop of`,
     selection: `The highlighted selection of`,
 };
+
+export const isPseudoElement = (value: string) => Object.keys(PSEUDO_ELEMENTS_DESCRIPTORS).includes(value);
 export type PseudoElement = keyof typeof PSEUDO_ELEMENTS_DESCRIPTORS | undefined;

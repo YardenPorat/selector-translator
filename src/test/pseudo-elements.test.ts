@@ -100,11 +100,18 @@ describe('Pseudo Elements', () => {
             );
         });
 
-        it('element + pseudo class + ::before inside an element with id', function () {
+        it('element + pseudo class + ::before inside an element', function () {
             const selector = 'input:required::before';
             expect(translate(selector), selector).to.eq(
                 `The 'before' pseudo-element of an '<input>' element when its required`
             );
+        });
+    });
+
+    describe('Errors', function () {
+        it('element::abc', function () {
+            const selector = 'div::abc';
+            expect(translate(selector), selector).to.eq(`Error: Unknown pseudo element 'abc'`);
         });
     });
 });

@@ -1,7 +1,7 @@
 import { parseCssSelector, groupCompoundSelectors, CompoundSelector } from '@tokey/css-selector-parser';
 import { Attribute, ERROR, EXIST, FULL, parseAttribute } from './helpers/parse-attribute';
 import { PseudoClass, PseudoClassName } from './types';
-import { PseudoElement, PSEUDO_ELEMENTS_DESCRIPTORS } from './helpers/pseudo-elements';
+import { isPseudoElement, PseudoElement, PSEUDO_ELEMENTS_DESCRIPTORS } from './helpers/pseudo-elements';
 import { getPseudoClassesString } from './helpers/pseudo-classes';
 import { joiner } from './helpers/joiner';
 
@@ -9,7 +9,8 @@ const ERRORS = {
     TWO_IDS: 'An element cannot have two ids',
     EMPTY_CLASS: 'You specified an empty class',
     EMPTY_PSEUDO_CLASS: 'You specified an empty pseudo class',
-    PSEUDO_ELEMENT_AS_PSEUDO_CLASS: (el: string) => `You specified a pseudo element (${el}) as a pseudo class`,
+    PSEUDO_ELEMENT_AS_PSEUDO_CLASS: (el: string) => `You specified the pseudo element '${el}' as a pseudo class`,
+    UNKNOWN_PSEUDO_ELEMENT: (el: string) => `Unknown pseudo element '${el}'`,
 };
 
 const capitalizeFirstLetter = (str: string) => (str?.length ? str.charAt(0).toUpperCase() + str.slice(1) : str);
@@ -21,14 +22,17 @@ export function translate(selector: string) {
     const selectorList = parseCssSelector(selector);
     const compoundSelectorList = groupCompoundSelectors(selectorList);
     const translations: string[] = [];
+
     for (const topLevelSelectors of compoundSelectorList) {
         const translation: string[] = [];
         for (const selector of topLevelSelectors.nodes.reverse()) {
-            if (errors.length) break;
             if (selector.type === 'compound_selector') {
                 const { classes, hasUniversal, element, id, attributes, pseudoClasses, pseudoElement, err } =
                     iterateCompoundSelector(selector);
-                if (err) errors.push(err);
+                if (err) {
+                    errors.push(err);
+                    break;
+                }
                 if (pseudoElement) {
                     translation.push(PSEUDO_ELEMENTS_DESCRIPTORS[pseudoElement]);
                 }
@@ -95,7 +99,11 @@ function iterateCompoundSelector(compoundSelector: CompoundSelector) {
     };
     for (const node of compoundSelector.nodes) {
         if (node.type === 'pseudo_element') {
-            result.pseudoElement = node.value as PseudoElement;
+            if (isPseudoElement(node.value)) {
+                result.pseudoElement = node.value;
+            } else {
+                result.err = ERRORS.UNKNOWN_PSEUDO_ELEMENT(node.value);
+            }
         } else if (node.type === 'class') {
             if (node.value === '') {
                 result.err = ERRORS.EMPTY_CLASS;
@@ -120,24 +128,38 @@ function iterateCompoundSelector(compoundSelector: CompoundSelector) {
         } else if (node.type === 'universal') {
             result.hasUniversal = true;
         } else if (node.type === 'pseudo_class') {
-            if (!node.value) {
+            const { value } = node;
+            if (!value) {
                 result.err = ERRORS.EMPTY_PSEUDO_CLASS;
-                break;
-            }
-            if (Object.keys(PSEUDO_ELEMENTS_DESCRIPTORS).includes(node.value)) {
-                result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(node.value);
-                break;
-            }
+            } else if (isPseudoElement(value)) {
+                result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
+            } else if (node.nodes && node.nodes[0].nodes) {
+                const secondLevelNodes = node.nodes[0].nodes;
+                const types = secondLevelNodes.map((node) => node.type);
 
-            // TODO: handle nth child formulas
-            if (node.nodes?.[0].nodes[0].type == 'type') {
-                result.pseudoClasses.push({
-                    name: node.value as PseudoClassName,
-                    value: node.nodes?.[0].nodes[0].value,
-                });
-                continue;
+                if (secondLevelNodes[0].type === 'type') {
+                    /** lang pseudo class */
+                    result.pseudoClasses.push({
+                        name: node.value as PseudoClassName,
+                        value: secondLevelNodes[0].value,
+                    });
+                } else if (types.includes('nth_offset') || types.includes('nth_step')) {
+                    const formula = { offset: '', step: '' };
+                    for (const node of secondLevelNodes) {
+                        if (node.type === 'nth_offset') {
+                            formula.offset = node.value;
+                        } else if (node.type === 'nth_step') {
+                            formula.step = node.value;
+                        }
+                    }
+                    result.pseudoClasses.push({
+                        name: node.value as PseudoClassName,
+                        ...formula,
+                    });
+                }
+            } else {
+                result.pseudoClasses.push({ name: node.value as PseudoClassName });
             }
-            result.pseudoClasses.push({ name: node.value as PseudoClassName, value: '' });
         }
     }
     return result;
