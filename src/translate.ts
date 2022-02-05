@@ -100,7 +100,7 @@ function iterateCompoundSelector(compoundSelector: CompoundSelector) {
     for (const node of compoundSelector.nodes) {
         if (node.type === 'pseudo_element') {
             if (isPseudoElement(node.value)) {
-                result.pseudoElement = node.value;
+                result.pseudoElement = node.value as PseudoElement;
             } else {
                 result.err = ERRORS.UNKNOWN_PSEUDO_ELEMENT(node.value);
             }
