@@ -1,26 +1,32 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto&display=swap"/><script src="https://cdnjs.cloudflare.com/ajax/libs/particlesjs/2.2.2/particles.min.js"></script><script>window.onload = function () {
-        Particles.init({
-          selector: '#background',
-          color: ['#DA0463', '#404B69', '#DBEDF3'],
-          connectParticles: true,
-          maxParticles: 150,
-          speed: 0.3,
-          responsive: [
-            {
-              breakpoint: 768,
-              options: {
-                maxParticles: 100,
-                color: '#48F2E3',
-              },
-            },
-            {
-              breakpoint: 530,
-              options: {
-                color: '#48F2E3',
-                maxParticles: 100,
-                connectParticles: false,
-              },
-            },
-          ],
-        });
-      };</script><title>Selectors Translated</title><script defer="defer" src="main.js"></script><link href="main.css" rel="stylesheet"></head><body><div class="container"><div id="form"><header><h1>Selectors Translated</h1><h3>Translates CSS selectors into plain English.</h3></header><div class="input-group"><label for="selector-input">Selector</label> <input id="selector-input" name="selector-input" autocomplete="off"/></div><div id="result"></div></div></div><canvas id="background" height="100vh" width="100%"></canvas></body></html>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto&display=swap">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particlesjs/2.2.2/particles.min.js"></script>
+    <script>window.onload=function(){Particles.init({selector:"#background",color:["#DA0463","#404B69","#DBEDF3"],connectParticles:!0,maxParticles:150,speed:.3,responsive:[{breakpoint:768,options:{maxParticles:100,color:"#48F2E3"}},{breakpoint:530,options:{color:"#48F2E3",maxParticles:100,connectParticles:!1}}]})}</script>
+    <style id="visualization-style"></style>
+    <title>Selectors Translated</title>
+  <script defer="defer" src="main.js"></script><link href="main.css" rel="stylesheet"></head>
+  <body>
+    <div class="container">
+      <div id="form">
+        <header>
+          <h1>Selectors Translated</h1>
+          <h3>Translates CSS selectors into plain English.</h3>
+        </header>
+        <div class="input-group">
+          <label for="selector-input">Selector</label>
+          <input type="text" id="selector-input" name="selector-input" autocomplete="off" spellcheck="false">
+        </div>
+        <div id="result"></div>
+        <div id="visualization"></div>
+      </div>
+    </div>
+    <canvas id="background" height="100vh" width="100%"></canvas>
+  </body>
+</html>
