@@ -1,19 +1,4 @@
-export type Exist = 'exist';
-export type AttributeAction = Exist | 'start' | 'end' | 'hyphen-list' | 'space-list' | 'equal' | 'contain';
-
-export interface AttributeError {
-    type: 'error';
-    error: string;
-}
-export type AttributeDescriptor = (value: string) => string;
-export interface Attribute {
-    type: 'full' | Exist;
-    action: AttributeAction;
-    name: string;
-    descriptor?: AttributeDescriptor;
-    value?: string;
-    casing?: boolean;
-}
+import type { Attribute, AttributeAction, AttributeDescriptor, AttributeError } from '../types';
 
 export const EXIST = 'exist';
 export const ERROR = 'error';

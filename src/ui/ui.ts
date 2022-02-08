@@ -1,9 +1,15 @@
-import { translate } from '../translate';
+import { translate } from '../translate/translate';
+import { visualize } from '../visualize';
 import './style.css';
+import { createVisualizationElement, getVisualizationStyle } from './visualization/create';
 
+const visualizationSelector = '#visualization';
 export class App {
     private input = document.querySelector('#selector-input') as HTMLInputElement;
     private result = document.querySelector('#result') as HTMLDivElement;
+    private visualization = document.querySelector(visualizationSelector) as HTMLDivElement;
+    private visualizationStyle = document.querySelector('#visualization-style') as HTMLStyleElement;
+    private previousInput = '';
 
     constructor() {
         this.fillInputFromURL();
@@ -11,11 +17,20 @@ export class App {
     }
 
     private initiate = () => {
-        if (this.input.value) {
-            this.translate(this.input.value);
+        const input = this.input.value.trim();
+        if (input) {
+            if (this.validateInput(input)) {
+                return;
+            }
+            this.translate(input);
+            this.previousInput = input;
         } else {
             this.clear();
         }
+    };
+
+    private validateInput = (input: string) => {
+        return input === this.previousInput || input.endsWith(',');
     };
 
     private translate(value: string) {
@@ -24,6 +39,29 @@ export class App {
 
         this.result.innerHTML = withTags;
         this.updateQueryParam(value);
+        this.visualization.innerHTML = '';
+
+        const unsupportedMessage = this.validateInputForVisualization(value, translation);
+        if (unsupportedMessage) {
+            this.visualization.innerHTML = unsupportedMessage;
+        } else {
+            this.visualize(value);
+        }
+    }
+
+    private validateInputForVisualization(value: string, translation: string) {
+        if (translation.includes('Error')) {
+            return 'No visualization due to selector input error';
+        }
+        if (translation.includes('unknown pseudo class')) {
+            return 'No visualization due to unknown pseudo class';
+        }
+        if (translation.includes('<script>')) {
+            return 'No visualization for script element';
+        }
+        if (value.includes(',')) {
+            return 'Visualization not supported for multiple selectors';
+        }
     }
 
     private updateQueryParam(value: string) {
@@ -39,6 +77,9 @@ export class App {
     private clear() {
         this.input.value = '';
         this.result.innerText = '';
+        this.visualizationStyle.innerHTML = '';
+        this.visualization.innerHTML = '';
+        this.previousInput = '';
         this.updateQueryParam('');
     }
 
@@ -60,6 +101,23 @@ export class App {
         }
         return tagged.join('');
     }
+
+    private visualize = (value: string) => {
+        const visualization = visualize(value);
+
+        // TODO: Remove
+        // eslint-disable-next-line no-console
+        // console.log(JSON.stringify(visualization, null, 0));
+
+        const elements = [];
+        for (const element of visualization) {
+            const el = createVisualizationElement(element);
+            elements.push(el);
+        }
+
+        this.visualization.append(...elements);
+        this.visualizationStyle.innerHTML = getVisualizationStyle(visualizationSelector, value);
+    };
 }
 
 window.App = new App();

@@ -1,11 +1,12 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
-const devMode = process.env.NODE_ENV !== 'production';
+const isDev = process.env.NODE_ENV !== 'production';
 
 module.exports = {
-    mode: devMode ? 'development' : 'production',
+    mode: isDev ? 'development' : 'production',
     entry: './src/index.ts',
     output: {
         path: path.join(__dirname, 'lib'),
@@ -20,16 +21,23 @@ module.exports = {
             },
             {
                 test: /\.css$/,
-                use: [devMode ? 'style-loader' : MiniCssExtractPlugin.loader, 'css-loader'],
+                use: [isDev ? 'style-loader' : MiniCssExtractPlugin.loader, 'css-loader'],
             },
         ],
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.mjs', '.js', '.json'],
     },
+    optimization: {
+        minimize: true,
+        minimizer: isDev ? [] : [new CssMinimizerPlugin()],
+    },
     plugins: [
         new HtmlWebpackPlugin({
             template: './src/ui/template.html',
+            minify: {
+                minifyJS: !isDev,
+            },
         }),
-    ].concat(devMode ? [] : [new MiniCssExtractPlugin()]),
+    ].concat(isDev ? [] : [new MiniCssExtractPlugin()]),
 };

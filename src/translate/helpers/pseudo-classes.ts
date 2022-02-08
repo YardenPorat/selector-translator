@@ -1,5 +1,7 @@
-import { joiner } from './joiner';
+import { joiner } from './string-manipulation';
 import type { PseudoClass, PseudoClassName } from '../types';
+
+export const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
 
 function parseStep(stepString: string) {
     const stepSign = stepString.includes('-') ? -1 : 1;
@@ -25,39 +27,40 @@ function getNumberSuffix(n: number) {
 }
 
 export const PSEUDO_CLASS_STATE = {
-    hover: 'hovered',
-    active: 'active',
-    focus: 'focused',
-    visited: 'visited',
-    empty: 'empty',
-    blank: 'blank',
-    target: 'targeted',
-    checked: 'checked',
-    indeterminate: 'indeterminate',
-    disabled: 'disabled',
-    optional: 'optional',
-    valid: 'valid',
-    invalid: 'invalid',
-    required: 'required',
-    'read-only': 'read-only',
-    'read-write': 'read-write',
-    'in-range': 'in-range',
-    'out-of-range': 'out-of-range',
-    lang: 'language',
-    'last-child': 'the last child of its parent',
-    'first-child': 'the first child of its parent',
-    'only-child': 'the only child of its parent',
-    'last-of-type': 'the last of its type in its parent',
-    'first-of-type': 'the first of its type in its parent',
-    'only-of-type': 'the only of its type in its parent',
-    'nth-child': 'child of its parent',
-    'nth-last-child': 'child from the end of its parent',
-    'nth-of-type': 'of its type in his parent',
-    'nth-last-of-type': 'of its type from the end in his parent',
+    hover: { state: 'hovered', text: '' },
+    active: { state: 'active', text: 'Click on me!' },
+    focus: { state: 'focused', text: 'Use with input / textarea' },
+    visited: { state: 'visited', text: 'A link that was already clicked' },
+    empty: { state: 'empty', text: '' },
+    blank: { state: 'blank', text: '' },
+    target: { state: 'targeted', text: '' },
+    checked: { state: 'checked', text: '' },
+    indeterminate: { state: 'indeterminate', text: '' },
+    disabled: { state: 'disabled', text: '' },
+    optional: { state: 'optional', text: '' },
+    valid: { state: 'valid', text: '' },
+    invalid: { state: 'invalid', text: '' },
+    required: { state: 'required', text: '' },
+    'read-only': { state: 'read-only', text: '' },
+    'read-write': { state: 'read-write', text: '' },
+    'in-range': { state: 'in-range', text: '' },
+    'out-of-range': { state: 'out-of-range', text: '' },
+    lang: { state: 'language', text: '' },
+    'last-child': { state: 'the last child of its parent', text: '' },
+    'first-child': { state: 'the first child of its parent', text: '' },
+    'only-child': { state: 'the only child of its parent', text: '' },
+    'last-of-type': { state: 'the last of its type in its parent', text: '' },
+    'first-of-type': { state: 'the first of its type in its parent', text: '' },
+    'only-of-type': { state: 'the only of its type in its parent', text: '' },
+    'nth-child': { state: 'child of its parent', text: '' },
+    'nth-last-child': { state: 'child from the end of its parent', text: '' },
+    'nth-of-type': { state: 'of its type in his parent', text: '' },
+    'nth-last-of-type': { state: 'of its type from the end in his parent', text: '' },
 };
 
 function pseudoClassDescriptor({ name, value }: { name: PseudoClassName; value: string }) {
-    return `${PSEUDO_CLASS_STATE[name]} is '${value}'`;
+    // language is en
+    return `${PSEUDO_CLASS_STATE[name].state} is '${value}'`;
 }
 
 function offsetDescriptor(value: number) {
@@ -87,7 +90,7 @@ function nthAndStepDescriptor({ value, step: stepString, name }: OffsetAndStepDe
     const type = name.includes('child') ? 'child' : 'child of type';
     const directionText =
         step < 0 && name.includes('last') ? '' : step < 0 || name.includes('last') ? ', going down' : '';
-    return `${stepText} ${type} starting with the ${offsetText} ${PSEUDO_CLASS_STATE[name]} (inclusive)${directionText}`;
+    return `${stepText} ${type} starting with the ${offsetText} ${PSEUDO_CLASS_STATE[name].state} (inclusive)${directionText}`;
 }
 
 export function getPseudoClassesString(pseudoClasses: PseudoClass[]) {
@@ -100,7 +103,7 @@ export function getPseudoClassesString(pseudoClasses: PseudoClass[]) {
         }
 
         if (PSEUDO_CLASS_STATE[name]) {
-            return PSEUDO_CLASS_STATE[name];
+            return PSEUDO_CLASS_STATE[name].state;
         }
 
         return `'${name}' (unknown pseudo class)`;
@@ -113,12 +116,13 @@ export function getPseudoClassesString(pseudoClasses: PseudoClass[]) {
 }
 
 function handleFormulas({ offset, step, name }: PseudoClass) {
+    const { state } = PSEUDO_CLASS_STATE[name];
     if (offset && !step) {
-        return `${offsetDescriptor(Number(offset))} ${PSEUDO_CLASS_STATE[name]}`;
+        return `${offsetDescriptor(Number(offset))} ${state}`;
     }
 
     if (!offset && step) {
-        return `${stepDescriptor(step)} ${PSEUDO_CLASS_STATE[name]}`;
+        return `${stepDescriptor(step)} ${state}`;
     }
     if (offset && step) {
         return nthAndStepDescriptor({ value: Number(offset), step, name });

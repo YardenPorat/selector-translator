@@ -1,12 +1,13 @@
 :root {
   --primary: deeppink;
-  --secondary: #48f2e3;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  text-decoration: none; /* s */
+  list-style-type: none; /* li */
 }
 
 html,
@@ -17,6 +18,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Particles.js */
 #background {
   position: absolute;
   top: 0;
@@ -29,7 +31,7 @@ body {
 .container {
   display: flex;
   width: 100vw;
-  height: 70vh;
+  margin-top: 15%;
   justify-content: center;
   align-items: center;
   padding: 0 10px;
@@ -43,7 +45,7 @@ header::after {
   position: absolute;
   width: 10em;
   height: 2px;
-  background-image: linear-gradient(to right, rgba(255, 20, 147, 0), deeppink, rgba(255, 20, 147, 0));
+  background-image: linear-gradient(to right, rgba(255, 20, 147, 0), var(--primary), rgba(255, 20, 147, 0));
   left: 50%;
   transform: translateX(-50%);
   bottom: -15px;
@@ -82,11 +84,11 @@ h3 {
   width: 90%;
 }
 
-label {
+.input-group label {
   display: block;
 }
 
-input {
+.input-group input {
   width: 100%;
   padding: 10px;
   border-radius: 5px;
@@ -94,8 +96,7 @@ input {
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   font-size: 1.5rem;
 }
-
-input:focus {
+.input-group input:focus {
   outline: none;
 }
 
@@ -106,24 +107,49 @@ input:focus {
   background-color: rgba(0, 0, 0, 0.4);
   border-radius: 10px;
   padding: 10px;
-  height: 30px;
 }
 
 #result mark {
-  background-color: deeppink;
+  background-color: var(--primary);
   padding: 0 5px;
   border-radius: 5px;
   box-shadow: rgb(0 0 0 / 35%) 0px -50px 36px -28px inset;
 }
 
+#visualization {
+  font-size: 1rem;
+  align-self: flex-start;
+  position: relative;
+  width: 100%;
+}
+
+#visualization * {
+  font-weight: 400;
+  line-height: 1;
+  margin: 3px 18px;
+  padding: 0 4px;
+  display: block;
+}
+
+#visualization textarea,
+#visualization input {
+  color: black !important;
+  resize: none;
+  max-height: 1rem;
+  font-size: 1rem;
+  font: inherit;
+  border-radius: 5px;
+  outline: none;
+  border: unset;
+  white-space: nowrap;
+}
+
 @media screen and (max-width: 768px) {
+  :root {
+    --primary: #48f2e3;
+  }
   header::after {
     height: 1px;
-    background-image: linear-gradient(to right, rgba(255, 20, 147, 0), var(--secondary), rgba(255, 20, 147, 0));
-  }
-
-  #result mark {
-    background-color: var(--secondary);
   }
 }
 @media screen and (max-width: 530px) {

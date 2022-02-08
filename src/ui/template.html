@@ -36,6 +36,7 @@
         });
       };
     </script>
+    <style id="visualization-style"></style>
     <title>Selectors Translated</title>
   </head>
   <body>
@@ -47,9 +48,10 @@
         </header>
         <div class="input-group">
           <label for="selector-input">Selector</label>
-          <input type="text" id="selector-input" name="selector-input" autocomplete="off" />
+          <input type="text" id="selector-input" name="selector-input" autocomplete="off" spellcheck="false" />
         </div>
         <div id="result"></div>
+        <div id="visualization"></div>
       </div>
     </div>
     <canvas id="background" height="100vh" width="100%"></canvas>

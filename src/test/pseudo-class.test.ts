@@ -1,40 +1,58 @@
 import { expect } from 'chai';
-import { translate } from '../translate';
+import { translate } from '../translate/translate';
+import { visualize } from '../visualize';
 
 describe('Pseudo Class', () => {
     it('element + hover', function () {
         const selector = 'a:hover';
-        expect(translate(selector), selector).to.eq(`An '<a>' element when its hovered`);
+        expect(translate(selector)).to.eq(`An '<a>' element when its hovered`);
+        expect(visualize(selector)).to.deep.eq([{ tag: 'a', innerText: 'When its hovered' }]);
     });
 
     it('element + active', function () {
         const selector = 'a:active';
         expect(translate(selector), selector).to.eq(`An '<a>' element when its active`);
+        expect(visualize(selector)).to.deep.eq([{ tag: 'a', innerText: 'When its active (Click on me!)' }]);
     });
 
     it('element + focus', function () {
-        const selector = 'a:focus';
-        expect(translate(selector), selector).to.eq(`An '<a>' element when its focused`);
+        const selector = 'input:focus';
+        expect(translate(selector), selector).to.eq(`An '<input>' element when its focused`);
+        expect(visualize(selector)).to.deep.eq([
+            { tag: 'input', innerText: 'When its focused (Use with input / textarea)' },
+        ]);
     });
 
     it('element + visited', function () {
         const selector = 'a:visited';
         expect(translate(selector), selector).to.eq(`An '<a>' element when its visited`);
+        expect(visualize(selector)).to.deep.eq([
+            { tag: 'a', innerText: 'When its visited (A link that was already clicked)' },
+        ]);
     });
 
     it('element + empty', function () {
         const selector = 'p:empty';
         expect(translate(selector), selector).to.eq(`A '<p>' element when its empty`);
+        expect(visualize(selector)).to.deep.eq([{ tag: 'p', innerText: 'When its empty' }]);
     });
 
     it('element + blank', function () {
         const selector = 'p:blank';
         expect(translate(selector), selector).to.eq(`A '<p>' element when its blank`);
+        expect(visualize(selector)).to.deep.eq([{ tag: 'p', innerText: 'When its blank' }]);
+    });
+
+    it('target', function () {
+        const selector = ':target';
+        expect(translate(selector), selector).to.eq(`Any element when its targeted`);
+        expect(visualize(selector)).to.deep.eq([{ tag: 'div', innerText: 'When its targeted' }]);
     });
 
     it('element + target', function () {
         const selector = 'p:target';
         expect(translate(selector), selector).to.eq(`A '<p>' element when its targeted`);
+        expect(visualize(selector)).to.deep.eq([{ tag: 'p', innerText: 'When its targeted' }]);
     });
 
     it('element + lang(en)', function () {
@@ -270,6 +288,16 @@ describe('Pseudo Class', () => {
 
         it('Pseudo-class which is suppose to be a pseudo element', function () {
             expect(translate('div:after')).to.eq(`Error: You specified the pseudo element 'after' as a pseudo class`);
+        });
+
+        it('Pseudo-class which is suppose to have a node', function () {
+            const expectedError =
+                'Error: You specified a pseudo class node which is expected to have a node (nth-child, nth-last-child, nth-of-type, nth-last-of-type, lang)';
+            expect(translate(':nth-child')).to.eq(expectedError);
+            expect(translate(':nth-last-child')).to.eq(expectedError);
+            expect(translate(':nth-of-type')).to.eq(expectedError);
+            expect(translate(':nth-last-of-type')).to.eq(expectedError);
+            expect(translate(':lang')).to.eq(expectedError);
         });
     });
 });

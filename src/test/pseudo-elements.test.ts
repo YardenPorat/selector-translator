@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { translate } from '../translate';
+import { translate } from '../translate/translate';
 
 describe('Pseudo Elements', () => {
     describe('Standalone', function () {
