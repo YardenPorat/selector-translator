@@ -77,24 +77,6 @@ describe('Relationships', () => {
                 },
             ]);
         });
-
-        it('ul > li > span div', function () {
-            const selector = 'ul > li > span div';
-            expect(translate(selector)).to.eq(
-                `A '<div>' element within a '<span>' element directly within an '<li>' element directly within a '<ul>' element`
-            );
-            expect(visualize(selector)).to.deep.eq([
-                {
-                    tag: 'ul',
-                    children: [
-                        {
-                            tag: 'li',
-                            children: [{ tag: 'li' }, { tag: 'span', children: [{ tag: 'span' }, { tag: 'div' }] }],
-                        },
-                    ],
-                },
-            ]);
-        });
     });
 
     describe('Directly adjacent (+)', function () {
@@ -220,6 +202,7 @@ describe('Relationships', () => {
     });
 
     describe('Errors', function () {
+        // No visualization for errors
         it('Empty >', function () {
             expect(translate('li >')).to.eq(`Error: You Specified an empty combinator '>'`);
             expect(translate('ul > li >')).to.eq(`Error: You Specified an empty combinator '>'`);

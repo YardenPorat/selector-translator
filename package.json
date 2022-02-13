@@ -6,7 +6,7 @@
     "clean": "rimraf \"dist/*\" \"lib/*\"",
     "start": "webpack-dev-server --open",
     "test": "mocha \"src/test/*.test.ts\"",
-    "test:browser": "mocha-play \"src/test/*.ts\" -c webpack.config.js",
+    "test:browser": "mocha-play \"src/test/*.test.browser.ts\" -c webpack.config.js",
     "lint": "eslint .",
     "build": "tsc",
     "watch": "npm run build -- -w",

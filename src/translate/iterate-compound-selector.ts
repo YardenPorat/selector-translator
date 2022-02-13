@@ -1,8 +1,8 @@
+import { parsePseudoClassNode, pseudoClassWithNodes } from './helpers/pseudo-classes';
+import { parseAttribute, ERROR } from './helpers/parse-attribute';
 import { isPseudoElement, type PseudoElement } from './helpers/pseudo-elements';
 import type { CompoundSelector } from '@tokey/css-selector-parser';
 import type { PseudoClass, Attribute, PseudoClassName } from './types';
-import { parseAttribute, ERROR } from './helpers/parse-attribute';
-import { pseudoClassWithNodes } from './helpers/pseudo-classes';
 
 const ERRORS = {
     TWO_IDS: 'An element cannot have two ids',
@@ -64,29 +64,8 @@ export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
             } else if (isPseudoElement(value)) {
                 result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
             } else if (node.nodes && node.nodes[0].nodes) {
-                const secondLevelNodes = node.nodes[0].nodes;
-                const types = secondLevelNodes.map((node) => node.type);
-
-                if (secondLevelNodes[0].type === 'type') {
-                    /** lang pseudo class */
-                    result.pseudoClasses.push({
-                        name: node.value as PseudoClassName,
-                        value: secondLevelNodes[0].value,
-                    });
-                } else if (types.includes('nth_offset') || types.includes('nth_step')) {
-                    const formula = { offset: '', step: '' };
-                    for (const node of secondLevelNodes) {
-                        if (node.type === 'nth_offset') {
-                            formula.offset = node.value;
-                        } else if (node.type === 'nth_step') {
-                            formula.step = node.value;
-                        }
-                    }
-                    result.pseudoClasses.push({
-                        name: node.value as PseudoClassName,
-                        ...formula,
-                    });
-                }
+                const { parsedPseudoClass } = parsePseudoClassNode(node.value, node.nodes[0].nodes);
+                result.pseudoClasses.push(parsedPseudoClass);
             } else {
                 result.pseudoClasses.push({ name: node.value as PseudoClassName });
             }

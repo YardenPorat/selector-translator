@@ -1,9 +1,10 @@
-import { translate } from '../translate/translate';
 import { visualize } from '../visualize';
+import { translate } from '../translate/translate';
+import { createVisualizationElement, getVisualizationStyle } from './visualization/create-element';
 import './style.css';
-import { createVisualizationElement, getVisualizationStyle } from './visualization/create';
 
 const visualizationSelector = '#visualization';
+
 export class App {
     private input = document.querySelector('#selector-input') as HTMLInputElement;
     private result = document.querySelector('#result') as HTMLDivElement;

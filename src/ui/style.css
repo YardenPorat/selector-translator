@@ -30,8 +30,7 @@ body {
 
 .container {
   display: flex;
-  width: 100vw;
-  margin-top: 15%;
+  margin: 15% 0 5% 0;
   justify-content: center;
   align-items: center;
   padding: 0 10px;
@@ -120,28 +119,38 @@ h3 {
   font-size: 1rem;
   align-self: flex-start;
   position: relative;
-  width: 100%;
 }
 
 #visualization * {
   font-weight: 400;
   line-height: 1;
-  margin: 3px 18px;
-  padding: 0 4px;
+  margin: 3px 0 3px 18px;
+  padding: 0 0 0 4px;
   display: block;
+}
+#visualization > * {
+  margin: 0 0 3px 0;
 }
 
 #visualization textarea,
 #visualization input {
   color: black !important;
   resize: none;
-  max-height: 1rem;
+  max-height: 1.1rem;
   font-size: 1rem;
   font: inherit;
   border-radius: 5px;
   outline: none;
   border: unset;
   white-space: nowrap;
+  max-width: 90%;
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+/* Hide scrollbar for Chrome, Safari and Opera */
+#visualization textarea::-webkit-scrollbar {
+  display: none;
 }
 
 @media screen and (max-width: 768px) {

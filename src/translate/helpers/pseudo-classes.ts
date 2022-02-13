@@ -1,9 +1,10 @@
 import { joiner } from './string-manipulation';
 import type { PseudoClass, PseudoClassName } from '../types';
+import type { NthNode, SelectorNodes } from '@tokey/css-selector-parser';
 
 export const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
 
-function parseStep(stepString: string) {
+export function parseStep(stepString: string) {
     const stepSign = stepString.includes('-') ? -1 : 1;
     return (Number(stepString.replace('n', '').replace('-', '')) || 1) * stepSign;
 }
@@ -37,12 +38,12 @@ export const PSEUDO_CLASS_STATE = {
     checked: { state: 'checked', text: '' },
     indeterminate: { state: 'indeterminate', text: '' },
     disabled: { state: 'disabled', text: '' },
-    optional: { state: 'optional', text: '' },
-    valid: { state: 'valid', text: '' },
+    optional: { state: 'optional', text: 'Not required' },
+    valid: { state: 'valid', text: 'Input value' },
     invalid: { state: 'invalid', text: '' },
-    required: { state: 'required', text: '' },
-    'read-only': { state: 'read-only', text: '' },
-    'read-write': { state: 'read-write', text: '' },
+    required: { state: 'required', text: '', attribute: 'required' },
+    'read-only': { state: 'read-only', text: '', attribute: 'readonly' },
+    'read-write': { state: 'read-write', text: 'Without readonly attribute' },
     'in-range': { state: 'in-range', text: '' },
     'out-of-range': { state: 'out-of-range', text: '' },
     lang: { state: 'language', text: '' },
@@ -57,6 +58,12 @@ export const PSEUDO_CLASS_STATE = {
     'nth-of-type': { state: 'of its type in his parent', text: '' },
     'nth-last-of-type': { state: 'of its type from the end in his parent', text: '' },
 };
+
+export const PSEUDO_CLASS_ATTRIBUTES = {
+    'read-only': 'readonly',
+};
+
+export type PseudoClassWithDifferentAttributeName = keyof typeof PSEUDO_CLASS_ATTRIBUTES;
 
 function pseudoClassDescriptor({ name, value }: { name: PseudoClassName; value: string }) {
     // language is en
@@ -82,7 +89,6 @@ interface OffsetAndStepDescOptions {
     step: string;
     name: PseudoClassName;
 }
-
 function nthAndStepDescriptor({ value, step: stepString, name }: OffsetAndStepDescOptions) {
     const step = parseStep(stepString);
     const stepText = stepDescriptor(stepString);
@@ -129,4 +135,40 @@ function handleFormulas({ offset, step, name }: PseudoClass) {
     }
 
     throw new Error('Invalid pseudo class');
+}
+
+export interface ParsePseudoClassNodeResult {
+    name: PseudoClassName;
+    value: string;
+    offset?: string;
+    step?: string;
+}
+export function parsePseudoClassNode(value: string, secondLevelNodes: SelectorNodes | NthNode[]) {
+    if (secondLevelNodes[0].type === 'type') {
+        /** lang pseudo class */
+        return {
+            parsedPseudoClass: {
+                name: value as PseudoClassName,
+                value: secondLevelNodes[0].value,
+                offset: undefined,
+                step: undefined,
+            },
+        };
+    } else {
+        const formula = { offset: '', step: '' };
+        for (const node of secondLevelNodes) {
+            if (node.type === 'nth_offset') {
+                formula.offset = node.value;
+            } else if (node.type === 'nth_step') {
+                formula.step = node.value;
+            }
+        }
+
+        return {
+            parsedPseudoClass: {
+                name: value as PseudoClassName,
+                ...formula,
+            },
+        };
+    }
 }
