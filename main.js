@@ -1756,6 +1756,382 @@ __webpack_require__.d(__webpack_exports__, {
 
 // EXTERNAL MODULE: ./node_modules/@tokey/css-selector-parser/dist/index.js
 var dist = __webpack_require__(774);
+;// CONCATENATED MODULE: ./src/translate/helpers/string-manipulation.ts
+function joiner(items) {
+    if (items.length === 2) {
+        return `${items[0]} and ${items[1]}`;
+    }
+    if (items.length > 2) {
+        return `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
+    }
+    return items[0];
+}
+
+;// CONCATENATED MODULE: ./src/translate/helpers/pseudo-classes.ts
+
+const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
+function parseStep(stepString) {
+    const stepSign = stepString.includes('-') ? -1 : 1;
+    return (Number(stepString.replace('n', '').replace('-', '')) || 1) * stepSign;
+}
+function getNumberSuffix(n) {
+    if (n > 3 && n < 21) {
+        return 'th';
+    }
+    const asString = n.toString();
+    if (asString.at(-1) === '1') {
+        return 'st';
+    }
+    if (asString.at(-1) === '2') {
+        return 'nd';
+    }
+    if (asString.at(-1) === '3') {
+        return 'rd';
+    }
+    return 'th';
+}
+const PSEUDO_CLASS_STATE = {
+    hover: { state: 'hovered', text: '' },
+    active: { state: 'active', text: 'Click on me!' },
+    focus: { state: 'focused', text: 'Use with input / textarea' },
+    visited: { state: 'visited', text: 'A link that was already clicked' },
+    empty: { state: 'empty', text: '' },
+    blank: { state: 'blank', text: '' },
+    target: { state: 'targeted', text: '' },
+    checked: { state: 'checked', text: '' },
+    indeterminate: { state: 'indeterminate', text: '' },
+    disabled: { state: 'disabled', text: '' },
+    optional: { state: 'optional', text: 'Not required' },
+    valid: { state: 'valid', text: 'Input value' },
+    invalid: { state: 'invalid', text: '' },
+    required: { state: 'required', text: '', attribute: 'required' },
+    'read-only': { state: 'read-only', text: '', attribute: 'readonly' },
+    'read-write': { state: 'read-write', text: 'Without readonly attribute' },
+    'in-range': { state: 'in-range', text: '' },
+    'out-of-range': { state: 'out-of-range', text: '' },
+    lang: { state: 'language', text: '' },
+    'last-child': { state: 'the last child of its parent', text: '' },
+    'first-child': { state: 'the first child of its parent', text: '' },
+    'only-child': { state: 'the only child of its parent', text: '' },
+    'last-of-type': { state: 'the last of its type in its parent', text: '' },
+    'first-of-type': { state: 'the first of its type in its parent', text: '' },
+    'only-of-type': { state: 'the only of its type in its parent', text: '' },
+    'nth-child': { state: 'child of its parent', text: '' },
+    'nth-last-child': { state: 'child from the end of its parent', text: '' },
+    'nth-of-type': { state: 'of its type in his parent', text: '' },
+    'nth-last-of-type': { state: 'of its type from the end in his parent', text: '' },
+};
+const PSEUDO_CLASS_ATTRIBUTES = {
+    'read-only': 'readonly',
+};
+function pseudoClassDescriptor({ name, value }) {
+    // language is en
+    return `${PSEUDO_CLASS_STATE[name].state} is '${value}'`;
+}
+function offsetDescriptor(value) {
+    return `the ${value}${getNumberSuffix(value)}`;
+}
+function stepDescriptor(stepString) {
+    if (['odd', 'even'].includes(stepString)) {
+        return `every ${stepString}`;
+    }
+    const step = parseStep(stepString);
+    const stepDescriptor = step === -1 || step === 1 ? '' : ` ${Math.abs(step)}${getNumberSuffix(step)}`;
+    return `every${stepDescriptor}`;
+}
+function nthAndStepDescriptor({ value, step: stepString, name }) {
+    const step = parseStep(stepString);
+    const stepText = stepDescriptor(stepString);
+    const offsetText = `${value}${getNumberSuffix(value)}`;
+    const type = name.includes('child') ? 'child' : 'child of type';
+    const directionText = step < 0 && name.includes('last') ? '' : step < 0 || name.includes('last') ? ', going down' : '';
+    return `${stepText} ${type} starting with the ${offsetText} ${PSEUDO_CLASS_STATE[name].state} (inclusive)${directionText}`;
+}
+function getPseudoClassesString(pseudoClasses) {
+    const state = pseudoClasses.map(({ name, value, offset, step }) => {
+        if (offset || step) {
+            return handleFormulas({ offset, step, name });
+        }
+        if (value && PSEUDO_CLASS_STATE[name]) {
+            return pseudoClassDescriptor({ name, value });
+        }
+        if (PSEUDO_CLASS_STATE[name]) {
+            return PSEUDO_CLASS_STATE[name].state;
+        }
+        return `'${name}' (unknown pseudo class)`;
+    });
+    if (state.length > 1) {
+        return joiner(state);
+    }
+    return state[0];
+}
+function handleFormulas({ offset, step, name }) {
+    const { state } = PSEUDO_CLASS_STATE[name];
+    if (offset && !step) {
+        return `${offsetDescriptor(Number(offset))} ${state}`;
+    }
+    if (!offset && step) {
+        return `${stepDescriptor(step)} ${state}`;
+    }
+    if (offset && step) {
+        return nthAndStepDescriptor({ value: Number(offset), step, name });
+    }
+    throw new Error('Invalid pseudo class');
+}
+function parsePseudoClassNode(value, secondLevelNodes) {
+    if (secondLevelNodes[0].type === 'type') {
+        /** lang pseudo class */
+        return {
+            parsedPseudoClass: {
+                name: value,
+                value: secondLevelNodes[0].value,
+                offset: undefined,
+                step: undefined,
+            },
+        };
+    }
+    else {
+        const formula = { offset: '', step: '' };
+        for (const node of secondLevelNodes) {
+            if (node.type === 'nth_offset') {
+                formula.offset = node.value;
+            }
+            else if (node.type === 'nth_step') {
+                formula.step = node.value;
+            }
+        }
+        return {
+            parsedPseudoClass: Object.assign({ name: value }, formula),
+        };
+    }
+}
+
+;// CONCATENATED MODULE: ./src/visualize.ts
+
+
+function appendAttribute(attribute, tag) {
+    let [attr, value] = attribute.split('=');
+    if (value) {
+        value = value.endsWith(' i') ? value.slice(0, -2) : value;
+        value = value[0] === '"' ? value.slice(1, -1) : value;
+        const modifier = ['^', '$', '~', '*', '|'].includes(attr.at(-1)) ? attr.at(-1) : '';
+        attr = modifier ? attr.slice(0, -1) : attr;
+        if (modifier === '^') {
+            attribute = `${attr}="${value}*"`;
+        }
+        else if (modifier === '|') {
+            attribute = attr + '="*-' + value + '-*"';
+        }
+        else if (modifier === '~') {
+            attribute = `${attr}="* ${value} *"`;
+        }
+        else if (modifier === '*') {
+            attribute = `${attr}="*${value}*"`;
+        }
+        else if (modifier === '$') {
+            attribute = `${attr}="*${value}"`;
+        }
+        else if (!modifier) {
+            attribute = `${attr}="${value}"`;
+        }
+    }
+    if (!tag) {
+        return `<element ${attribute}>`;
+    }
+    return `${tag.slice(0, -1)} ${attribute}>`;
+}
+const getLastIndex = (arr) => arr.length - 1;
+let currentElement;
+let siblingArrayRef;
+const baseElement = { tag: 'div' };
+function visualize(selector) {
+    var _a;
+    const [selectorList] = (0,dist.parseCssSelector)(selector); // first selector, before the ','
+    const tags = [''];
+    const elements = [Object.assign({}, baseElement)];
+    siblingArrayRef = elements;
+    currentElement = elements[0];
+    let duplicateNext = false;
+    let duplicateAsSibling = false;
+    let adjacentCount = selector.split('+').length - 1;
+    for (const selector of selectorList.nodes) {
+        if (selector.type === 'type') {
+            // Tag
+            Object.assign(currentElement, { tag: selector.value });
+        }
+        else if (selector.type === 'class') {
+            currentElement.classes = [...new Set([...((_a = currentElement.classes) !== null && _a !== void 0 ? _a : []), selector.value])];
+        }
+        else if (selector.type === 'id') {
+            Object.assign(currentElement, { id: selector.value });
+        }
+        else if (selector.type === 'attribute') {
+            tags[tags.length - 1] = appendAttribute(selector.value, tags.at(-1));
+        }
+        else if (selector.type === 'pseudo_class') {
+            const value = selector.value;
+            let mainText = '';
+            if (hasInnerNodes(selector)) {
+                const { parsedPseudoClass } = parsePseudoClassNode(selector.value, selector.nodes[0].nodes);
+                if (parsedPseudoClass.name === 'lang') {
+                    mainText = `${PSEUDO_CLASS_STATE[parsedPseudoClass.name].state} is '${parsedPseudoClass.value}'`;
+                    addAttributes([[parsedPseudoClass.name, parsedPseudoClass.value]]);
+                }
+                else if (parsedPseudoClass.offset && !parsedPseudoClass.step) {
+                    const offset = Number(parsedPseudoClass.offset);
+                    appendMultipleSiblings(offset);
+                    moveRefToSiblingByIndex(offset - 1); // 1 based
+                }
+                else if (parsedPseudoClass.offset && parsedPseudoClass.step) {
+                    const offset = Number(parsedPseudoClass.offset);
+                    appendMultipleSiblings(offset * 2);
+                    moveRefToSiblingByIndex(offset - 1); // 1 based
+                }
+                else if (!parsedPseudoClass.offset && parsedPseudoClass.step) {
+                    const step = Math.abs(parseStep(parsedPseudoClass.step));
+                    appendMultipleSiblings(step * 2);
+                    moveRefToSiblingByIndex(step - 1); // 1 based
+                }
+            }
+            else if (['disabled', 'required', 'read-only'].includes(value)) {
+                const attrName = getAttributeName(value);
+                addAttributes([[attrName, 'true']]);
+                mainText = value;
+            }
+            else if (value === 'invalid') {
+                addAttributes([['type', 'email']]);
+                mainText = value;
+            }
+            else if (value === 'in-range' || value === 'out-of-range') {
+                addAttributes([
+                    ['min', '5'],
+                    ['max', '10'],
+                ]);
+                mainText = value;
+            }
+            else {
+                mainText = PSEUDO_CLASS_STATE[value].state;
+            }
+            const extraText = PSEUDO_CLASS_STATE[value].text ? ` (${PSEUDO_CLASS_STATE[value].text})` : '';
+            if (mainText) {
+                appendInnerText(mainText, extraText, currentElement);
+            }
+            if (value === 'last-child' || value === 'last-of-type') {
+                duplicateElementAsSibling(currentElement, { moveRef: true });
+            }
+            if (value === 'first-child' || value === 'first-of-type') {
+                duplicateElementAsSibling(currentElement, { moveRef: false });
+            }
+        }
+        else if (selector.type === 'combinator') {
+            const [combinator] = selector.value;
+            if (combinator === ' ') {
+                // Child combinators
+                addChild(currentElement, baseElement, { moveSiblingsRef: true, moveRefToChild: true });
+            }
+            else if (combinator === '>') {
+                addChild(currentElement, baseElement, { moveSiblingsRef: true, moveRefToChild: true });
+                duplicateNext = true;
+                continue;
+            }
+            else if (combinator === '+') {
+                adjacentCount--;
+                siblingArrayRef.push(Object.assign({}, baseElement));
+                moveRefToSiblingByIndex(-1);
+                if (adjacentCount === 0) {
+                    // Only last element of adjacent combinator will be duplicated
+                    duplicateAsSibling = true;
+                }
+            }
+            else if (combinator === '~') {
+                addSibling(currentElement, baseElement, { moveRef: true });
+            }
+        }
+        else if (selector.type === 'universal') {
+            if (tags.at(-1) === '') {
+                tags[tags.length - 1] = 'Any element';
+            }
+            else {
+                tags.push('Any element');
+            }
+        }
+        if (duplicateNext) {
+            addChild(currentElement, currentElement);
+            duplicateNext = false;
+        }
+        if (duplicateAsSibling) {
+            siblingArrayRef.push(currentElement);
+            duplicateAsSibling = false;
+        }
+    }
+    return elements;
+}
+function hasInnerNodes(selector) {
+    return selector.nodes && selector.nodes[0].nodes;
+}
+function appendMultipleSiblings(amount) {
+    for (let index = 0; index < amount; index++) {
+        duplicateElementAsSibling(currentElement, { moveRef: false });
+    }
+}
+function duplicateElementAsSibling(element, options = {}) {
+    const newSibling = Object.assign({}, element);
+    siblingArrayRef.push(newSibling);
+    if (options.moveRef) {
+        currentElement = newSibling;
+    }
+}
+function addChild(parent, child = baseElement, options = {}) {
+    const newChild = Object.assign({}, child);
+    if (!parent.children) {
+        parent.children = [];
+    }
+    parent.children.push(Object.assign({}, newChild));
+    if (options.moveSiblingsRef) {
+        siblingArrayRef = parent.children;
+    }
+    if (options.moveRefToChild) {
+        currentElement = parent.children.at(-1);
+    }
+}
+function addSibling(element, sibling = baseElement, options = {}) {
+    const lastIndex = getLastIndex(siblingArrayRef);
+    siblingArrayRef.push(Object.assign({}, sibling));
+    if (options.moveRef) {
+        currentElement = siblingArrayRef.at(lastIndex + 1);
+    }
+}
+function moveRefToSiblingByIndex(index) {
+    if (index === -1) {
+        currentElement = siblingArrayRef[getLastIndex(siblingArrayRef)];
+        return;
+    }
+    currentElement = siblingArrayRef[index];
+}
+function addAttributes(keyValues) {
+    if (!currentElement.attributes) {
+        currentElement.attributes = {};
+    }
+    for (const [key, value] of keyValues) {
+        currentElement.attributes[key] = value;
+    }
+}
+function getAttributeName(value) {
+    if (Object.keys(PSEUDO_CLASS_ATTRIBUTES).includes(value)) {
+        return PSEUDO_CLASS_ATTRIBUTES[value];
+    }
+    return value;
+}
+function appendInnerText(mainText, secondaryText, currentElement) {
+    const text = `${mainText}${secondaryText}`;
+    if (currentElement.innerText) {
+        currentElement.innerText += ` and ${text}`;
+    }
+    else {
+        currentElement.innerText = `When its ${text}`;
+    }
+}
+
 ;// CONCATENATED MODULE: ./src/translate/helpers/parse-attribute.ts
 const EXIST = 'exist';
 const ERROR = 'error';
@@ -1830,126 +2206,6 @@ const PSEUDO_ELEMENTS_DESCRIPTORS = {
     selection: `The highlighted selection of`,
 };
 const isPseudoElement = (value) => Object.keys(PSEUDO_ELEMENTS_DESCRIPTORS).includes(value);
-
-;// CONCATENATED MODULE: ./src/translate/helpers/string-manipulation.ts
-function joiner(items) {
-    if (items.length === 2) {
-        return `${items[0]} and ${items[1]}`;
-    }
-    if (items.length > 2) {
-        return `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
-    }
-    return items[0];
-}
-
-;// CONCATENATED MODULE: ./src/translate/helpers/pseudo-classes.ts
-
-const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
-function parseStep(stepString) {
-    const stepSign = stepString.includes('-') ? -1 : 1;
-    return (Number(stepString.replace('n', '').replace('-', '')) || 1) * stepSign;
-}
-function getNumberSuffix(n) {
-    if (n > 3 && n < 21) {
-        return 'th';
-    }
-    const asString = n.toString();
-    if (asString.at(-1) === '1') {
-        return 'st';
-    }
-    if (asString.at(-1) === '2') {
-        return 'nd';
-    }
-    if (asString.at(-1) === '3') {
-        return 'rd';
-    }
-    return 'th';
-}
-const PSEUDO_CLASS_STATE = {
-    hover: { state: 'hovered', text: '' },
-    active: { state: 'active', text: 'Click on me!' },
-    focus: { state: 'focused', text: 'Use with input / textarea' },
-    visited: { state: 'visited', text: 'A link that was already clicked' },
-    empty: { state: 'empty', text: '' },
-    blank: { state: 'blank', text: '' },
-    target: { state: 'targeted', text: '' },
-    checked: { state: 'checked', text: '' },
-    indeterminate: { state: 'indeterminate', text: '' },
-    disabled: { state: 'disabled', text: '' },
-    optional: { state: 'optional', text: '' },
-    valid: { state: 'valid', text: '' },
-    invalid: { state: 'invalid', text: '' },
-    required: { state: 'required', text: '' },
-    'read-only': { state: 'read-only', text: '' },
-    'read-write': { state: 'read-write', text: '' },
-    'in-range': { state: 'in-range', text: '' },
-    'out-of-range': { state: 'out-of-range', text: '' },
-    lang: { state: 'language', text: '' },
-    'last-child': { state: 'the last child of its parent', text: '' },
-    'first-child': { state: 'the first child of its parent', text: '' },
-    'only-child': { state: 'the only child of its parent', text: '' },
-    'last-of-type': { state: 'the last of its type in its parent', text: '' },
-    'first-of-type': { state: 'the first of its type in its parent', text: '' },
-    'only-of-type': { state: 'the only of its type in its parent', text: '' },
-    'nth-child': { state: 'child of its parent', text: '' },
-    'nth-last-child': { state: 'child from the end of its parent', text: '' },
-    'nth-of-type': { state: 'of its type in his parent', text: '' },
-    'nth-last-of-type': { state: 'of its type from the end in his parent', text: '' },
-};
-function pseudoClassDescriptor({ name, value }) {
-    // language is en
-    return `${PSEUDO_CLASS_STATE[name].state} is '${value}'`;
-}
-function offsetDescriptor(value) {
-    return `the ${value}${getNumberSuffix(value)}`;
-}
-function stepDescriptor(stepString) {
-    if (['odd', 'even'].includes(stepString)) {
-        return `every ${stepString}`;
-    }
-    const step = parseStep(stepString);
-    const stepDescriptor = step === -1 || step === 1 ? '' : ` ${Math.abs(step)}${getNumberSuffix(step)}`;
-    return `every${stepDescriptor}`;
-}
-function nthAndStepDescriptor({ value, step: stepString, name }) {
-    const step = parseStep(stepString);
-    const stepText = stepDescriptor(stepString);
-    const offsetText = `${value}${getNumberSuffix(value)}`;
-    const type = name.includes('child') ? 'child' : 'child of type';
-    const directionText = step < 0 && name.includes('last') ? '' : step < 0 || name.includes('last') ? ', going down' : '';
-    return `${stepText} ${type} starting with the ${offsetText} ${PSEUDO_CLASS_STATE[name].state} (inclusive)${directionText}`;
-}
-function getPseudoClassesString(pseudoClasses) {
-    const state = pseudoClasses.map(({ name, value, offset, step }) => {
-        if (offset || step) {
-            return handleFormulas({ offset, step, name });
-        }
-        if (value && PSEUDO_CLASS_STATE[name]) {
-            return pseudoClassDescriptor({ name, value });
-        }
-        if (PSEUDO_CLASS_STATE[name]) {
-            return PSEUDO_CLASS_STATE[name].state;
-        }
-        return `'${name}' (unknown pseudo class)`;
-    });
-    if (state.length > 1) {
-        return joiner(state);
-    }
-    return state[0];
-}
-function handleFormulas({ offset, step, name }) {
-    const { state } = PSEUDO_CLASS_STATE[name];
-    if (offset && !step) {
-        return `${offsetDescriptor(Number(offset))} ${state}`;
-    }
-    if (!offset && step) {
-        return `${stepDescriptor(step)} ${state}`;
-    }
-    if (offset && step) {
-        return nthAndStepDescriptor({ value: Number(offset), step, name });
-    }
-    throw new Error('Invalid pseudo class');
-}
 
 ;// CONCATENATED MODULE: ./src/translate/iterate-compound-selector.ts
 
@@ -2030,27 +2286,8 @@ function iterateCompoundSelector(compoundSelector) {
                 result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
             }
             else if (node.nodes && node.nodes[0].nodes) {
-                const secondLevelNodes = node.nodes[0].nodes;
-                const types = secondLevelNodes.map((node) => node.type);
-                if (secondLevelNodes[0].type === 'type') {
-                    /** lang pseudo class */
-                    result.pseudoClasses.push({
-                        name: node.value,
-                        value: secondLevelNodes[0].value,
-                    });
-                }
-                else if (types.includes('nth_offset') || types.includes('nth_step')) {
-                    const formula = { offset: '', step: '' };
-                    for (const node of secondLevelNodes) {
-                        if (node.type === 'nth_offset') {
-                            formula.offset = node.value;
-                        }
-                        else if (node.type === 'nth_step') {
-                            formula.step = node.value;
-                        }
-                    }
-                    result.pseudoClasses.push(Object.assign({ name: node.value }, formula));
-                }
+                const { parsedPseudoClass } = parsePseudoClassNode(node.value, node.nodes[0].nodes);
+                result.pseudoClasses.push(parsedPseudoClass);
             }
             else {
                 result.pseudoClasses.push({ name: node.value });
@@ -2150,193 +2387,73 @@ function isVowelPrefix(str) {
     return ['li'].includes(str) || ['a', 'e', 'o', 'i', 'u'].includes(str[0]);
 }
 
-;// CONCATENATED MODULE: ./src/visualize.ts
-
-
-function appendAttribute(attribute, tag) {
-    let [attr, value] = attribute.split('=');
-    if (value) {
-        value = value.endsWith(' i') ? value.slice(0, -2) : value;
-        value = value[0] === '"' ? value.slice(1, -1) : value;
-        const modifier = ['^', '$', '~', '*', '|'].includes(attr.at(-1)) ? attr.at(-1) : '';
-        attr = modifier ? attr.slice(0, -1) : attr;
-        if (modifier === '^') {
-            attribute = `${attr}="${value}*"`;
-        }
-        else if (modifier === '|') {
-            attribute = attr + '="*-' + value + '-*"';
-        }
-        else if (modifier === '~') {
-            attribute = `${attr}="* ${value} *"`;
-        }
-        else if (modifier === '*') {
-            attribute = `${attr}="*${value}*"`;
-        }
-        else if (modifier === '$') {
-            attribute = `${attr}="*${value}"`;
-        }
-        else if (!modifier) {
-            attribute = `${attr}="${value}"`;
-        }
-    }
-    if (!tag) {
-        return `<element ${attribute}>`;
-    }
-    return `${tag.slice(0, -1)} ${attribute}>`;
-}
-const getLastIndex = (arr) => arr.length - 1;
-function visualize(selector) {
-    var _a, _b;
-    const baseElement = { tag: 'div' };
-    const [selectorList] = (0,dist.parseCssSelector)(selector); // first selector, before the ','
-    const tags = [''];
-    const elements = [Object.assign({}, baseElement)];
-    let siblingArrayRef = elements;
-    let currentElement = elements[0];
-    let duplicateNext = false;
-    let duplicateAsSibling = false;
-    let adjacentCount = selector.split('+').length - 1;
-    for (const selector of selectorList.nodes) {
-        //
-        // console.log('selector:', selector, '\n', JSON.stringify(elements, null, 2));
-        if (selector.type === 'type') {
-            // Tag
-            Object.assign(currentElement, { tag: selector.value });
-        }
-        else if (selector.type === 'class') {
-            currentElement.classes = [...new Set([...((_a = currentElement.classes) !== null && _a !== void 0 ? _a : []), selector.value])];
-        }
-        else if (selector.type === 'id') {
-            Object.assign(currentElement, { id: selector.value });
-        }
-        else if (selector.type === 'attribute') {
-            tags[tags.length - 1] = appendAttribute(selector.value, tags.at(-1));
-        }
-        else if (selector.type === 'pseudo_class') {
-            const value = selector.value;
-            let mainText = '';
-            if (value === 'lang') {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-                const lang = ((_b = selector.nodes) === null || _b === void 0 ? void 0 : _b.at(0).nodes.at(0)).value;
-                mainText = `${PSEUDO_CLASS_STATE[value].state} is '${lang}'`;
-            }
-            else {
-                mainText = PSEUDO_CLASS_STATE[value].state;
-            }
-            const extraText = PSEUDO_CLASS_STATE[value].text ? ` (${PSEUDO_CLASS_STATE[value].text})` : '';
-            currentElement.innerText = `When its ${mainText}${extraText}`;
-        }
-        else if (selector.type === 'combinator') {
-            const [combinator] = selector.value;
-            if (combinator === ' ') {
-                // Child combinators
-                addBaseChild(currentElement);
-                moveRefToYoungestChild(currentElement);
-            }
-            if (combinator === '>') {
-                addBaseChild(currentElement);
-                moveRefToYoungestChild(currentElement);
-                duplicateNext = true;
-                continue;
-            }
-            if (combinator === '+') {
-                adjacentCount--;
-                siblingArrayRef.push(Object.assign({}, baseElement));
-                currentElement = siblingArrayRef[getLastIndex(siblingArrayRef)];
-                if (adjacentCount === 0) {
-                    // Only last element of adjacent combinator will be duplicated
-                    duplicateAsSibling = true;
-                }
-                continue;
-            }
-            if (combinator === '~') {
-                addBaseSibling(siblingArrayRef);
-                continue;
-            }
-        }
-        else if (selector.type === 'universal') {
-            if (tags.at(-1) === '') {
-                tags[tags.length - 1] = 'Any element';
-            }
-            else {
-                tags.push('Any element');
-            }
-        }
-        if (duplicateNext) {
-            duplicateAsChild(currentElement);
-        }
-        if (duplicateAsSibling) {
-            siblingArrayRef.push(currentElement);
-            duplicateAsSibling = false;
-        }
-    }
-    return elements;
-    function duplicateAsChild(element) {
-        element.children = [Object.assign({}, element)];
-        duplicateNext = false;
-    }
-    function addBaseChild(element) {
-        if (element.children) {
-            element.children.push(Object.assign({}, baseElement));
-        }
-        else {
-            element.children = [Object.assign({}, baseElement)];
-        }
-        siblingArrayRef = element.children;
-    }
-    function addBaseSibling(siblingArrayRef) {
-        const lastIndex = getLastIndex(siblingArrayRef);
-        if (siblingArrayRef[lastIndex].children) {
-            const newLength = siblingArrayRef[lastIndex].children.push(Object.assign({}, baseElement));
-            currentElement = siblingArrayRef[lastIndex].children[newLength - 1];
-        }
-        else {
-            const newLength = siblingArrayRef.push(Object.assign({}, baseElement));
-            currentElement = siblingArrayRef[newLength - 1];
-        }
-    }
-    function moveRefToYoungestChild(el) {
-        currentElement = el.children[getLastIndex(el.children)];
-    }
-}
-
-;// CONCATENATED MODULE: ./src/ui/visualization/create.ts
-const escapeChars = (str) => str.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+;// CONCATENATED MODULE: ./src/ui/visualization/create-element.ts
 function createVisualizationElement(element) {
-    var _a;
-    const resolvedTag = (_a = element.tag) !== null && _a !== void 0 ? _a : 'div';
-    const el = document.createElement(resolvedTag);
-    const [startTag, closingBracket, endTag] = [`<${resolvedTag}`, `>`, `</${resolvedTag}`];
-    const innerText = element.innerText ? `${closingBracket}${element.innerText}${endTag}` : '';
-    const classes = element.classes ? ` class="${element.classes.join(' ')}"` : '';
-    const id = element.id ? ` id="${element.id}"` : '';
-    const innerHTML = `${startTag}${id}${classes}${innerText}${closingBracket}`;
-    el.innerHTML = escapeChars(innerHTML);
-    addSpecialAttributes(resolvedTag, el, innerHTML);
+    const el = document.createElement(element.tag);
     if (element.classes)
         el.classList.add(...element.classes);
     if (element.id)
         el.id = element.id;
+    addVisibleAttributes(element, el);
+    const innerHTML = getInnerHtml(el, element.innerText);
+    el.innerHTML = innerHTML;
+    addHiddenAttributes(element, el, innerHTML);
+    addVisibleAttributes(element, el); // visible attributes should override hidden ones
     if (element.children) {
         el.append(...element.children.map((child) => createVisualizationElement(child)));
     }
     return el;
 }
-function addSpecialAttributes(resolvedTag, el, innerHTML) {
-    if (resolvedTag === 'input') {
-        el.setAttribute('value', innerHTML);
-        el.setAttribute('type', 'text');
-        el.setAttribute('size', `${innerHTML.length}`);
+const escapeChars = (str) => str.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+const unescapeChars = (str) => str.replaceAll('&lt;', '<').replaceAll('&gt;', '>');
+const hasEndingTag = (el) => {
+    const tagName = el.tagName.toLowerCase();
+    return el.outerHTML.slice(-1 * (tagName.length + 3)).includes(`/${tagName}`);
+};
+function getInnerHtml(el, innerText = '') {
+    const index = el.outerHTML.indexOf('>');
+    const gotEndingTag = hasEndingTag(el);
+    // console.log('gotEndingTag', gotEndingTag);
+    // console.log('el', el);
+    // console.log('el.outerHTML', el.outerHTML);
+    const startingTag = el.outerHTML.slice(0, index + 1);
+    const ending = gotEndingTag ? el.outerHTML.slice(-1 * (el.tagName.length + 3)) : el.outerHTML.slice(-1);
+    const outerHtml = `${startingTag}${innerText && gotEndingTag ? innerText + ending : ''}`;
+    return escapeChars(outerHtml);
+}
+/** This values will be presented to the user */
+function addVisibleAttributes(element, el) {
+    if (element.attributes) {
+        for (const [key, value] of Object.entries(element.attributes)) {
+            el.setAttribute(key, value);
+        }
     }
-    if (resolvedTag === 'textarea') {
+}
+function addHiddenAttributes(element, el, innerHTML) {
+    const { tag, innerText } = element;
+    if (tag === 'input') {
+        const escaped = unescapeChars(innerHTML);
+        // move inner text to value
+        const escapedWithInnerText = innerText ? `${escaped.slice(0, -1)} value="${innerText}">` : escaped;
+        const inputLength = escapedWithInnerText.length + (innerText ? -3 : 0);
+        el.innerText = '';
+        el.setAttribute('value', escapedWithInnerText);
+        el.setAttribute('type', 'text');
+        el.setAttribute('size', `${inputLength}`);
+    }
+    if (tag === 'textarea') {
         el.setAttribute('cols', `${innerHTML.length}`);
     }
 }
 function getVisualizationStyle(rootSelector, inputSelector) {
-    return `${rootSelector} ${inputSelector}:first-line { 
+    return `${rootSelector} ${inputSelector} { 
         background-color: var(--primary);
         box-shadow: rgb(0 0 0 / 35%) 0px -50px 36px -28px inset;
         color: black;
+    }
+    ${rootSelector} ${inputSelector} * { 
+        background-color: rgb(0 0 0 / 50%);
+        color: white;
     }
     ${rootSelector} :not(${inputSelector}){
         color: white;
