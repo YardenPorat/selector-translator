@@ -27,14 +27,13 @@ export function createVisualizationElement(element: VisualizationElement) {
 
 const escapeChars = (str: string) => str.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 const unescapeChars = (str: string) => str.replaceAll('&lt;', '<').replaceAll('&gt;', '>');
-const hasEndingTag = (el: HTMLElement) => {
-    const tagName = el.tagName.toLowerCase();
-    return el.outerHTML.slice(-1 * (tagName.length + 3)).includes(`/${tagName}`);
-};
+const getStartingTag = (el: HTMLElement) => el.outerHTML.slice(0, el.outerHTML.indexOf('>') + 1);
+const hasEndingTag = (el: HTMLElement) =>
+    el.outerHTML.slice(-(el.tagName.length + 3)).includes(`/${el.tagName.toLowerCase()}`);
+
 function getInnerHtml(el: HTMLElement, innerText = '') {
-    const index = el.outerHTML.indexOf('>');
     const gotEndingTag = hasEndingTag(el);
-    const startingTag = el.outerHTML.slice(0, index + 1);
+    const startingTag = getStartingTag(el);
     const ending = gotEndingTag ? el.outerHTML.slice(-1 * (el.tagName.length + 3)) : el.outerHTML.slice(-1);
     const outerHtml = `${startingTag}${innerText && gotEndingTag ? innerText + ending : ''}`;
     return escapeChars(outerHtml);
