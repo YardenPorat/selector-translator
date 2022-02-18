@@ -2048,12 +2048,9 @@ function visualize(selector) {
             }
         }
         else if (selector.type === 'universal') {
-            if (tags.at(-1) === '') {
-                tags[tags.length - 1] = 'Any element';
-            }
-            else {
-                tags.push('Any element');
-            }
+            // not moving the reference allow adding children to adjacent elements
+            addSibling(currentElement, Object.assign(Object.assign({}, baseElement), { tag: 'span' }));
+            addSibling(currentElement, Object.assign(Object.assign({}, baseElement), { tag: 'a' }));
         }
         if (duplicateNext) {
             addChild(currentElement, currentElement);
@@ -2413,9 +2410,6 @@ const hasEndingTag = (el) => {
 function getInnerHtml(el, innerText = '') {
     const index = el.outerHTML.indexOf('>');
     const gotEndingTag = hasEndingTag(el);
-    // console.log('gotEndingTag', gotEndingTag);
-    // console.log('el', el);
-    // console.log('el.outerHTML', el.outerHTML);
     const startingTag = el.outerHTML.slice(0, index + 1);
     const ending = gotEndingTag ? el.outerHTML.slice(-1 * (el.tagName.length + 3)) : el.outerHTML.slice(-1);
     const outerHtml = `${startingTag}${innerText && gotEndingTag ? innerText + ending : ''}`;
