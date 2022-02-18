@@ -1,7 +1,7 @@
 # Tasks
 
 - [x] Visualize PseudoClasses
-- [ ] Fix textarea width
+- [x] Fix textarea width
 - [ ] Visualize \*
 - [ ] Visualize attributes
 - [ ] Visualize PseudoElements

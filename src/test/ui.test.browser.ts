@@ -2,70 +2,111 @@ import { expect } from 'chai';
 import { createVisualizationElement } from '../ui/visualization/create-element';
 import { visualize } from '../visualize';
 
+const visualizeTextArea = (selector: string) =>
+    createVisualizationElement(visualize(selector)[0]) as HTMLTextAreaElement;
+
 describe('Browser tests', function () {
+    describe('Elements', function () {
+        describe('Tags', function () {
+            describe('textarea', function () {
+                it('textarea', function () {
+                    const selector = 'textarea';
+                    const element = visualizeTextArea(selector);
+                    expect(element.tagName).to.eq('TEXTAREA');
+                    expect(element.cols).to.eq(9);
+                    expect(element.value).to.eq('<textarea>');
+                    expect(element.spellcheck).to.eq(false);
+                });
+                it('textarea + focus', function () {
+                    const selector = 'textarea:focus';
+                    const element = visualizeTextArea(selector);
+                    expect(element.tagName).to.eq('TEXTAREA');
+                    expect(element.cols).to.eq(59);
+                    expect(element.value).to.eq('<textarea>When its focused (Use with input / textarea)</textarea>');
+                    expect(element.spellcheck).to.eq(false);
+                });
+            });
+        });
+    });
     describe('Pseudo Classes', function () {
         describe('Inputs', function () {
             it('element + disabled', function () {
                 const selector = 'input:disabled';
-                expect(createVisualizationElement(visualize(selector)[0]).outerHTML).to.eq(
-                    '<input disabled="true" value="<input disabled=&quot;true&quot; value=&quot;When its disabled&quot;>" type="text" size="46">'
-                );
+                const element = createVisualizationElement(visualize(selector)[0]) as HTMLInputElement;
+                expect(element.type).to.eq('text');
+                expect(element.disabled).to.eq(true);
+                expect(element.size).to.eq(44);
+                expect(element.value).to.eq('<input disabled="true" value="When its disabled">');
             });
 
-            it('element + required', function () {
+            it('input + required', function () {
                 const selector = 'input:required';
-                expect(createVisualizationElement(visualize(selector)[0]).outerHTML).to.eq(
-                    '<input required="true" value="<input required=&quot;true&quot; value=&quot;When its required&quot;>" type="text" size="46">'
-                );
+                const element = createVisualizationElement(visualize(selector)[0]) as HTMLInputElement;
+                expect(element.type).to.eq('text');
+                expect(element.required).to.eq(true);
+                expect(element.size).to.eq(43);
+                expect(element.value).to.eq('<input required="true" value="When its required">');
             });
 
-            it('element + optional', function () {
+            it('input + optional', function () {
                 const selector = 'input:optional';
-                expect(createVisualizationElement(visualize(selector)[0]).outerHTML).to.eq(
-                    '<input value="<input value=&quot;When its optional (Not required)&quot;>" type="text" size="45">'
-                );
+                const element = createVisualizationElement(visualize(selector)[0]) as HTMLInputElement;
+                expect(element.type).to.eq('text');
+                expect(element.size).to.eq(43);
+                expect(element.value).to.eq('<input value="When its optional (Not required)">');
             });
 
-            it('element + valid', function () {
+            it('input + valid', function () {
                 const selector = 'input:valid';
-                expect(createVisualizationElement(visualize(selector)[0]).outerHTML).to.eq(
-                    '<input value="<input value=&quot;When its valid (Input value)&quot;>" type="text" size="41">'
-                );
+                const element = createVisualizationElement(visualize(selector)[0]) as HTMLInputElement;
+                expect(element.type).to.eq('text');
+                expect(element.size).to.eq(40);
+                expect(element.value).to.eq('<input value="When its valid (Input value)">');
             });
 
-            it('element + invalid', function () {
+            it('input + invalid', function () {
                 const selector = 'input:invalid';
-                expect(createVisualizationElement(visualize(selector)[0]).outerHTML).to.eq(
-                    '<input type="email" value="<input type=&quot;email&quot; value=&quot;When its invalid&quot;>" size="42">'
-                );
+                const element = createVisualizationElement(visualize(selector)[0]) as HTMLInputElement;
+                expect(element.type).to.eq('email');
+                expect(element.size).to.eq(40);
+                expect(element.value).to.eq('<input type="email" value="When its invalid">');
             });
 
-            it('element + read-only', function () {
+            it('input + read-only', function () {
                 const selector = 'input:read-only';
-                expect(createVisualizationElement(visualize(selector)[0]).outerHTML).to.eq(
-                    '<input readonly="true" value="<input readonly=&quot;true&quot; value=&quot;When its read-only&quot;>" type="text" size="47">'
-                );
+                const element = createVisualizationElement(visualize(selector)[0]) as HTMLInputElement;
+                expect(element.type).to.eq('text');
+                expect(element.size).to.eq(45);
+                expect(element.readOnly).to.eq(true);
+                expect(element.value).to.eq('<input readonly="true" value="When its read-only">');
             });
 
             it('input + read-write', function () {
                 const selector = 'input:read-write';
-                expect(createVisualizationElement(visualize(selector)[0]).outerHTML).to.eq(
-                    '<input value="<input value=&quot;When its read-write (Without readonly attribute)&quot;>" type="text" size="61">'
-                );
+                const element = createVisualizationElement(visualize(selector)[0]) as HTMLInputElement;
+                expect(element.type).to.eq('text');
+                expect(element.size).to.eq(57);
+                expect(element.value).to.eq('<input value="When its read-write (Without readonly attribute)">');
             });
 
-            it('element + in-range', function () {
+            it('input + in-range', function () {
                 const selector = 'input:in-range';
-                expect(createVisualizationElement(visualize(selector)[0]).outerHTML).to.eq(
-                    '<input min="5" max="10" value="<input min=&quot;5&quot; max=&quot;10&quot; value=&quot;When its in-range&quot;>" type="text" size="47">'
-                );
+                const element = createVisualizationElement(visualize(selector)[0]) as HTMLInputElement;
+                expect(element.type).to.eq('text');
+                expect(element.min).to.eq('5');
+                expect(element.max).to.eq('10');
+                expect(element.size).to.eq(45);
+                expect(element.value).to.eq('<input min="5" max="10" value="When its in-range">');
             });
 
-            it('element + out-of-range', function () {
+            it('input + out-of-range', function () {
                 const selector = 'input:out-of-range';
-                expect(createVisualizationElement(visualize(selector)[0]).outerHTML).to.eq(
-                    '<input min="5" max="10" value="<input min=&quot;5&quot; max=&quot;10&quot; value=&quot;When its out-of-range&quot;>" type="text" size="51">'
-                );
+                const element = createVisualizationElement(visualize(selector)[0]) as HTMLInputElement;
+                expect(element.type).to.eq('text');
+                expect(element.min).to.eq('5');
+                expect(element.max).to.eq('10');
+                expect(element.size).to.eq(49);
+                expect(element.value).to.eq('<input min="5" max="10" value="When its out-of-range">');
             });
         });
 

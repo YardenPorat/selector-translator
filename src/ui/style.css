@@ -134,6 +134,7 @@ h3 {
 
 #visualization textarea,
 #visualization input {
+  /* Don't use width properties. Width is determined by size\cols html attribute */
   color: black !important;
   resize: none;
   max-height: 1.1rem;
@@ -143,7 +144,6 @@ h3 {
   outline: none;
   border: unset;
   white-space: nowrap;
-  max-width: 90%;
   /* Hide scrollbar for IE, Edge and Firefox */
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */

@@ -43,7 +43,7 @@ function getInnerHtml(el: HTMLElement, innerText = '') {
     return escapeChars(outerHtml);
 }
 
-/** This values will be presented to the user */
+/** This attributes will be presented to the user */
 function addVisibleAttributes(element: VisualizationElement, el: HTMLElement) {
     if (element.attributes) {
         for (const [key, value] of Object.entries(element.attributes)) {
@@ -52,21 +52,27 @@ function addVisibleAttributes(element: VisualizationElement, el: HTMLElement) {
     }
 }
 
+//shortest: input:out-of-range
+const countShortChars = (str: string) => (str.match(/(i|l|"|t|r|f)/g) ?? []).length;
+const calculateLength = (str: string) => str.length - Math.ceil(countShortChars(str) / 3);
+
+/** This attributes will be hidden from the user */
 function addHiddenAttributes(element: VisualizationElement, el: HTMLElement, innerHTML: string) {
     const { tag, innerText } = element;
+    const unescaped = unescapeChars(innerHTML);
     if (tag === 'input') {
-        const escaped = unescapeChars(innerHTML);
         // move inner text to value
-        const escapedWithInnerText = innerText ? `${escaped.slice(0, -1)} value="${innerText}">` : escaped;
-        const inputLength = escapedWithInnerText.length + (innerText ? -3 : 0);
+        const escapedWithInnerText = innerText ? `${unescaped.slice(0, -1)} value="${innerText}">` : unescaped;
         el.innerText = '';
-        el.setAttribute('value', escapedWithInnerText);
         el.setAttribute('type', 'text');
-        el.setAttribute('size', `${inputLength}`);
+
+        el.setAttribute('value', escapedWithInnerText);
+        el.setAttribute('size', `${calculateLength(escapedWithInnerText)}`);
     }
 
     if (tag === 'textarea') {
-        el.setAttribute('cols', `${innerHTML.length}`);
+        el.setAttribute('cols', `${calculateLength(unescaped)}`);
+        el.setAttribute('spellcheck', 'false');
     }
 }
 
