@@ -34,9 +34,6 @@ const hasEndingTag = (el: HTMLElement) => {
 function getInnerHtml(el: HTMLElement, innerText = '') {
     const index = el.outerHTML.indexOf('>');
     const gotEndingTag = hasEndingTag(el);
-    // console.log('gotEndingTag', gotEndingTag);
-    // console.log('el', el);
-    // console.log('el.outerHTML', el.outerHTML);
     const startingTag = el.outerHTML.slice(0, index + 1);
     const ending = gotEndingTag ? el.outerHTML.slice(-1 * (el.tagName.length + 3)) : el.outerHTML.slice(-1);
     const outerHtml = `${startingTag}${innerText && gotEndingTag ? innerText + ending : ''}`;

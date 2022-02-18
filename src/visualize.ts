@@ -135,11 +135,9 @@ export function visualize(selector: string) {
                 addSibling(currentElement, baseElement, { moveRef: true });
             }
         } else if (selector.type === 'universal') {
-            if (tags.at(-1) === '') {
-                tags[tags.length - 1] = 'Any element';
-            } else {
-                tags.push('Any element');
-            }
+            // not moving the reference allow adding children to adjacent elements
+            addSibling(currentElement, { ...baseElement, tag: 'span' });
+            addSibling(currentElement, { ...baseElement, tag: 'a' });
         }
 
         if (duplicateNext) {

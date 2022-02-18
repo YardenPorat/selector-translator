@@ -28,6 +28,44 @@ describe('Browser tests', function () {
             });
         });
     });
+    describe('Universal', function () {
+        describe('*', function () {
+            it('*', function () {
+                const selector = '*';
+                const visualizations = visualize(selector);
+                expect(visualizations.length).to.eq(3);
+                expect(createVisualizationElement(visualizations[0]).innerText).to.eq('<div>');
+                expect(createVisualizationElement(visualizations[1]).innerText).to.eq('<span>');
+                expect(createVisualizationElement(visualizations[2]).innerText).to.eq('<a>');
+            });
+
+            it('span + *', function () {
+                const selector = 'span + *';
+                const visualizations = visualize(selector);
+                expect(visualizations.length).to.eq(5);
+                expect(visualizations.map((item) => createVisualizationElement(item).innerText)).to.deep.eq([
+                    '<span>',
+                    '<div>',
+                    '<div>',
+                    '<span>',
+                    '<a>',
+                ]);
+            });
+
+            it('span + * footer', function () {
+                const selector = 'span + * footer';
+                const visualizations = visualize(selector);
+                expect(visualizations.length).to.eq(5);
+                expect(visualizations.map((item) => createVisualizationElement(item).innerText)).to.deep.eq([
+                    '<span>',
+                    '<div><footer>',
+                    '<div><footer>',
+                    '<span>',
+                    '<a>',
+                ]);
+            });
+        });
+    });
     describe('Pseudo Classes', function () {
         describe('Inputs', function () {
             it('element + disabled', function () {
