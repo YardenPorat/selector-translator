@@ -4,6 +4,7 @@ import { visualize } from '../visualize';
 
 const visualizeTextArea = (selector: string) =>
     createVisualizationElement(visualize(selector)[0]) as HTMLTextAreaElement;
+const getVisualizedElements = (selector: string) => visualize(selector).map((item) => createVisualizationElement(item));
 
 describe('Browser tests', function () {
     describe('Elements', function () {
@@ -63,6 +64,96 @@ describe('Browser tests', function () {
                     '<span>',
                     '<a>',
                 ]);
+            });
+        });
+    });
+    describe('Universal', function () {
+        describe('Subsequent-sibling (~)', function () {
+            it('li ~ li', function () {
+                const selector = 'li ~ li';
+                const elements = getVisualizedElements(selector);
+                expect(elements[0].innerText).to.eq('<li>');
+                expect(elements[1].innerText).to.eq('<li>');
+            });
+
+            it('a ~ a ~ a ~ a ~ a', function () {
+                const selector = 'a ~ a ~ a ~ a ~ a';
+                const elements = getVisualizedElements(selector);
+                expect(elements.map((el) => el.innerText)).to.deep.eq(['<a>', '<a>', '<a>', '<a>', '<a>']);
+            });
+
+            it('a ~ b ~ c ~ d ~ e', function () {
+                const selector = 'a ~ b ~ c ~ d ~ e';
+                const elements = getVisualizedElements(selector);
+                expect(elements.map((el) => el.innerText)).to.deep.eq(['<a>', '<b>', '<c>', '<d>', '<e>']);
+            });
+
+            it('div span ~ li', function () {
+                const selector = 'div span ~ li';
+                const elements = getVisualizedElements(selector);
+                expect(elements[0].childElementCount).to.eq(2);
+                expect(elements[0].firstChild?.nodeValue).to.eq('<div>');
+                expect((elements[0].firstElementChild as HTMLElement).innerText).to.eq('<span>');
+                expect((elements[0].lastElementChild as HTMLElement).innerText).to.eq('<li>');
+            });
+
+            it('div + span ~ li', function () {
+                const selector = 'div + span ~ li';
+                const elements = getVisualizedElements(selector);
+                expect(elements.map((el) => el.innerText)).to.deep.eq(['<div>', '<span>', '<span>', '<li>']);
+            });
+
+            it('div + span ~ li + b ~ c + d', function () {
+                const selector = 'div + span ~ li + b ~ c + d';
+                const elements = getVisualizedElements(selector);
+                expect(elements.map((el) => el.innerText)).to.deep.eq([
+                    '<div>',
+                    '<span>',
+                    '<li>',
+                    '<b>',
+                    '<c>',
+                    '<d>',
+                    '<d>',
+                ]);
+            });
+
+            it('a b c d ~ d', function () {
+                const selector = 'a b c d ~ d';
+                const elements = getVisualizedElements(selector);
+                expect(elements[0].firstChild?.nodeValue).to.deep.eq('<a>');
+                expect(elements[0].firstElementChild?.firstChild?.nodeValue).to.deep.eq('<b>');
+                expect(elements[0].firstElementChild?.firstElementChild?.firstChild?.nodeValue).to.deep.eq('<c>');
+                expect(
+                    elements[0].firstElementChild?.firstElementChild?.firstElementChild?.firstChild?.nodeValue
+                ).to.deep.eq('<d>');
+                expect(
+                    (
+                        elements[0].firstElementChild?.firstElementChild?.firstElementChild
+                            ?.nextElementSibling as HTMLElement
+                    ).innerText
+                ).to.deep.eq('<d>');
+            });
+            it('a b c > d ~ d ~ d', function () {
+                const selector = 'a b c > d ~ d ~ d';
+                const elements = getVisualizedElements(selector);
+                expect(elements[0].firstChild?.nodeValue).to.deep.eq('<a>');
+                expect(elements[0].firstElementChild?.firstChild?.nodeValue).to.deep.eq('<b>');
+                expect(elements[0].firstElementChild?.firstElementChild?.firstChild?.nodeValue).to.deep.eq('<c>');
+                expect(
+                    (elements[0].firstElementChild?.firstElementChild?.firstElementChild as HTMLElement).innerText
+                ).to.deep.eq('<d><d>');
+                expect(
+                    (
+                        elements[0].firstElementChild?.firstElementChild?.firstElementChild
+                            ?.nextElementSibling as HTMLElement
+                    ).innerText
+                ).to.deep.eq('<d>');
+                expect(
+                    (
+                        elements[0].firstElementChild?.firstElementChild?.firstElementChild?.nextElementSibling
+                            ?.nextElementSibling as HTMLElement
+                    ).innerText
+                ).to.deep.eq('<d>');
             });
         });
     });
