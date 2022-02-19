@@ -1769,7 +1769,6 @@ function joiner(items) {
 
 ;// CONCATENATED MODULE: ./src/translate/helpers/pseudo-classes.ts
 
-const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
 function parseStep(stepString) {
     const stepSign = stepString.includes('-') ? -1 : 1;
     return (Number(stepString.replace('n', '').replace('-', '')) || 1) * stepSign;
@@ -1968,6 +1967,22 @@ function visualize(selector) {
         else if (selector.type === 'attribute') {
             tags[tags.length - 1] = appendAttribute(selector.value, tags.at(-1));
         }
+        else if (selector.type === 'pseudo_element') {
+            if (selector.value === 'first-line') {
+                addChild(currentElement, {
+                    tag: 'div',
+                    innerText: 'First line',
+                    attributes: { data: 'first-child' },
+                    hideTag: true,
+                });
+                addChild(currentElement, { tag: 'div', innerText: 'Second line', hideTag: true });
+                addSibling(currentElement, {
+                    tag: currentElement.tag,
+                    innerText: `</${currentElement.tag}>`,
+                    hideTag: true,
+                }, { adjacent: true });
+            }
+        }
         else if (selector.type === 'pseudo_class') {
             const value = selector.value;
             let mainText = '';
@@ -2093,7 +2108,13 @@ function addChild(parent, child = baseElement, options = {}) {
 }
 function addSibling(element, sibling = baseElement, options = {}) {
     const lastIndex = getLastIndex(siblingArrayRef);
-    siblingArrayRef.push(Object.assign({}, sibling));
+    if (options.adjacent) {
+        const currentElementIndex = siblingArrayRef.indexOf(element);
+        siblingArrayRef.splice(currentElementIndex + 1, 0, Object.assign({}, sibling));
+    }
+    else {
+        siblingArrayRef.push(Object.assign({}, sibling));
+    }
     if (options.moveRef) {
         currentElement = siblingArrayRef.at(lastIndex + 1);
     }
@@ -2195,7 +2216,7 @@ function getModifierType(modifier) {
 const PSEUDO_ELEMENTS_DESCRIPTORS = {
     before: `The 'before' pseudo-element of`,
     after: `The 'after' pseudo-element of`,
-    'first-line': `The first line of`,
+    'first-line': `The 'first line' of`,
     'first-letter': `The first letter of`,
     placeholder: `The placeholder of`,
     marker: `The marker (numbering) of`,
@@ -2204,10 +2225,8 @@ const PSEUDO_ELEMENTS_DESCRIPTORS = {
 };
 const isPseudoElement = (value) => Object.keys(PSEUDO_ELEMENTS_DESCRIPTORS).includes(value);
 
-;// CONCATENATED MODULE: ./src/translate/iterate-compound-selector.ts
-
-
-
+;// CONCATENATED MODULE: ./src/translate/constants.ts
+const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
 const ERRORS = {
     TWO_IDS: 'An element cannot have two ids',
     EMPTY_CLASS: 'You specified an empty class',
@@ -2215,11 +2234,18 @@ const ERRORS = {
     EMPTY_PSEUDO_CLASS: 'You specified an empty pseudo class',
     PSEUDO_ELEMENT_AS_PSEUDO_CLASS: (el) => `You specified the pseudo element '${el}' as a pseudo class`,
     UNKNOWN_PSEUDO_ELEMENT: (el) => `Unknown pseudo element '${el}'`,
+    MULTIPLE_PSEUDO_ELEMENT: `You cannot have multiple pseudo elements on a single selector`,
     EMPTY_PSEUDO_CLASS_NODE: 'You specified an empty pseudo class node',
     EXPECTED_PSEUDO_CLASS_NODE: `You specified a pseudo class node which is expected to have a node (${[
         ...pseudoClassWithNodes,
     ].join(', ')})`,
 };
+
+;// CONCATENATED MODULE: ./src/translate/iterate-compound-selector.ts
+
+
+
+
 function iterateCompoundSelector(compoundSelector) {
     const result = {
         attributes: [],
@@ -2301,6 +2327,7 @@ function iterateCompoundSelector(compoundSelector) {
 
 
 
+
 const capitalizeFirstLetter = (str) => ((str === null || str === void 0 ? void 0 : str.length) ? str.charAt(0).toUpperCase() + str.slice(1) : str);
 const addSingleQuotes = (items) => items.map((item) => `'${item}'`);
 const getClassesString = (cls) => (cls.length > 1 ? `classes ${joiner(cls)}` : `a class of ${cls[0]}`);
@@ -2309,6 +2336,7 @@ function translate(selector) {
     const selectorList = (0,dist.parseCssSelector)(selector);
     const compoundSelectorList = (0,dist.groupCompoundSelectors)(selectorList);
     const translations = [];
+    let pseudoElementCount = 0;
     for (const topLevelSelectors of compoundSelectorList) {
         const translation = [];
         for (const selector of topLevelSelectors.nodes.reverse()) {
@@ -2319,6 +2347,10 @@ function translate(selector) {
                     break;
                 }
                 if (pseudoElement) {
+                    pseudoElementCount++;
+                    if (pseudoElementCount > 1) {
+                        errors.push(ERRORS.MULTIPLE_PSEUDO_ELEMENT);
+                    }
                     translation.push(PSEUDO_ELEMENTS_DESCRIPTORS[pseudoElement]);
                 }
                 if (element) {
@@ -2392,7 +2424,7 @@ function createVisualizationElement(element) {
     if (element.id)
         el.id = element.id;
     addVisibleAttributes(element, el);
-    const innerHTML = getInnerHtml(el, element.innerText);
+    const innerHTML = getInnerHtml(el, element);
     el.innerHTML = innerHTML;
     addHiddenAttributes(element, el, innerHTML);
     addVisibleAttributes(element, el); // visible attributes should override hidden ones
@@ -2405,12 +2437,16 @@ const escapeChars = (str) => str.replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 const unescapeChars = (str) => str.replaceAll('&lt;', '<').replaceAll('&gt;', '>');
 const getStartingTag = (el) => el.outerHTML.slice(0, el.outerHTML.indexOf('>') + 1);
 const hasEndingTag = (el) => el.outerHTML.slice(-(el.tagName.length + 3)).includes(`/${el.tagName.toLowerCase()}`);
-function getInnerHtml(el, innerText = '') {
-    const gotEndingTag = hasEndingTag(el);
-    const startingTag = getStartingTag(el);
-    const ending = gotEndingTag ? el.outerHTML.slice(-1 * (el.tagName.length + 3)) : el.outerHTML.slice(-1);
-    const outerHtml = `${startingTag}${innerText && gotEndingTag ? innerText + ending : ''}`;
-    return escapeChars(outerHtml);
+function getInnerHtml(el, element) {
+    const { innerText, hideTag } = element;
+    if (!hideTag) {
+        const gotEndingTag = hasEndingTag(el);
+        const startingTag = getStartingTag(el);
+        const ending = gotEndingTag ? el.outerHTML.slice(-1 * (el.tagName.length + 3)) : el.outerHTML.slice(-1);
+        const outerHtml = `${startingTag}${innerText && gotEndingTag ? innerText + ending : ''}`;
+        return escapeChars(outerHtml);
+    }
+    return escapeChars(innerText !== null && innerText !== void 0 ? innerText : '');
 }
 /** This attributes will be presented to the user */
 function addVisibleAttributes(element, el) {
@@ -2440,18 +2476,35 @@ function addHiddenAttributes(element, el, innerHTML) {
         el.setAttribute('spellcheck', 'false');
     }
 }
+const replacements = {
+    '::first-line': ' [data="first-child"]',
+};
+const findSelectorToReplace = (selector) => {
+    for (const toReplace of Object.keys(replacements)) {
+        if (selector.includes(toReplace)) {
+            return toReplace;
+        }
+    }
+};
 function getVisualizationStyle(rootSelector, inputSelector) {
-    return `${rootSelector} ${inputSelector} { 
+    const toBeReplaced = findSelectorToReplace(inputSelector);
+    const selector = toBeReplaced ? inputSelector.replace(toBeReplaced, replacements[toBeReplaced]) : inputSelector;
+    const after = inputSelector.includes('::after') ? 'after pseudo element' : '';
+    const before = inputSelector.includes('::before') ? 'before pseudo element' : '';
+    return `${rootSelector} ${selector} { 
         background-color: var(--primary);
         box-shadow: rgb(0 0 0 / 35%) 0px -50px 36px -28px inset;
         color: black;
+        text-shadow: none;
+        ${before || after ? `content: '${after}${before}';` : ''}
     }
-    ${rootSelector} ${inputSelector} * { 
+    ${rootSelector} ${selector} * { 
         background-color: rgb(0 0 0 / 50%);
         color: white;
     }
-    ${rootSelector} :not(${inputSelector}){
+    ${rootSelector} :not(${selector}){
         color: white;
+        text-shadow: 0 0 5px black;
     }
     `.trim();
 }
