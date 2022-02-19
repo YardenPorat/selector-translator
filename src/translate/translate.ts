@@ -4,6 +4,7 @@ import { PSEUDO_ELEMENTS_DESCRIPTORS } from './helpers/pseudo-elements';
 import { getPseudoClassesString } from './helpers/pseudo-classes';
 import { joiner } from './helpers/string-manipulation';
 import { iterateCompoundSelector } from './iterate-compound-selector';
+import { ERRORS } from './constants';
 
 const capitalizeFirstLetter = (str: string) => (str?.length ? str.charAt(0).toUpperCase() + str.slice(1) : str);
 const addSingleQuotes = (items: string[]) => items.map((item) => `'${item}'`);
@@ -14,6 +15,7 @@ export function translate(selector: string) {
     const selectorList = parseCssSelector(selector);
     const compoundSelectorList = groupCompoundSelectors(selectorList);
     const translations: string[] = [];
+    let pseudoElementCount = 0;
 
     for (const topLevelSelectors of compoundSelectorList) {
         const translation: string[] = [];
@@ -26,6 +28,10 @@ export function translate(selector: string) {
                     break;
                 }
                 if (pseudoElement) {
+                    pseudoElementCount++;
+                    if (pseudoElementCount > 1) {
+                        errors.push(ERRORS.MULTIPLE_PSEUDO_ELEMENT);
+                    }
                     translation.push(PSEUDO_ELEMENTS_DESCRIPTORS[pseudoElement]);
                 }
                 if (element) {

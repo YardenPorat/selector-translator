@@ -1,21 +1,49 @@
 import { expect } from 'chai';
 import { translate } from '../translate/translate';
+import { visualize } from '../visualize';
 
 describe('Pseudo Elements', () => {
     describe('Standalone', function () {
         it('::before', function () {
             const selector = '::before';
-            expect(translate(selector), selector).to.eq(`The 'before' pseudo-element of any element`);
+            expect(translate(selector)).to.eq(`The 'before' pseudo-element of any element`);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }]);
         });
 
         it('::after', function () {
             const selector = '::after';
-            expect(translate(selector), selector).to.eq(`The 'after' pseudo-element of any element`);
+            expect(translate(selector)).to.eq(`The 'after' pseudo-element of any element`);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }]);
         });
 
         it('::first-line', function () {
             const selector = '::first-line';
-            expect(translate(selector), selector).to.eq(`The first line of any element`);
+            expect(translate(selector)).to.eq(`The 'first line' of any element`);
+            expect(visualize(selector)).to.deep.eq([
+                {
+                    tag: 'div',
+                    children: [
+                        {
+                            hideTag: true,
+                            innerText: 'First line',
+                            tag: 'div',
+                            attributes: {
+                                data: 'first-child',
+                            },
+                        },
+                        {
+                            hideTag: true,
+                            innerText: 'Second line',
+                            tag: 'div',
+                        },
+                    ],
+                },
+                {
+                    hideTag: true,
+                    innerText: '</div>',
+                    tag: 'div',
+                },
+            ]);
         });
 
         it('::first-letter', function () {
@@ -56,7 +84,32 @@ describe('Pseudo Elements', () => {
 
         it('element + ::first-line', function () {
             const selector = 'p::first-line';
-            expect(translate(selector), selector).to.eq(`The first line of a '<p>' element`);
+            expect(translate(selector), selector).to.eq(`The 'first line' of a '<p>' element`);
+            expect(visualize(selector)).to.deep.eq([
+                {
+                    tag: 'p',
+                    children: [
+                        {
+                            hideTag: true,
+                            innerText: 'First line',
+                            tag: 'div',
+                            attributes: {
+                                data: 'first-child',
+                            },
+                        },
+                        {
+                            hideTag: true,
+                            innerText: 'Second line',
+                            tag: 'div',
+                        },
+                    ],
+                },
+                {
+                    hideTag: true,
+                    innerText: '</p>',
+                    tag: 'p',
+                },
+            ]);
         });
 
         it('element + ::first-letter', function () {
@@ -112,6 +165,11 @@ describe('Pseudo Elements', () => {
         it('element::abc', function () {
             const selector = 'div::abc';
             expect(translate(selector), selector).to.eq(`Error: Unknown pseudo element 'abc'`);
+        });
+        it('element + after + before', function () {
+            const error = `Error: You cannot have multiple pseudo elements on a single selector`;
+            expect(translate('div::after::before')).to.eq(error);
+            expect(translate('div::before::after')).to.eq(error);
         });
     });
 });

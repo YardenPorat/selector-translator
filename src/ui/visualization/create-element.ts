@@ -5,6 +5,7 @@ export interface VisualizationElement {
     children?: VisualizationElement[];
     innerText?: string;
     attributes?: { [key: string]: string };
+    hideTag?: boolean;
 }
 
 export function createVisualizationElement(element: VisualizationElement) {
@@ -13,7 +14,7 @@ export function createVisualizationElement(element: VisualizationElement) {
     if (element.classes) el.classList.add(...element.classes);
     if (element.id) el.id = element.id;
     addVisibleAttributes(element, el);
-    const innerHTML = getInnerHtml(el, element.innerText);
+    const innerHTML = getInnerHtml(el, element);
     el.innerHTML = innerHTML;
 
     addHiddenAttributes(element, el, innerHTML);
@@ -31,12 +32,16 @@ const getStartingTag = (el: HTMLElement) => el.outerHTML.slice(0, el.outerHTML.i
 const hasEndingTag = (el: HTMLElement) =>
     el.outerHTML.slice(-(el.tagName.length + 3)).includes(`/${el.tagName.toLowerCase()}`);
 
-function getInnerHtml(el: HTMLElement, innerText = '') {
-    const gotEndingTag = hasEndingTag(el);
-    const startingTag = getStartingTag(el);
-    const ending = gotEndingTag ? el.outerHTML.slice(-1 * (el.tagName.length + 3)) : el.outerHTML.slice(-1);
-    const outerHtml = `${startingTag}${innerText && gotEndingTag ? innerText + ending : ''}`;
-    return escapeChars(outerHtml);
+function getInnerHtml(el: HTMLElement, element: VisualizationElement) {
+    const { innerText, hideTag } = element;
+    if (!hideTag) {
+        const gotEndingTag = hasEndingTag(el);
+        const startingTag = getStartingTag(el);
+        const ending = gotEndingTag ? el.outerHTML.slice(-1 * (el.tagName.length + 3)) : el.outerHTML.slice(-1);
+        const outerHtml = `${startingTag}${innerText && gotEndingTag ? innerText + ending : ''}`;
+        return escapeChars(outerHtml);
+    }
+    return escapeChars(innerText ?? '');
 }
 
 /** This attributes will be presented to the user */
@@ -72,18 +77,38 @@ function addHiddenAttributes(element: VisualizationElement, el: HTMLElement, inn
     }
 }
 
+const replacements = {
+    '::first-line': ' [data="first-child"]',
+};
+type replacer = keyof typeof replacements;
+const findSelectorToReplace = (selector: string) => {
+    for (const toReplace of Object.keys(replacements) as replacer[]) {
+        if (selector.includes(toReplace)) {
+            return toReplace;
+        }
+    }
+};
+
 export function getVisualizationStyle(rootSelector: string, inputSelector: string) {
-    return `${rootSelector} ${inputSelector} { 
+    const toBeReplaced = findSelectorToReplace(inputSelector);
+    const selector = toBeReplaced ? inputSelector.replace(toBeReplaced, replacements[toBeReplaced]) : inputSelector;
+    const after = inputSelector.includes('::after') ? 'after pseudo element' : '';
+    const before = inputSelector.includes('::before') ? 'before pseudo element' : '';
+
+    return `${rootSelector} ${selector} { 
         background-color: var(--primary);
         box-shadow: rgb(0 0 0 / 35%) 0px -50px 36px -28px inset;
         color: black;
+        text-shadow: none;
+        ${before || after ? `content: '${after}${before}';` : ''}
     }
-    ${rootSelector} ${inputSelector} * { 
+    ${rootSelector} ${selector} * { 
         background-color: rgb(0 0 0 / 50%);
         color: white;
     }
-    ${rootSelector} :not(${inputSelector}){
+    ${rootSelector} :not(${selector}){
         color: white;
+        text-shadow: 0 0 5px black;
     }
     `.trim();
 }

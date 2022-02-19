@@ -62,6 +62,25 @@ export function visualize(selector: string) {
             Object.assign(currentElement, { id: selector.value });
         } else if (selector.type === 'attribute') {
             tags[tags.length - 1] = appendAttribute(selector.value, tags.at(-1));
+        } else if (selector.type === 'pseudo_element') {
+            if (selector.value === 'first-line') {
+                addChild(currentElement, {
+                    tag: 'div',
+                    innerText: 'First line',
+                    attributes: { data: 'first-child' },
+                    hideTag: true,
+                });
+                addChild(currentElement, { tag: 'div', innerText: 'Second line', hideTag: true });
+                addSibling(
+                    currentElement,
+                    {
+                        tag: currentElement.tag,
+                        innerText: `</${currentElement.tag}>`,
+                        hideTag: true,
+                    },
+                    { adjacent: true }
+                );
+            }
         } else if (selector.type === 'pseudo_class') {
             const value = selector.value as PseudoClassName;
 
@@ -196,10 +215,16 @@ function addChild(parent: VisualizationElement, child = baseElement, options: Ad
 
 interface AddSiblingOptions {
     moveRef?: boolean;
+    adjacent?: boolean;
 }
 function addSibling(element: VisualizationElement, sibling = baseElement, options: AddSiblingOptions = {}) {
     const lastIndex = getLastIndex(siblingArrayRef);
-    siblingArrayRef.push({ ...sibling });
+    if (options.adjacent) {
+        const currentElementIndex = siblingArrayRef.indexOf(element);
+        siblingArrayRef.splice(currentElementIndex + 1, 0, { ...sibling });
+    } else {
+        siblingArrayRef.push({ ...sibling });
+    }
 
     if (options.moveRef) {
         currentElement = siblingArrayRef.at(lastIndex + 1)!;

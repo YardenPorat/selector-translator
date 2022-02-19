@@ -2,8 +2,6 @@ import { joiner } from './string-manipulation';
 import type { PseudoClass, PseudoClassName } from '../types';
 import type { NthNode, SelectorNodes } from '@tokey/css-selector-parser';
 
-export const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
-
 export function parseStep(stepString: string) {
     const stepSign = stepString.includes('-') ? -1 : 1;
     return (Number(stepString.replace('n', '').replace('-', '')) || 1) * stepSign;

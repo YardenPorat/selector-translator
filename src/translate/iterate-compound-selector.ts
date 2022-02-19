@@ -1,21 +1,9 @@
-import { parsePseudoClassNode, pseudoClassWithNodes } from './helpers/pseudo-classes';
+import { parsePseudoClassNode } from './helpers/pseudo-classes';
 import { parseAttribute, ERROR } from './helpers/parse-attribute';
 import { isPseudoElement, type PseudoElement } from './helpers/pseudo-elements';
+import { ERRORS, pseudoClassWithNodes } from './constants';
 import type { CompoundSelector } from '@tokey/css-selector-parser';
 import type { PseudoClass, Attribute, PseudoClassName } from './types';
-
-const ERRORS = {
-    TWO_IDS: 'An element cannot have two ids',
-    EMPTY_CLASS: 'You specified an empty class',
-    EMPTY_ID: 'You specified an empty id',
-    EMPTY_PSEUDO_CLASS: 'You specified an empty pseudo class',
-    PSEUDO_ELEMENT_AS_PSEUDO_CLASS: (el: string) => `You specified the pseudo element '${el}' as a pseudo class`,
-    UNKNOWN_PSEUDO_ELEMENT: (el: string) => `Unknown pseudo element '${el}'`,
-    EMPTY_PSEUDO_CLASS_NODE: 'You specified an empty pseudo class node',
-    EXPECTED_PSEUDO_CLASS_NODE: `You specified a pseudo class node which is expected to have a node (${[
-        ...pseudoClassWithNodes,
-    ].join(', ')})`,
-};
 
 export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
     const result = {
