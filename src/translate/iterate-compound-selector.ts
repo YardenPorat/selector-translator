@@ -1,4 +1,4 @@
-import { parsePseudoClassNode } from './helpers/pseudo-classes';
+import { parsePseudoClassNode, validatePseudoClassStep } from './helpers/pseudo-classes';
 import { parseAttribute, ERROR } from './helpers/parse-attribute';
 import { isPseudoElement, type PseudoElement } from './helpers/pseudo-elements';
 import { ERRORS, pseudoClassWithNodes } from './constants';
@@ -43,16 +43,20 @@ export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
 
             if (!value) {
                 result.err = ERRORS.EMPTY_PSEUDO_CLASS;
-            } else if (node.nodes && node.nodes.length === 0) {
-                result.err = ERRORS.EMPTY_PSEUDO_CLASS_NODE;
-                break;
             } else if (pseudoClassWithNodes.has(value) && !node.nodes) {
                 result.err = ERRORS.EXPECTED_PSEUDO_CLASS_NODE;
                 break;
+            } else if (pseudoClassWithNodes.has(value) && node.nodes?.length === 0) {
+                result.err = ERRORS.EMPTY_REQUIRED_NODE;
+                break;
             } else if (isPseudoElement(value)) {
                 result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
-            } else if (node.nodes && node.nodes[0].nodes) {
+            } else if (node.nodes?.length && node.nodes[0].nodes) {
                 const { parsedPseudoClass } = parsePseudoClassNode(node.value, node.nodes[0].nodes);
+                if (parsedPseudoClass.step) {
+                    const error = validatePseudoClassStep(parsedPseudoClass.step);
+                    if (error) result.err = error;
+                }
                 result.pseudoClasses.push(parsedPseudoClass);
             } else {
                 result.pseudoClasses.push({ name: node.value as PseudoClassName });
