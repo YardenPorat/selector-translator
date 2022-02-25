@@ -81,6 +81,23 @@ export function visualize(selector: string) {
                     { adjacent: true }
                 );
             }
+            if (selector.value === 'first-letter') {
+                addChild(currentElement, {
+                    tag: 'div',
+                    innerText: 'First letter only',
+                    attributes: { data: 'first-letter' },
+                    hideTag: true,
+                });
+                addSibling(
+                    currentElement,
+                    {
+                        tag: currentElement.tag,
+                        innerText: `</${currentElement.tag}>`,
+                        hideTag: true,
+                    },
+                    { adjacent: true }
+                );
+            }
         } else if (selector.type === 'pseudo_class') {
             const value = selector.value as PseudoClassName;
 
@@ -99,9 +116,13 @@ export function visualize(selector: string) {
                     appendMultipleSiblings(offset * 2);
                     moveRefToSiblingByIndex(offset - 1); // 1 based
                 } else if (!parsedPseudoClass.offset && parsedPseudoClass.step) {
-                    const step = Math.abs(parseStep(parsedPseudoClass.step));
-                    appendMultipleSiblings(step * 2);
-                    moveRefToSiblingByIndex(step - 1); // 1 based
+                    if (['odd', 'even'].includes(parsedPseudoClass.step)) {
+                        appendMultipleSiblings(4);
+                        moveRefToSiblingByIndex(parsedPseudoClass.step === 'even' ? 3 : 4); // last even sibling
+                    } else {
+                        const step = Math.abs(parseStep(parsedPseudoClass.step));
+                        appendMultipleSiblings(step * 2, { moveRefToLast: true });
+                    }
                 }
             } else if (['disabled', 'required', 'read-only'].includes(value)) {
                 const attrName = getAttributeName(value);
@@ -176,9 +197,16 @@ function hasInnerNodes(selector: PseudoClass) {
     return selector.nodes && selector.nodes[0].nodes;
 }
 
-function appendMultipleSiblings(amount: number) {
+interface AppendMultipleSiblingsOptions {
+    moveRefToLast?: boolean;
+}
+function appendMultipleSiblings(amount: number, options: AppendMultipleSiblingsOptions = {}) {
     for (let index = 0; index < amount; index++) {
         duplicateElementAsSibling(currentElement, { moveRef: false });
+    }
+
+    if (options.moveRefToLast) {
+        currentElement = siblingArrayRef[siblingArrayRef.length - 1];
     }
 }
 interface DuplicateElementAsSiblingOptions {

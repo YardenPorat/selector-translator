@@ -79,6 +79,7 @@ function addHiddenAttributes(element: VisualizationElement, el: HTMLElement, inn
 
 const replacements = {
     '::first-line': ' [data="first-child"]',
+    '::first-letter': ' [data="first-letter"]::first-letter',
 };
 type replacer = keyof typeof replacements;
 const findSelectorToReplace = (selector: string) => {
