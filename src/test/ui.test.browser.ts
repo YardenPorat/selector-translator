@@ -361,9 +361,9 @@ describe('Browser tests', function () {
                     const result = visualize('li:first-of-type');
                     expect(result.length).to.eq(2);
                     for (const element of result) {
-                        expect(createVisualizationElement(element).outerHTML).to.eq(
-                            '<li>&lt;li&gt;When its the first of its type in its parent&lt;/li&gt;</li>'
-                        );
+                        const el = createVisualizationElement(element);
+                        expect(el.textContent).to.eq('<li>When its the first child of its type in its parent</li>');
+                        expect(el.tagName).to.eq('LI');
                     }
                 });
 
@@ -371,10 +371,10 @@ describe('Browser tests', function () {
                     const result = visualize('li:first-of-type a');
                     expect(result.length).to.eq(2);
                     expect(createVisualizationElement(result[0]).outerHTML).to.eq(
-                        '<li>&lt;li&gt;When its the first of its type in its parent&lt;/li&gt;<a>&lt;a&gt;</a></li>'
+                        '<li>&lt;li&gt;When its the first child of its type in its parent&lt;/li&gt;<a>&lt;a&gt;</a></li>'
                     );
                     expect(createVisualizationElement(result[1]).outerHTML).to.eq(
-                        '<li>&lt;li&gt;When its the first of its type in its parent&lt;/li&gt;</li>'
+                        '<li>&lt;li&gt;When its the first child of its type in its parent&lt;/li&gt;</li>'
                     );
                 });
             });
@@ -385,7 +385,7 @@ describe('Browser tests', function () {
                     expect(result.length).to.eq(2);
                     for (const element of result) {
                         expect(createVisualizationElement(element).outerHTML).to.eq(
-                            '<li>&lt;li&gt;When its the last of its type in its parent&lt;/li&gt;</li>'
+                            '<li>&lt;li&gt;When its the last child of its type in its parent&lt;/li&gt;</li>'
                         );
                     }
                 });
@@ -394,10 +394,10 @@ describe('Browser tests', function () {
                     const result = visualize('li:last-of-type a');
                     expect(result.length).to.eq(2);
                     expect(createVisualizationElement(result[0]).outerHTML).to.eq(
-                        '<li>&lt;li&gt;When its the last of its type in its parent&lt;/li&gt;</li>'
+                        '<li>&lt;li&gt;When its the last child of its type in its parent&lt;/li&gt;</li>'
                     );
                     expect(createVisualizationElement(result[1]).outerHTML).to.eq(
-                        '<li>&lt;li&gt;When its the last of its type in its parent&lt;/li&gt;<a>&lt;a&gt;</a></li>'
+                        '<li>&lt;li&gt;When its the last child of its type in its parent&lt;/li&gt;<a>&lt;a&gt;</a></li>'
                     );
                 });
             });
@@ -434,7 +434,7 @@ describe('Browser tests', function () {
 
                     it(`li:${nodeSelector}:odd`, function () {
                         const result = visualize('li:nth-child(odd)');
-                        expect(result.length).to.eq(3);
+                        expect(result.length).to.eq(5);
                         for (const element of result) {
                             expect(createVisualizationElement(element).outerHTML).to.eq('<li>&lt;li&gt;</li>');
                         }
@@ -442,7 +442,7 @@ describe('Browser tests', function () {
 
                     it(`li:${nodeSelector}:even`, function () {
                         const result = visualize(`li:${nodeSelector}(even)`);
-                        expect(result.length).to.eq(3);
+                        expect(result.length).to.eq(5);
                         for (const element of result) {
                             expect(createVisualizationElement(element).outerHTML).to.eq('<li>&lt;li&gt;</li>');
                         }
@@ -450,7 +450,7 @@ describe('Browser tests', function () {
                 }
             });
 
-            describe('Offset and Step', () => {
+            describe('Step', () => {
                 for (const nodeSelector of ['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type']) {
                     for (const step of ['2n']) {
                         it(`element + ${nodeSelector}(${step})`, function () {
