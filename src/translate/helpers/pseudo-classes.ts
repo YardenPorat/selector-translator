@@ -139,19 +139,19 @@ export function parsePseudoClassNode(value: string, secondLevelNodes: SelectorNo
         };
     } else {
         const formula = { offset: '', step: '' };
-        let dash = false;
+        let dash = '';
         for (const node of secondLevelNodes) {
             if (node.type === 'nth_offset') {
                 if (dash) {
-                    formula.offset = '-' + node.value;
-                    dash = false;
+                    formula.offset = dash + node.value;
+                    dash = '';
                 } else {
                     formula.offset = node.value;
                 }
             } else if (node.type === 'nth_step') {
                 formula.step = node.value;
             } else if (node.type === 'nth_dash') {
-                dash = true;
+                dash = node.value;
             }
         }
 
