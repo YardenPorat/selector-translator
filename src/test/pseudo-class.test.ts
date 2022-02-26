@@ -302,6 +302,14 @@ describe('Pseudo Class', () => {
                     );
                     expect(visualize(selector)).to.deep.eq(new Array(7).fill({ tag: 'li' }));
                 });
+
+                it('+Xn- Y (with space)', function () {
+                    const selector = 'li:nth-child(2n- 3)';
+                    expect(translate(selector)).to.eq(
+                        `An '<li>' element when its every 2nd child starting with the -3rd child of its parent (inclusive)`
+                    );
+                    expect(visualize(selector)).to.deep.eq(new Array(7).fill({ tag: 'li' }));
+                });
             });
 
             it('element + nth-of-type(-Xn+Y)', function () {

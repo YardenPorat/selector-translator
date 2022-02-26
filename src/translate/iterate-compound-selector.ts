@@ -43,6 +43,7 @@ export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
 
             if (!value) {
                 result.err = ERRORS.EMPTY_PSEUDO_CLASS;
+                break;
             } else if (pseudoClassWithNodes.has(value) && !node.nodes) {
                 result.err = ERRORS.EXPECTED_PSEUDO_CLASS_NODE;
                 break;
