@@ -483,6 +483,7 @@ describe('Pseudo Class', () => {
         it('Pseudo-class with node error node', function () {
             const expectedError = 'Error: You specified an incorrect pseudo class node: ';
 
+            expect(translate(':nth-child(2n 3)')).to.eq(expectedError + `'2n 3'`);
             expect(translate(':nth-child(2n3)')).to.eq(expectedError + `'2n3'`);
             expect(translate(':nth-child(+)')).to.eq(expectedError + `'+'`);
             expect(translate(':nth-last-child(abc)')).to.eq(expectedError + `'abc'`);

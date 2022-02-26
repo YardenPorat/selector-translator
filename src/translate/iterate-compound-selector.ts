@@ -1,8 +1,17 @@
+import {
+    stringifySelectorAst,
+    type CompoundSelector,
+    type NthDash,
+    type NthNode,
+    type NthOf,
+    type NthOffset,
+    type NthStep,
+} from '@tokey/css-selector-parser';
 import { parsePseudoClassNode } from './helpers/pseudo-classes';
 import { parseAttribute, ERROR } from './helpers/parse-attribute';
 import { isPseudoElement, type PseudoElement } from './helpers/pseudo-elements';
 import { ERRORS, pseudoClassWithNodes } from './constants';
-import type { CompoundSelector, NthNode, NthOf } from '@tokey/css-selector-parser';
+
 import type { PseudoClass, Attribute, PseudoClassName } from './types';
 
 export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
@@ -39,26 +48,38 @@ export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
         } else if (node.type === 'universal') {
             result.hasUniversal = true;
         } else if (node.type === 'pseudo_class') {
-            const { value } = node;
+            const { value, nodes } = node;
 
             if (!value) {
                 result.err = ERRORS.EMPTY_PSEUDO_CLASS;
                 break;
-            } else if (pseudoClassWithNodes.has(value) && !node.nodes) {
+            } else if (pseudoClassWithNodes.has(value) && !nodes) {
                 result.err = ERRORS.EXPECTED_PSEUDO_CLASS_NODE;
                 break;
-            } else if (pseudoClassWithNodes.has(value) && node.nodes?.length === 0) {
+            } else if (pseudoClassWithNodes.has(value) && nodes?.length === 0) {
                 result.err = ERRORS.EMPTY_REQUIRED_NODE;
                 break;
             } else if (isPseudoElement(value)) {
                 result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
                 break;
-            } else if (node.nodes?.length && (node.nodes[0].nodes as NthNode[])) {
-                if (node.nodes[0].nodes.some((node) => (node as NthOf).invalid === true)) {
-                    result.err = ERRORS.INCORRECT_PSEUDO_CLASS_NODE((node.nodes[0].nodes[0] as NthOf).value);
+            } else if (nodes?.length && (nodes[0].nodes as NthNode[])) {
+                const innerNodes = nodes[0].nodes as (NthStep | NthOffset | NthDash | NthOf)[];
+
+                if (innerNodes.some((node) => node.invalid === true)) {
+                    result.err = ERRORS.INCORRECT_PSEUDO_CLASS_NODE(innerNodes[0].value);
                     break;
                 }
-                const { parsedPseudoClass } = parsePseudoClassNode(node.value, node.nodes[0].nodes);
+
+                /** Check for lacking sign after spaces */
+                if (
+                    innerNodes[0].after?.includes(' ') &&
+                    !innerNodes[1].value.startsWith('+') &&
+                    !innerNodes[1].value.startsWith('-')
+                ) {
+                    result.err = ERRORS.INCORRECT_PSEUDO_CLASS_NODE(stringifySelectorAst(nodes));
+                    break;
+                }
+                const { parsedPseudoClass } = parsePseudoClassNode(value, innerNodes);
                 result.pseudoClasses.push(parsedPseudoClass);
             } else {
                 result.pseudoClasses.push({ name: node.value as PseudoClassName });
