@@ -1756,6 +1756,24 @@ __webpack_require__.d(__webpack_exports__, {
 
 // EXTERNAL MODULE: ./node_modules/@tokey/css-selector-parser/dist/index.js
 var dist = __webpack_require__(774);
+;// CONCATENATED MODULE: ./src/translate/constants.ts
+const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
+const ERRORS = {
+    TWO_IDS: 'An element cannot have two ids',
+    EMPTY_CLASS: 'You specified an empty class',
+    EMPTY_ID: 'You specified an empty id',
+    EMPTY_PSEUDO_CLASS: 'You specified an empty pseudo class',
+    PSEUDO_ELEMENT_AS_PSEUDO_CLASS: (el) => `You specified the pseudo element '${el}' as a pseudo class`,
+    UNKNOWN_PSEUDO_ELEMENT: (el) => `Unknown pseudo element '${el}'`,
+    MULTIPLE_PSEUDO_ELEMENT: `You cannot have multiple pseudo elements on a single selector`,
+    EMPTY_PSEUDO_CLASS_NODE: 'You specified an empty pseudo class node',
+    EXPECTED_PSEUDO_CLASS_NODE: `You specified a pseudo class which is expected to have a node (${[
+        ...pseudoClassWithNodes,
+    ].join(', ')})`,
+    EMPTY_REQUIRED_NODE: 'You specified a pseudo class with an empty node',
+    INCORRECT_PSEUDO_CLASS_NODE: (node) => `You specified an incorrect pseudo class node: '${node}'`,
+};
+
 ;// CONCATENATED MODULE: ./src/translate/helpers/string-manipulation.ts
 function joiner(items) {
     if (items.length === 2) {
@@ -1769,25 +1787,20 @@ function joiner(items) {
 
 ;// CONCATENATED MODULE: ./src/translate/helpers/pseudo-classes.ts
 
+
+function validatePseudoClassStep(step) {
+    const lowercaseStep = step.toLowerCase();
+    if (['odd', 'even'].includes(lowercaseStep)) {
+        return;
+    }
+    if (!lowercaseStep.includes('n') ||
+        isNaN(Number(lowercaseStep.replace('n', '').replace('-', '').replace('+', '')))) {
+        return ERRORS.INCORRECT_PSEUDO_CLASS_NODE(step);
+    }
+}
 function parseStep(stepString) {
     const stepSign = stepString.includes('-') ? -1 : 1;
-    return (Number(stepString.replace('n', '').replace('-', '')) || 1) * stepSign;
-}
-function getNumberSuffix(n) {
-    if (n > 3 && n < 21) {
-        return 'th';
-    }
-    const asString = n.toString();
-    if (asString.at(-1) === '1') {
-        return 'st';
-    }
-    if (asString.at(-1) === '2') {
-        return 'nd';
-    }
-    if (asString.at(-1) === '3') {
-        return 'rd';
-    }
-    return 'th';
+    return (Number(stepString.toLowerCase().replace('n', '').replace('-', '')) || 1) * stepSign;
 }
 const PSEUDO_CLASS_STATE = {
     hover: { state: 'hovered', text: '' },
@@ -1812,13 +1825,13 @@ const PSEUDO_CLASS_STATE = {
     'last-child': { state: 'the last child of its parent', text: '' },
     'first-child': { state: 'the first child of its parent', text: '' },
     'only-child': { state: 'the only child of its parent', text: '' },
-    'last-of-type': { state: 'the last of its type in its parent', text: '' },
-    'first-of-type': { state: 'the first of its type in its parent', text: '' },
+    'last-of-type': { state: 'the last child of its type in its parent', text: '' },
+    'first-of-type': { state: 'the first child of its type in its parent', text: '' },
     'only-of-type': { state: 'the only of its type in its parent', text: '' },
     'nth-child': { state: 'child of its parent', text: '' },
     'nth-last-child': { state: 'child from the end of its parent', text: '' },
-    'nth-of-type': { state: 'of its type in his parent', text: '' },
-    'nth-last-of-type': { state: 'of its type from the end in his parent', text: '' },
+    'nth-of-type': { state: 'child of its type in his parent', text: '' },
+    'nth-last-of-type': { state: 'child of its type from the end in his parent', text: '' },
 };
 const PSEUDO_CLASS_ATTRIBUTES = {
     'read-only': 'readonly',
@@ -1838,13 +1851,17 @@ function stepDescriptor(stepString) {
     const stepDescriptor = step === -1 || step === 1 ? '' : ` ${Math.abs(step)}${getNumberSuffix(step)}`;
     return `every${stepDescriptor}`;
 }
-function nthAndStepDescriptor({ value, step: stepString, name }) {
+function nthAndStepDescriptor({ offset, step: stepString, name }) {
     const step = parseStep(stepString);
     const stepText = stepDescriptor(stepString);
-    const offsetText = `${value}${getNumberSuffix(value)}`;
+    const offsetText = `${offset}${getNumberSuffix(offset)}`;
     const type = name.includes('child') ? 'child' : 'child of type';
     const directionText = step < 0 && name.includes('last') ? '' : step < 0 || name.includes('last') ? ', going down' : '';
-    return `${stepText} ${type} starting with the ${offsetText} ${PSEUDO_CLASS_STATE[name].state} (inclusive)${directionText}`;
+    if (offset) {
+        return `${stepText} ${type} starting with the ${offsetText} ${PSEUDO_CLASS_STATE[name].state} (inclusive)${directionText}`;
+    }
+    const nonShown = step < 0 ? ' (non shown because selection starts at 0, going down)' : '';
+    return `${stepText} ${PSEUDO_CLASS_STATE[name].state}${directionText}${nonShown}`;
 }
 function getPseudoClassesString(pseudoClasses) {
     const state = pseudoClasses.map(({ name, value, offset, step }) => {
@@ -1869,11 +1886,8 @@ function handleFormulas({ offset, step, name }) {
     if (offset && !step) {
         return `${offsetDescriptor(Number(offset))} ${state}`;
     }
-    if (!offset && step) {
-        return `${stepDescriptor(step)} ${state}`;
-    }
-    if (offset && step) {
-        return nthAndStepDescriptor({ value: Number(offset), step, name });
+    if (step) {
+        return nthAndStepDescriptor({ offset: Number(offset), step, name });
     }
     throw new Error('Invalid pseudo class');
 }
@@ -1903,6 +1917,22 @@ function parsePseudoClassNode(value, secondLevelNodes) {
             parsedPseudoClass: Object.assign({ name: value }, formula),
         };
     }
+}
+function getNumberSuffix(n) {
+    if (n > 3 && n < 21) {
+        return 'th';
+    }
+    const asString = n.toString();
+    if (asString.at(-1) === '1') {
+        return 'st';
+    }
+    if (asString.at(-1) === '2') {
+        return 'nd';
+    }
+    if (asString.at(-1) === '3') {
+        return 'rd';
+    }
+    return 'th';
 }
 
 ;// CONCATENATED MODULE: ./src/visualize.ts
@@ -1982,6 +2012,19 @@ function visualize(selector) {
                     hideTag: true,
                 }, { adjacent: true });
             }
+            if (selector.value === 'first-letter') {
+                addChild(currentElement, {
+                    tag: 'div',
+                    innerText: 'First letter only',
+                    attributes: { data: 'first-letter' },
+                    hideTag: true,
+                });
+                addSibling(currentElement, {
+                    tag: currentElement.tag,
+                    innerText: `</${currentElement.tag}>`,
+                    hideTag: true,
+                }, { adjacent: true });
+            }
         }
         else if (selector.type === 'pseudo_class') {
             const value = selector.value;
@@ -2003,9 +2046,14 @@ function visualize(selector) {
                     moveRefToSiblingByIndex(offset - 1); // 1 based
                 }
                 else if (!parsedPseudoClass.offset && parsedPseudoClass.step) {
-                    const step = Math.abs(parseStep(parsedPseudoClass.step));
-                    appendMultipleSiblings(step * 2);
-                    moveRefToSiblingByIndex(step - 1); // 1 based
+                    if (['odd', 'even'].includes(parsedPseudoClass.step)) {
+                        appendMultipleSiblings(4);
+                        moveRefToSiblingByIndex(parsedPseudoClass.step === 'even' ? 3 : 4); // last even sibling
+                    }
+                    else {
+                        const step = Math.abs(parseStep(parsedPseudoClass.step));
+                        appendMultipleSiblings(step * 2, { moveRefToLast: true });
+                    }
                 }
             }
             else if (['disabled', 'required', 'read-only'].includes(value)) {
@@ -2081,9 +2129,12 @@ function visualize(selector) {
 function hasInnerNodes(selector) {
     return selector.nodes && selector.nodes[0].nodes;
 }
-function appendMultipleSiblings(amount) {
+function appendMultipleSiblings(amount, options = {}) {
     for (let index = 0; index < amount; index++) {
         duplicateElementAsSibling(currentElement, { moveRef: false });
+    }
+    if (options.moveRefToLast) {
+        currentElement = siblingArrayRef[siblingArrayRef.length - 1];
     }
 }
 function duplicateElementAsSibling(element, options = {}) {
@@ -2225,28 +2276,13 @@ const PSEUDO_ELEMENTS_DESCRIPTORS = {
 };
 const isPseudoElement = (value) => Object.keys(PSEUDO_ELEMENTS_DESCRIPTORS).includes(value);
 
-;// CONCATENATED MODULE: ./src/translate/constants.ts
-const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
-const ERRORS = {
-    TWO_IDS: 'An element cannot have two ids',
-    EMPTY_CLASS: 'You specified an empty class',
-    EMPTY_ID: 'You specified an empty id',
-    EMPTY_PSEUDO_CLASS: 'You specified an empty pseudo class',
-    PSEUDO_ELEMENT_AS_PSEUDO_CLASS: (el) => `You specified the pseudo element '${el}' as a pseudo class`,
-    UNKNOWN_PSEUDO_ELEMENT: (el) => `Unknown pseudo element '${el}'`,
-    MULTIPLE_PSEUDO_ELEMENT: `You cannot have multiple pseudo elements on a single selector`,
-    EMPTY_PSEUDO_CLASS_NODE: 'You specified an empty pseudo class node',
-    EXPECTED_PSEUDO_CLASS_NODE: `You specified a pseudo class node which is expected to have a node (${[
-        ...pseudoClassWithNodes,
-    ].join(', ')})`,
-};
-
 ;// CONCATENATED MODULE: ./src/translate/iterate-compound-selector.ts
 
 
 
 
 function iterateCompoundSelector(compoundSelector) {
+    var _a, _b;
     const result = {
         attributes: [],
         err: '',
@@ -2297,19 +2333,24 @@ function iterateCompoundSelector(compoundSelector) {
             if (!value) {
                 result.err = ERRORS.EMPTY_PSEUDO_CLASS;
             }
-            else if (node.nodes && node.nodes.length === 0) {
-                result.err = ERRORS.EMPTY_PSEUDO_CLASS_NODE;
-                break;
-            }
             else if (pseudoClassWithNodes.has(value) && !node.nodes) {
                 result.err = ERRORS.EXPECTED_PSEUDO_CLASS_NODE;
+                break;
+            }
+            else if (pseudoClassWithNodes.has(value) && ((_a = node.nodes) === null || _a === void 0 ? void 0 : _a.length) === 0) {
+                result.err = ERRORS.EMPTY_REQUIRED_NODE;
                 break;
             }
             else if (isPseudoElement(value)) {
                 result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
             }
-            else if (node.nodes && node.nodes[0].nodes) {
+            else if (((_b = node.nodes) === null || _b === void 0 ? void 0 : _b.length) && node.nodes[0].nodes) {
                 const { parsedPseudoClass } = parsePseudoClassNode(node.value, node.nodes[0].nodes);
+                if (parsedPseudoClass.step) {
+                    const error = validatePseudoClassStep(parsedPseudoClass.step);
+                    if (error)
+                        result.err = error;
+                }
                 result.pseudoClasses.push(parsedPseudoClass);
             }
             else {
@@ -2478,6 +2519,7 @@ function addHiddenAttributes(element, el, innerHTML) {
 }
 const replacements = {
     '::first-line': ' [data="first-child"]',
+    '::first-letter': ' [data="first-letter"]::first-letter',
 };
 const findSelectorToReplace = (selector) => {
     for (const toReplace of Object.keys(replacements)) {
