@@ -2272,7 +2272,8 @@ const ERRORS = {
         ...pseudoClassWithNodes,
     ].join(', ')})`,
     EMPTY_REQUIRED_NODE: 'You specified a pseudo class with an empty node',
-    INCORRECT_PSEUDO_CLASS_NODE: (node) => `You specified an incorrect pseudo class node: '${node}'`,
+    INCORRECT_PSEUDO_CLASS_NODE: (node) => `Incorrect pseudo class node was specified: '${node}'`,
+    NTH_OF_NOT_SUPPORTED: 'Nth of syntax is not supported',
 };
 
 ;// CONCATENATED MODULE: ./src/translate/iterate-compound-selector.ts
@@ -2349,7 +2350,12 @@ function iterateCompoundSelector(compoundSelector) {
             else if ((nodes === null || nodes === void 0 ? void 0 : nodes.length) && nodes[0].nodes) {
                 const innerNodes = nodes[0].nodes;
                 if (innerNodes.some((node) => node.invalid === true)) {
-                    result.err = ERRORS.INCORRECT_PSEUDO_CLASS_NODE(innerNodes[0].value);
+                    result.err = ERRORS.INCORRECT_PSEUDO_CLASS_NODE((0,dist.stringifySelectorAst)(nodes));
+                    break;
+                }
+                /** after invalid check, because (3 2n) is identified as nth_of */
+                if (innerNodes.some((node) => node.type === 'nth_of')) {
+                    result.err = ERRORS.NTH_OF_NOT_SUPPORTED;
                     break;
                 }
                 /** Check for lacking sign after spaces */
