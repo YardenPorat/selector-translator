@@ -2280,8 +2280,9 @@ const ERRORS = {
 
 
 
+
 function iterateCompoundSelector(compoundSelector) {
-    var _a, _b;
+    var _a;
     const result = {
         attributes: [],
         err: '',
@@ -2328,16 +2329,16 @@ function iterateCompoundSelector(compoundSelector) {
             result.hasUniversal = true;
         }
         else if (node.type === 'pseudo_class') {
-            const { value } = node;
+            const { value, nodes } = node;
             if (!value) {
                 result.err = ERRORS.EMPTY_PSEUDO_CLASS;
                 break;
             }
-            else if (pseudoClassWithNodes.has(value) && !node.nodes) {
+            else if (pseudoClassWithNodes.has(value) && !nodes) {
                 result.err = ERRORS.EXPECTED_PSEUDO_CLASS_NODE;
                 break;
             }
-            else if (pseudoClassWithNodes.has(value) && ((_a = node.nodes) === null || _a === void 0 ? void 0 : _a.length) === 0) {
+            else if (pseudoClassWithNodes.has(value) && (nodes === null || nodes === void 0 ? void 0 : nodes.length) === 0) {
                 result.err = ERRORS.EMPTY_REQUIRED_NODE;
                 break;
             }
@@ -2345,12 +2346,20 @@ function iterateCompoundSelector(compoundSelector) {
                 result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
                 break;
             }
-            else if (((_b = node.nodes) === null || _b === void 0 ? void 0 : _b.length) && node.nodes[0].nodes) {
-                if (node.nodes[0].nodes.some((node) => node.invalid === true)) {
-                    result.err = ERRORS.INCORRECT_PSEUDO_CLASS_NODE(node.nodes[0].nodes[0].value);
+            else if ((nodes === null || nodes === void 0 ? void 0 : nodes.length) && nodes[0].nodes) {
+                const innerNodes = nodes[0].nodes;
+                if (innerNodes.some((node) => node.invalid === true)) {
+                    result.err = ERRORS.INCORRECT_PSEUDO_CLASS_NODE(innerNodes[0].value);
                     break;
                 }
-                const { parsedPseudoClass } = parsePseudoClassNode(node.value, node.nodes[0].nodes);
+                /** Check for lacking sign after spaces */
+                if (((_a = innerNodes[0].after) === null || _a === void 0 ? void 0 : _a.includes(' ')) &&
+                    !innerNodes[1].value.startsWith('+') &&
+                    !innerNodes[1].value.startsWith('-')) {
+                    result.err = ERRORS.INCORRECT_PSEUDO_CLASS_NODE((0,dist.stringifySelectorAst)(nodes));
+                    break;
+                }
+                const { parsedPseudoClass } = parsePseudoClassNode(value, innerNodes);
                 result.pseudoClasses.push(parsedPseudoClass);
             }
             else {
