@@ -278,20 +278,30 @@ describe('Pseudo Class', () => {
         });
 
         describe('Offset and Step', () => {
-            it('element + nth-child(-n+Y)', function () {
-                const selector = 'li:nth-child(-n+3)';
-                expect(translate(selector), selector).to.eq(
-                    `An '<li>' element when its every child starting with the 3rd child of its parent (inclusive), going down`
-                );
-                expect(visualize(selector)).to.deep.eq(new Array(7).fill({ tag: 'li' }));
-            });
+            describe('nth-last-child', () => {
+                it('-n+Y', function () {
+                    const selector = 'li:nth-child(-n+3)';
+                    expect(translate(selector), selector).to.eq(
+                        `An '<li>' element when its every child starting with the 3rd child of its parent (inclusive), going down`
+                    );
+                    expect(visualize(selector)).to.deep.eq(new Array(7).fill({ tag: 'li' }));
+                });
 
-            it('element + nth-child(-Xn+Y)', function () {
-                const selector = 'li:nth-child(-2n+3)';
-                expect(translate(selector)).to.eq(
-                    `An '<li>' element when its every 2nd child starting with the 3rd child of its parent (inclusive), going down`
-                );
-                expect(visualize(selector)).to.deep.eq(new Array(7).fill({ tag: 'li' }));
+                it('-Xn+Y', function () {
+                    const selector = 'li:nth-child(-2n+3)';
+                    expect(translate(selector)).to.eq(
+                        `An '<li>' element when its every 2nd child starting with the 3rd child of its parent (inclusive), going down`
+                    );
+                    expect(visualize(selector)).to.deep.eq(new Array(7).fill({ tag: 'li' }));
+                });
+
+                it('+Xn-Y', function () {
+                    const selector = 'li:nth-child(2n-3)';
+                    expect(translate(selector)).to.eq(
+                        `An '<li>' element when its every 2nd child starting with the -3rd child of its parent (inclusive)`
+                    );
+                    expect(visualize(selector)).to.deep.eq(new Array(7).fill({ tag: 'li' }));
+                });
             });
 
             it('element + nth-of-type(-Xn+Y)', function () {
@@ -457,6 +467,7 @@ describe('Pseudo Class', () => {
         it('Pseudo-class with node error node', function () {
             const expectedError = 'Error: You specified an incorrect pseudo class node: ';
 
+            expect(translate(':nth-child(2n3)')).to.eq(expectedError + `'2n3'`);
             expect(translate(':nth-child(+)')).to.eq(expectedError + `'+'`);
             expect(translate(':nth-last-child(abc)')).to.eq(expectedError + `'abc'`);
             expect(translate(':nth-of-type(!)')).to.eq(expectedError + `'!'`);

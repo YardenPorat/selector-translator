@@ -112,7 +112,7 @@ export function visualize(selector: string) {
                     appendMultipleSiblings(offset);
                     moveRefToSiblingByIndex(offset - 1); // 1 based
                 } else if (parsedPseudoClass.offset && parsedPseudoClass.step) {
-                    const offset = Number(parsedPseudoClass.offset);
+                    const offset = Math.abs(Number(parsedPseudoClass.offset));
                     appendMultipleSiblings(offset * 2);
                     moveRefToSiblingByIndex(offset - 1); // 1 based
                 } else if (!parsedPseudoClass.offset && parsedPseudoClass.step) {

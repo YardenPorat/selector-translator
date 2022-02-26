@@ -1,20 +1,7 @@
-import { ERRORS } from '../constants';
 import { joiner } from './string-manipulation';
 import type { PseudoClass, PseudoClassName } from '../types';
 import type { NthNode, SelectorNodes } from '@tokey/css-selector-parser';
 
-export function validatePseudoClassStep(step: string) {
-    const lowercaseStep = step.toLowerCase();
-    if (['odd', 'even'].includes(lowercaseStep)) {
-        return;
-    }
-    if (
-        !lowercaseStep.includes('n') ||
-        isNaN(Number(lowercaseStep.replace('n', '').replace('-', '').replace('+', '')))
-    ) {
-        return ERRORS.INCORRECT_PSEUDO_CLASS_NODE(step);
-    }
-}
 export function parseStep(stepString: string) {
     const stepSign = stepString.includes('-') ? -1 : 1;
     return (Number(stepString.toLowerCase().replace('n', '').replace('-', '')) || 1) * stepSign;

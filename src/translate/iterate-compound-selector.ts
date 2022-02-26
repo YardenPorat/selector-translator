@@ -1,8 +1,8 @@
-import { parsePseudoClassNode, validatePseudoClassStep } from './helpers/pseudo-classes';
+import { parsePseudoClassNode } from './helpers/pseudo-classes';
 import { parseAttribute, ERROR } from './helpers/parse-attribute';
 import { isPseudoElement, type PseudoElement } from './helpers/pseudo-elements';
 import { ERRORS, pseudoClassWithNodes } from './constants';
-import type { CompoundSelector } from '@tokey/css-selector-parser';
+import type { CompoundSelector, NthNode, NthOf } from '@tokey/css-selector-parser';
 import type { PseudoClass, Attribute, PseudoClassName } from './types';
 
 export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
@@ -51,12 +51,13 @@ export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
                 break;
             } else if (isPseudoElement(value)) {
                 result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
-            } else if (node.nodes?.length && node.nodes[0].nodes) {
-                const { parsedPseudoClass } = parsePseudoClassNode(node.value, node.nodes[0].nodes);
-                if (parsedPseudoClass.step) {
-                    const error = validatePseudoClassStep(parsedPseudoClass.step);
-                    if (error) result.err = error;
+                break;
+            } else if (node.nodes?.length && (node.nodes[0].nodes as NthNode[])) {
+                if (node.nodes[0].nodes.some((node) => (node as NthOf).invalid === true)) {
+                    result.err = ERRORS.INCORRECT_PSEUDO_CLASS_NODE((node.nodes[0].nodes[0] as NthOf).value);
+                    break;
                 }
+                const { parsedPseudoClass } = parsePseudoClassNode(node.value, node.nodes[0].nodes);
                 result.pseudoClasses.push(parsedPseudoClass);
             } else {
                 result.pseudoClasses.push({ name: node.value as PseudoClassName });
