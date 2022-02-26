@@ -1876,12 +1876,22 @@ function parsePseudoClassNode(value, secondLevelNodes) {
     }
     else {
         const formula = { offset: '', step: '' };
+        let dash = false;
         for (const node of secondLevelNodes) {
             if (node.type === 'nth_offset') {
-                formula.offset = node.value;
+                if (dash) {
+                    formula.offset = '-' + node.value;
+                    dash = false;
+                }
+                else {
+                    formula.offset = node.value;
+                }
             }
             else if (node.type === 'nth_step') {
                 formula.step = node.value;
+            }
+            else if (node.type === 'nth_dash') {
+                dash = true;
             }
         }
         return {
@@ -2321,6 +2331,7 @@ function iterateCompoundSelector(compoundSelector) {
             const { value } = node;
             if (!value) {
                 result.err = ERRORS.EMPTY_PSEUDO_CLASS;
+                break;
             }
             else if (pseudoClassWithNodes.has(value) && !node.nodes) {
                 result.err = ERRORS.EXPECTED_PSEUDO_CLASS_NODE;
