@@ -481,13 +481,18 @@ describe('Pseudo Class', () => {
         });
 
         it('Pseudo-class with node error node', function () {
-            const expectedError = 'Error: You specified an incorrect pseudo class node: ';
+            const expectedError = 'Error: Incorrect pseudo class node was specified: ';
 
+            expect(translate(':nth-child(3 2n)')).to.eq(expectedError + `'3 2n'`);
             expect(translate(':nth-child(2n 3)')).to.eq(expectedError + `'2n 3'`);
             expect(translate(':nth-child(2n3)')).to.eq(expectedError + `'2n3'`);
             expect(translate(':nth-child(+)')).to.eq(expectedError + `'+'`);
             expect(translate(':nth-last-child(abc)')).to.eq(expectedError + `'abc'`);
             expect(translate(':nth-of-type(!)')).to.eq(expectedError + `'!'`);
+        });
+
+        it('nth of not supported', function () {
+            expect(translate(':nth-child(2n + 3 of div.cls)')).to.eq('Error: Nth of syntax is not supported');
         });
     });
 });

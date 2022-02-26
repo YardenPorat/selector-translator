@@ -66,7 +66,13 @@ export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
                 const innerNodes = nodes[0].nodes as (NthStep | NthOffset | NthDash | NthOf)[];
 
                 if (innerNodes.some((node) => node.invalid === true)) {
-                    result.err = ERRORS.INCORRECT_PSEUDO_CLASS_NODE(innerNodes[0].value);
+                    result.err = ERRORS.INCORRECT_PSEUDO_CLASS_NODE(stringifySelectorAst(nodes));
+                    break;
+                }
+
+                /** after invalid check, because (3 2n) is identified as nth_of */
+                if (innerNodes.some((node) => node.type === 'nth_of')) {
+                    result.err = ERRORS.NTH_OF_NOT_SUPPORTED;
                     break;
                 }
 

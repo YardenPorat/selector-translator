@@ -13,5 +13,6 @@ export const ERRORS = {
         ...pseudoClassWithNodes,
     ].join(', ')})`,
     EMPTY_REQUIRED_NODE: 'You specified a pseudo class with an empty node',
-    INCORRECT_PSEUDO_CLASS_NODE: (node: string) => `You specified an incorrect pseudo class node: '${node}'`,
+    INCORRECT_PSEUDO_CLASS_NODE: (node: string) => `Incorrect pseudo class node was specified: '${node}'`,
+    NTH_OF_NOT_SUPPORTED: 'Nth of syntax is not supported',
 };
