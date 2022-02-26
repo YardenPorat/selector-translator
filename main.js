@@ -1756,24 +1756,6 @@ __webpack_require__.d(__webpack_exports__, {
 
 // EXTERNAL MODULE: ./node_modules/@tokey/css-selector-parser/dist/index.js
 var dist = __webpack_require__(774);
-;// CONCATENATED MODULE: ./src/translate/constants.ts
-const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
-const ERRORS = {
-    TWO_IDS: 'An element cannot have two ids',
-    EMPTY_CLASS: 'You specified an empty class',
-    EMPTY_ID: 'You specified an empty id',
-    EMPTY_PSEUDO_CLASS: 'You specified an empty pseudo class',
-    PSEUDO_ELEMENT_AS_PSEUDO_CLASS: (el) => `You specified the pseudo element '${el}' as a pseudo class`,
-    UNKNOWN_PSEUDO_ELEMENT: (el) => `Unknown pseudo element '${el}'`,
-    MULTIPLE_PSEUDO_ELEMENT: `You cannot have multiple pseudo elements on a single selector`,
-    EMPTY_PSEUDO_CLASS_NODE: 'You specified an empty pseudo class node',
-    EXPECTED_PSEUDO_CLASS_NODE: `You specified a pseudo class which is expected to have a node (${[
-        ...pseudoClassWithNodes,
-    ].join(', ')})`,
-    EMPTY_REQUIRED_NODE: 'You specified a pseudo class with an empty node',
-    INCORRECT_PSEUDO_CLASS_NODE: (node) => `You specified an incorrect pseudo class node: '${node}'`,
-};
-
 ;// CONCATENATED MODULE: ./src/translate/helpers/string-manipulation.ts
 function joiner(items) {
     if (items.length === 2) {
@@ -1787,17 +1769,6 @@ function joiner(items) {
 
 ;// CONCATENATED MODULE: ./src/translate/helpers/pseudo-classes.ts
 
-
-function validatePseudoClassStep(step) {
-    const lowercaseStep = step.toLowerCase();
-    if (['odd', 'even'].includes(lowercaseStep)) {
-        return;
-    }
-    if (!lowercaseStep.includes('n') ||
-        isNaN(Number(lowercaseStep.replace('n', '').replace('-', '').replace('+', '')))) {
-        return ERRORS.INCORRECT_PSEUDO_CLASS_NODE(step);
-    }
-}
 function parseStep(stepString) {
     const stepSign = stepString.includes('-') ? -1 : 1;
     return (Number(stepString.toLowerCase().replace('n', '').replace('-', '')) || 1) * stepSign;
@@ -2041,7 +2012,7 @@ function visualize(selector) {
                     moveRefToSiblingByIndex(offset - 1); // 1 based
                 }
                 else if (parsedPseudoClass.offset && parsedPseudoClass.step) {
-                    const offset = Number(parsedPseudoClass.offset);
+                    const offset = Math.abs(Number(parsedPseudoClass.offset));
                     appendMultipleSiblings(offset * 2);
                     moveRefToSiblingByIndex(offset - 1); // 1 based
                 }
@@ -2276,6 +2247,24 @@ const PSEUDO_ELEMENTS_DESCRIPTORS = {
 };
 const isPseudoElement = (value) => Object.keys(PSEUDO_ELEMENTS_DESCRIPTORS).includes(value);
 
+;// CONCATENATED MODULE: ./src/translate/constants.ts
+const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
+const ERRORS = {
+    TWO_IDS: 'An element cannot have two ids',
+    EMPTY_CLASS: 'You specified an empty class',
+    EMPTY_ID: 'You specified an empty id',
+    EMPTY_PSEUDO_CLASS: 'You specified an empty pseudo class',
+    PSEUDO_ELEMENT_AS_PSEUDO_CLASS: (el) => `You specified the pseudo element '${el}' as a pseudo class`,
+    UNKNOWN_PSEUDO_ELEMENT: (el) => `Unknown pseudo element '${el}'`,
+    MULTIPLE_PSEUDO_ELEMENT: `You cannot have multiple pseudo elements on a single selector`,
+    EMPTY_PSEUDO_CLASS_NODE: 'You specified an empty pseudo class node',
+    EXPECTED_PSEUDO_CLASS_NODE: `You specified a pseudo class which is expected to have a node (${[
+        ...pseudoClassWithNodes,
+    ].join(', ')})`,
+    EMPTY_REQUIRED_NODE: 'You specified a pseudo class with an empty node',
+    INCORRECT_PSEUDO_CLASS_NODE: (node) => `You specified an incorrect pseudo class node: '${node}'`,
+};
+
 ;// CONCATENATED MODULE: ./src/translate/iterate-compound-selector.ts
 
 
@@ -2343,14 +2332,14 @@ function iterateCompoundSelector(compoundSelector) {
             }
             else if (isPseudoElement(value)) {
                 result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
+                break;
             }
             else if (((_b = node.nodes) === null || _b === void 0 ? void 0 : _b.length) && node.nodes[0].nodes) {
-                const { parsedPseudoClass } = parsePseudoClassNode(node.value, node.nodes[0].nodes);
-                if (parsedPseudoClass.step) {
-                    const error = validatePseudoClassStep(parsedPseudoClass.step);
-                    if (error)
-                        result.err = error;
+                if (node.nodes[0].nodes.some((node) => node.invalid === true)) {
+                    result.err = ERRORS.INCORRECT_PSEUDO_CLASS_NODE(node.nodes[0].nodes[0].value);
+                    break;
                 }
+                const { parsedPseudoClass } = parsePseudoClassNode(node.value, node.nodes[0].nodes);
                 result.pseudoClasses.push(parsedPseudoClass);
             }
             else {
