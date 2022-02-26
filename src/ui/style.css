@@ -105,7 +105,7 @@ h3 {
   text-align: center;
   background-color: rgba(0, 0, 0, 0.4);
   border-radius: 10px;
-  padding: 10px;
+  padding: 10px 0;
 }
 
 #result mark {
