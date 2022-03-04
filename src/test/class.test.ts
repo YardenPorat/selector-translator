@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { translate } from '../translate/translate';
-import { visualize } from '../visualize';
+import { visualize } from '../ui/visualization/visualize';
 
 describe('Classes', () => {
     it('A single class selector', function () {

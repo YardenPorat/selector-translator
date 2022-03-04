@@ -18,9 +18,14 @@ export function parseAttribute(unparsedAttribute: string): AttributeError | Attr
 
     const firstPart = unparsedAttribute.slice(0, splitterLocation);
     const secondPart = unparsedAttribute.slice(splitterLocation + 1);
+
     const { value, casing } = getValue(secondPart);
     if (firstPart.length === 0 || !value || secondPart.endsWith(':')) {
         return { type: ERROR, error: `Invalid attribute selector: '[${unparsedAttribute}]'` };
+    }
+
+    if (!isNaN(Number(secondPart))) {
+        return { type: ERROR, error: `Numeric attribute value which is not wrapped in double quotes - ${secondPart}` };
     }
 
     const modifier = firstPart.at(-1)!;

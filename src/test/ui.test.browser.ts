@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { createVisualizationElement } from '../ui/visualization/create-element';
-import { visualize } from '../visualize';
+import { visualize } from '../ui/visualization/visualize';
 
 const visualizeTextArea = (selector: string) =>
     createVisualizationElement(visualize(selector)[0]) as HTMLTextAreaElement;

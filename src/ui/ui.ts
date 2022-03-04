@@ -1,4 +1,4 @@
-import { visualize } from '../visualize';
+import { visualize } from './visualization/visualize';
 import { translate } from '../translate/translate';
 import { createVisualizationElement, getVisualizationStyle } from './visualization/create-element';
 import './style.css';

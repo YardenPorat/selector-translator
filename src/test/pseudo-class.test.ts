@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { translate } from '../translate/translate';
-import { visualize } from '../visualize';
+import { visualize } from '../ui/visualization/visualize';
 import type { VisualizationElement } from '../ui/visualization/create-element';
 
 describe('Pseudo Class', () => {

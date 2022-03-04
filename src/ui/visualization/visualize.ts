@@ -4,35 +4,47 @@ import {
     parseStep,
     PSEUDO_CLASS_ATTRIBUTES,
     PSEUDO_CLASS_STATE,
-} from './translate/helpers/pseudo-classes';
-import type { VisualizationElement } from './ui/visualization/create-element';
-import type { PseudoClassName } from './translate/types';
+} from '../../translate/helpers/pseudo-classes';
+import type { VisualizationElement } from './create-element';
+import type { PseudoClassName } from '../../translate/types';
 
-function appendAttribute(attribute: string, tag: string | undefined) {
+function parseAttribute(attribute: string) {
     let [attr, value] = attribute.split('=');
     if (value) {
-        value = value.endsWith(' i') ? value.slice(0, -2) : value;
+        if (value.endsWith(' i')) {
+            value = value
+                .slice(0, -2)
+                .replaceAll('"', '')
+                .split('')
+                .map((char, i) => (i % 2 !== 0 ? char.toLowerCase() : char.toUpperCase()))
+                .join('');
+        }
         value = value[0] === '"' ? value.slice(1, -1) : value;
         const modifier = ['^', '$', '~', '*', '|'].includes(attr.at(-1)!) ? attr.at(-1) : '';
         attr = modifier ? attr.slice(0, -1) : attr;
+        return { attr, value, modifier };
+    }
+    return { attr, value };
+}
+
+function getAttribute(attribute: string) {
+    const { attr, value, modifier } = parseAttribute(attribute);
+    if (value) {
         if (modifier === '^') {
-            attribute = `${attr}="${value}*"`;
+            return { attr, value: `${value}*` };
         } else if (modifier === '|') {
-            attribute = attr + '="*-' + value + '-*"';
+            return { attr, value: `*-${value}-*` };
         } else if (modifier === '~') {
-            attribute = `${attr}="* ${value} *"`;
+            return { attr, value: `* ${value} *` };
         } else if (modifier === '*') {
-            attribute = `${attr}="*${value}*"`;
+            return { attr, value: `*${value}*` };
         } else if (modifier === '$') {
-            attribute = `${attr}="*${value}"`;
-        } else if (!modifier) {
-            attribute = `${attr}="${value}"`;
+            return { attr, value: `*${value}` };
+        } else {
+            return { attr, value: value };
         }
     }
-    if (!tag) {
-        return `<element ${attribute}>`;
-    }
-    return `${tag.slice(0, -1)} ${attribute}>`;
+    return { attr, value: '' };
 }
 
 const getLastIndex = (arr: any[]) => arr.length - 1;
@@ -44,7 +56,6 @@ const baseElement: VisualizationElement = { tag: 'div' };
 export function visualize(selector: string) {
     const [selectorList] = parseCssSelector(selector); // first selector, before the ','
 
-    const tags = [''];
     const elements: VisualizationElement[] = [{ ...baseElement }];
     siblingArrayRef = elements;
     currentElement = elements[0];
@@ -61,7 +72,9 @@ export function visualize(selector: string) {
         } else if (selector.type === 'id') {
             Object.assign(currentElement, { id: selector.value });
         } else if (selector.type === 'attribute') {
-            tags[tags.length - 1] = appendAttribute(selector.value, tags.at(-1));
+            // tags[tags.length - 1] = appendAttribute(selector.value, tags.at(-1));
+            const { attr, value } = getAttribute(selector.value);
+            addAttributes([[attr, value]]);
         } else if (selector.type === 'pseudo_element') {
             if (selector.value === 'first-line') {
                 addChild(currentElement, {

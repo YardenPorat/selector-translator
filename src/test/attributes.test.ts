@@ -1,31 +1,33 @@
 import { expect } from 'chai';
 import { translate } from '../translate/translate';
-// import { visualize } from '../visualize';
+import { visualize } from '../ui/visualization/visualize';
 
 describe('Attributes', () => {
-    it('Has attribute', function () {
-        const selector = '[href]';
-        expect(translate(selector), selector).to.eq(`Any element with an attribute of 'href'`);
-        // expect(visualize(selector)).to.deep.eq(['<element href>']);
-    });
+    describe('Without value', function () {
+        it('Has attribute - [href]', function () {
+            const selector = '[href]';
+            expect(translate(selector)).to.eq(`Any element with an attribute of 'href'`);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div', attributes: { href: '' } }]);
+        });
 
-    it('Specific element that has an attribute', function () {
-        const selector = 'div[href]';
-        expect(translate(selector), selector).to.eq(`A '<div>' element with an attribute of 'href'`);
-        // expect(visualize(selector)).to.deep.eq(['<div href>']);
+        it('Specific element that has an attribute', function () {
+            const selector = 'div[href]';
+            expect(translate(selector)).to.eq(`A '<div>' element with an attribute of 'href'`);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div', attributes: { href: '' } }]);
+        });
     });
 
     describe('With double quotes', function () {
         it('Handle invalid attribute selector', function () {
             const selector = '[="z"]';
-            expect(translate(selector), selector).to.eq(`Error: Invalid attribute selector: '[="z"]'`);
+            expect(translate(selector)).to.eq(`Error: Invalid attribute selector: '[="z"]'`);
             // No visualization support for invalid attribute selector
         });
 
         it('Handles an empty attribute', function () {
             const selector = '[href=""]';
             expect(translate(selector), selector).to.eq(`Any element with an attribute of 'href' whose value is empty`);
-            // expect(visualize(selector)).to.deep.eq(['<element href="">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div', attributes: { href: '' } }]);
         });
 
         it('Handles attribute = value', function () {
@@ -33,7 +35,13 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `Any element with an attribute of 'target' whose value is '_blank'`
             );
-            // expect(visualize(selector)).to.deep.eq(['<element target="_blank">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div', attributes: { target: '_blank' } }]);
+        });
+
+        it('Handles attribute with numeric value', function () {
+            const selector = '[a="1"]';
+            expect(translate(selector), selector).to.eq(`Any element with an attribute of 'a' whose value is '1'`);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div', attributes: { a: '1' } }]);
         });
 
         it('Handles element with attribute = value', function () {
@@ -41,7 +49,7 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'target' whose value is '_blank'`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a target="_blank">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { target: '_blank' } }]);
         });
 
         it('Handles element with attribute ^= value', function () {
@@ -49,7 +57,7 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'href' whose value starts with 'mailto:'`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a href="mailto:*">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { href: 'mailto:*' } }]);
         });
 
         it('Handles element with attribute $= value', function () {
@@ -57,15 +65,15 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'href' whose value ends with '.pdf'`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a href="*.pdf">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { href: '*.pdf' } }]);
         });
 
-        it('Handles element with attribute |= value', function () {
+        it(`Handles element with attribute |= value - 'a[lang|="en"]'`, function () {
             const selector = 'a[lang|="en"]';
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'lang' whose value 'en' is included in a hyphen separated list`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a lang="*-en-*">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { lang: '*-en-*' } }]);
         });
 
         it('Handles element with attribute ~= value', function () {
@@ -73,7 +81,7 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'rel' whose value 'noopener' is included in a space separated list`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a rel="* noopener *">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { rel: '* noopener *' } }]);
         });
 
         it('Handles element with attribute *= value', function () {
@@ -81,7 +89,7 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'rel' whose value contains 'noopener'`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a rel="*noopener*">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { rel: '*noopener*' } }]);
         });
 
         it('Handles element with attribute = value, case insensitive', function () {
@@ -89,35 +97,17 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'target' whose value is '_blank' (case insensitive)`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a target="_blank">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { target: '_bLaNk' } }]);
         });
     });
 
     describe('Without double quotes', function () {
-        it('Handle invalid attribute selector - no attribute', function () {
-            const selector = '[=z]';
-            expect(translate(selector), selector).to.eq(`Error: Invalid attribute selector: '[=z]'`);
-            // No visualization support for invalid attribute selector
-        });
-
-        it('Handle invalid attribute selector - no value', function () {
-            const selector = '[href=]';
-            expect(translate(selector), selector).to.eq(`Error: Invalid attribute selector: '[href=]'`);
-            // No visualization support for invalid attribute selector
-        });
-
-        it('Handle invalid attribute selector - value ends with colon', function () {
-            const selector = '[href=mailto:]';
-            expect(translate(selector), selector).to.eq(`Error: Invalid attribute selector: '[href=mailto:]'`);
-            // No visualization support for invalid attribute selector
-        });
-
         it('Handles attribute = value', function () {
             const selector = '[target=_blank]';
             expect(translate(selector), selector).to.eq(
                 `Any element with an attribute of 'target' whose value is '_blank'`
             );
-            // expect(visualize(selector)).to.deep.eq(['<element target="_blank">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div', attributes: { target: '_blank' } }]);
         });
 
         it('Handles element with attribute = value', function () {
@@ -125,7 +115,7 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'target' whose value is '_blank'`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a target="_blank">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { target: '_blank' } }]);
         });
 
         it('Handles element with attribute ^= value', function () {
@@ -133,7 +123,7 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'href' whose value starts with 'mailto'`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a href="mailto*">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { href: 'mailto*' } }]);
         });
 
         it('Handles element with attribute $= value', function () {
@@ -141,7 +131,7 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'href' whose value ends with '.pdf'`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a href="*.pdf">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { href: '*.pdf' } }]);
         });
 
         it('Handles element with attribute |= value', function () {
@@ -149,7 +139,7 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'lang' whose value 'en' is included in a hyphen separated list`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a lang="*-en-*">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { lang: '*-en-*' } }]);
         });
 
         it('Handles element with attribute ~= value', function () {
@@ -157,7 +147,7 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'rel' whose value 'noopener' is included in a space separated list`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a rel="* noopener *">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { rel: '* noopener *' } }]);
         });
 
         it('Handles element with attribute *= value', function () {
@@ -165,7 +155,7 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'rel' whose value contains 'noopener'`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a rel="*noopener*">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { rel: '*noopener*' } }]);
         });
 
         it('Handles element with attribute = value, case insensitive', function () {
@@ -173,15 +163,40 @@ describe('Attributes', () => {
             expect(translate(selector), selector).to.eq(
                 `An '<a>' element with an attribute of 'target' whose value is '_blank' (case insensitive)`
             );
-            // expect(visualize(selector)).to.deep.eq(['<a target="_blank">']);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'a', attributes: { target: '_bLaNk' } }]);
+        });
+
+        describe('Invalid selectors', function () {
+            // No visualization support for invalid attribute selector
+            it('Handle invalid attribute selector - no attribute', function () {
+                const selector = '[=z]';
+                expect(translate(selector), selector).to.eq(`Error: Invalid attribute selector: '[=z]'`);
+            });
+
+            it('Handle invalid attribute selector - no value', function () {
+                const selector = '[href=]';
+                expect(translate(selector), selector).to.eq(`Error: Invalid attribute selector: '[href=]'`);
+            });
+
+            it('Handle invalid attribute selector - value ends with colon', function () {
+                const selector = '[href=mailto:]';
+                expect(translate(selector), selector).to.eq(`Error: Invalid attribute selector: '[href=mailto:]'`);
+            });
+
+            it('Handle invalid value which must be wrapped with double quotes', function () {
+                const selector = '[a=1]';
+                expect(translate(selector), selector).to.eq(
+                    `Error: Numeric attribute value which is not wrapped in double quotes - 1`
+                );
+            });
         });
     });
 
     describe('Errors', function () {
+        // No visualization support for invalid attribute selector
         it('Empty attribute', function () {
             expect(translate('[]')).to.eq(`Error: Empty attribute selector: '[]'`);
             expect(translate('[ ]')).to.eq(`Error: Empty attribute selector: '[ ]'`);
-            // No visualization support for invalid attribute selector
         });
     });
 });
