@@ -1916,39 +1916,50 @@ function getNumberSuffix(n) {
     return 'th';
 }
 
-;// CONCATENATED MODULE: ./src/visualize.ts
+;// CONCATENATED MODULE: ./src/ui/visualization/visualize.ts
 
 
-function appendAttribute(attribute, tag) {
+function parseAttribute(attribute) {
     let [attr, value] = attribute.split('=');
     if (value) {
-        value = value.endsWith(' i') ? value.slice(0, -2) : value;
+        if (value.endsWith(' i')) {
+            value = value
+                .slice(0, -2)
+                .replaceAll('"', '')
+                .split('')
+                .map((char, i) => (i % 2 !== 0 ? char.toLowerCase() : char.toUpperCase()))
+                .join('');
+        }
         value = value[0] === '"' ? value.slice(1, -1) : value;
         const modifier = ['^', '$', '~', '*', '|'].includes(attr.at(-1)) ? attr.at(-1) : '';
         attr = modifier ? attr.slice(0, -1) : attr;
+        return { attr, value, modifier };
+    }
+    return { attr, value };
+}
+function getAttribute(attribute) {
+    const { attr, value, modifier } = parseAttribute(attribute);
+    if (value) {
         if (modifier === '^') {
-            attribute = `${attr}="${value}*"`;
+            return { attr, value: `${value}*` };
         }
         else if (modifier === '|') {
-            attribute = attr + '="*-' + value + '-*"';
+            return { attr, value: `*-${value}-*` };
         }
         else if (modifier === '~') {
-            attribute = `${attr}="* ${value} *"`;
+            return { attr, value: `* ${value} *` };
         }
         else if (modifier === '*') {
-            attribute = `${attr}="*${value}*"`;
+            return { attr, value: `*${value}*` };
         }
         else if (modifier === '$') {
-            attribute = `${attr}="*${value}"`;
+            return { attr, value: `*${value}` };
         }
-        else if (!modifier) {
-            attribute = `${attr}="${value}"`;
+        else {
+            return { attr, value: value };
         }
     }
-    if (!tag) {
-        return `<element ${attribute}>`;
-    }
-    return `${tag.slice(0, -1)} ${attribute}>`;
+    return { attr, value: '' };
 }
 const getLastIndex = (arr) => arr.length - 1;
 let currentElement;
@@ -1957,7 +1968,6 @@ const baseElement = { tag: 'div' };
 function visualize(selector) {
     var _a;
     const [selectorList] = (0,dist.parseCssSelector)(selector); // first selector, before the ','
-    const tags = [''];
     const elements = [Object.assign({}, baseElement)];
     siblingArrayRef = elements;
     currentElement = elements[0];
@@ -1976,7 +1986,9 @@ function visualize(selector) {
             Object.assign(currentElement, { id: selector.value });
         }
         else if (selector.type === 'attribute') {
-            tags[tags.length - 1] = appendAttribute(selector.value, tags.at(-1));
+            // tags[tags.length - 1] = appendAttribute(selector.value, tags.at(-1));
+            const { attr, value } = getAttribute(selector.value);
+            addAttributes([[attr, value]]);
         }
         else if (selector.type === 'pseudo_element') {
             if (selector.value === 'first-line') {
@@ -2188,7 +2200,7 @@ const ERROR = 'error';
 const FULL = 'full';
 const EQUAL = 'equal';
 const EMPTY = 'empty';
-function parseAttribute(unparsedAttribute) {
+function parse_attribute_parseAttribute(unparsedAttribute) {
     if (unparsedAttribute.trim() === '') {
         return { type: ERROR, error: `Empty attribute selector: '[${unparsedAttribute}]'` };
     }
@@ -2201,6 +2213,9 @@ function parseAttribute(unparsedAttribute) {
     const { value, casing } = getValue(secondPart);
     if (firstPart.length === 0 || !value || secondPart.endsWith(':')) {
         return { type: ERROR, error: `Invalid attribute selector: '[${unparsedAttribute}]'` };
+    }
+    if (!isNaN(Number(secondPart))) {
+        return { type: ERROR, error: `Numeric attribute value which is not wrapped in double quotes - ${secondPart}` };
     }
     const modifier = firstPart.at(-1);
     const { action, descriptor } = getModifierType(modifier);
@@ -2319,7 +2334,7 @@ function iterateCompoundSelector(compoundSelector) {
                 result.id = node.value;
         }
         else if (node.type === 'attribute') {
-            const attr = parseAttribute(node.value);
+            const attr = parse_attribute_parseAttribute(node.value);
             if (attr.type === ERROR) {
                 result.err = attr.error;
                 break;
@@ -2597,9 +2612,6 @@ class App {
         };
         this.visualize = (value) => {
             const visualization = visualize(value);
-            // TODO: Remove
-            // eslint-disable-next-line no-console
-            // console.log(JSON.stringify(visualization, null, 0));
             const elements = [];
             for (const element of visualization) {
                 const el = createVisualizationElement(element);
