@@ -106,10 +106,6 @@ export class App {
     private visualize = (value: string) => {
         const visualization = visualize(value);
 
-        // TODO: Remove
-        // eslint-disable-next-line no-console
-        // console.log(JSON.stringify(visualization, null, 0));
-
         const elements = [];
         for (const element of visualization) {
             const el = createVisualizationElement(element);

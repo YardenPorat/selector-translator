@@ -6,7 +6,7 @@
 - [x] a b c > d ~ d ~ d
 - [ ] Visualize PseudoElements
   - [x] after, before, first-line
-- [ ] Visualize attributes
-- [ ] Handle TODOs
+- [x] Visualize attributes
+- [x] Handle TODOs
 - [ ] allow history back\forward functionality
-- [ ] throttle input changes
+- [ ] throttle input changes ?

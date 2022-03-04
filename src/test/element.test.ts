@@ -6,8 +6,7 @@ describe('Elements', () => {
     it('Any element', function () {
         const selector = '*';
         expect(translate(selector)).to.eq(`Any element`);
-        // TODO: Visualization
-        // expect(visualize(selector)).to.deep.eq(['Any element']);
+        expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'span' }, { tag: 'a' }]);
     });
     it('A single element (not vowel)', function () {
         const selector = 'p';
