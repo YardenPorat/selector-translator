@@ -1,19 +1,18 @@
 :root {
   --primary: deeppink;
+  --textPrimary: white;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  text-decoration: none; /* s */
-  list-style-type: none; /* li */
 }
 
 html,
 body {
   background: black;
-  color: white;
+  color: var(--textPrimary);
   font-family: 'Roboto', Arial, Helvetica;
   -webkit-font-smoothing: antialiased;
 }
@@ -115,6 +114,16 @@ h3 {
   box-shadow: rgb(0 0 0 / 35%) 0px -50px 36px -28px inset;
 }
 
+#specificity {
+  margin-bottom: 20px;
+}
+#specificity-link:link,
+#specificity-link:visited {
+  color: var(--textPrimary);
+  text-decoration: none;
+  border-bottom: 1px solid white;
+}
+
 #visualization {
   font-size: 1rem;
   align-self: flex-start;
@@ -127,6 +136,8 @@ h3 {
   margin: 3px 0 3px 18px;
   padding: 0 0 0 4px;
   display: block;
+  text-decoration: none; /* s */
+  list-style-type: none; /* li */
 }
 #visualization > * {
   margin: 0 0 3px 0;

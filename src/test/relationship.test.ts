@@ -1,17 +1,19 @@
 import { expect } from 'chai';
-import { translate } from '../translate/translate';
+import { getTranslation } from './utils/get-translation';
 import { visualize } from '../ui/visualization/visualize';
 
 describe('Relationships', () => {
     describe('Space combinator', function () {
         it('ul li', function () {
             const selector = 'ul li';
-            expect(translate(selector)).to.eq(`An '<li>' element within a '<ul>' element`);
+            expect(getTranslation(selector)).to.eq(`An '<li>' element within a '<ul>' element`);
             expect(visualize(selector)).to.deep.eq([{ tag: 'ul', children: [{ tag: 'li' }] }]);
         });
         it('ul li span', function () {
             const selector = 'ul li span';
-            expect(translate(selector)).to.eq(`A '<span>' element within an '<li>' element within a '<ul>' element`);
+            expect(getTranslation(selector)).to.eq(
+                `A '<span>' element within an '<li>' element within a '<ul>' element`
+            );
             expect(visualize(selector)).to.deep.eq([
                 { tag: 'ul', children: [{ tag: 'li', children: [{ tag: 'span' }] }] },
             ]);
@@ -19,7 +21,7 @@ describe('Relationships', () => {
 
         it('a b c d c', function () {
             const selector = 'a b c d c';
-            expect(translate(selector)).to.eq(
+            expect(getTranslation(selector)).to.eq(
                 `A '<c>' element within a '<d>' element within a '<c>' element within a '<b>' element within an '<a>' element`
             );
             expect(visualize(selector)).to.deep.eq([
@@ -36,7 +38,7 @@ describe('Relationships', () => {
     describe('Direct child (>)', function () {
         it('ul > li', function () {
             const selector = 'ul > li';
-            expect(translate(selector)).to.eq(`An '<li>' element directly within a '<ul>' element`);
+            expect(getTranslation(selector)).to.eq(`An '<li>' element directly within a '<ul>' element`);
             expect(visualize(selector)).to.deep.eq([
                 { tag: 'ul', children: [{ tag: 'li', children: [{ tag: 'li' }] }] },
             ]);
@@ -44,7 +46,7 @@ describe('Relationships', () => {
 
         it('ul > li div', function () {
             const selector = 'ul > li div';
-            expect(translate(selector)).to.eq(
+            expect(getTranslation(selector)).to.eq(
                 `A '<div>' element within an '<li>' element directly within a '<ul>' element`
             );
             expect(visualize(selector)).to.deep.eq([
@@ -54,7 +56,7 @@ describe('Relationships', () => {
 
         it('ul > li div span', function () {
             const selector = 'ul > li div span';
-            expect(translate(selector)).to.eq(
+            expect(getTranslation(selector)).to.eq(
                 `A '<span>' element within a '<div>' element within an '<li>' element directly within a '<ul>' element`
             );
             expect(visualize(selector)).to.deep.eq([
@@ -67,7 +69,7 @@ describe('Relationships', () => {
 
         it('ul > li > span', function () {
             const selector = 'ul > li > span';
-            expect(translate(selector)).to.eq(
+            expect(getTranslation(selector)).to.eq(
                 `A '<span>' element directly within an '<li>' element directly within a '<ul>' element`
             );
             expect(visualize(selector)).to.deep.eq([
@@ -82,13 +84,13 @@ describe('Relationships', () => {
     describe('Directly adjacent (+)', function () {
         it('li + li', function () {
             const selector = 'li + li';
-            expect(translate(selector)).to.eq(`An '<li>' element directly adjacent sibling to an '<li>' element`);
+            expect(getTranslation(selector)).to.eq(`An '<li>' element directly adjacent sibling to an '<li>' element`);
             expect(visualize(selector)).to.deep.eq([{ tag: 'li' }, { tag: 'li' }, { tag: 'li' }]);
         });
 
         it('li + li + span', function () {
             const selector = 'li + li + span';
-            expect(translate(selector)).to.eq(
+            expect(getTranslation(selector)).to.eq(
                 `A '<span>' element directly adjacent sibling to an '<li>' element directly adjacent sibling to an '<li>' element`
             );
             expect(visualize(selector)).to.deep.eq([{ tag: 'li' }, { tag: 'li' }, { tag: 'span' }, { tag: 'span' }]);
@@ -106,7 +108,7 @@ describe('Relationships', () => {
 
         it('a+b+c+d+e', function () {
             const selector = 'a+b+c+d+e';
-            expect(translate(selector)).to.eq(
+            expect(getTranslation(selector)).to.eq(
                 `An '<e>' element directly adjacent sibling to a '<d>' element directly adjacent sibling to a '<c>' element directly adjacent sibling to a '<b>' element directly adjacent sibling to an '<a>' element`
             );
             expect(visualize(selector)).to.deep.eq([
@@ -123,13 +125,13 @@ describe('Relationships', () => {
     describe('Subsequent-sibling (~)', function () {
         it('li ~ li', function () {
             const selector = 'li ~ li';
-            expect(translate(selector)).to.eq(`An '<li>' element after a sibling which is an '<li>' element`);
+            expect(getTranslation(selector)).to.eq(`An '<li>' element after a sibling which is an '<li>' element`);
             expect(visualize(selector)).to.deep.eq([{ tag: 'li' }, { tag: 'li' }]);
         });
 
         it('a ~ a ~ a ~ a ~ a', function () {
             const selector = 'a ~ a ~ a ~ a ~ a';
-            expect(translate(selector)).to.eq(
+            expect(getTranslation(selector)).to.eq(
                 `An '<a>' element after a sibling which is an '<a>' element after a sibling which is an '<a>' element after a sibling which is an '<a>' element after a sibling which is an '<a>' element`
             );
             expect(visualize(selector)).to.deep.eq([
@@ -143,7 +145,7 @@ describe('Relationships', () => {
 
         it('a ~ b ~ c ~ d ~ e', function () {
             const selector = 'a ~ b ~ c ~ d ~ e';
-            expect(translate(selector)).to.eq(
+            expect(getTranslation(selector)).to.eq(
                 `An '<e>' element after a sibling which is a '<d>' element after a sibling which is a '<c>' element after a sibling which is a '<b>' element after a sibling which is an '<a>' element`
             );
             expect(visualize(selector)).to.deep.eq([
@@ -157,7 +159,7 @@ describe('Relationships', () => {
 
         it('div span ~ li', function () {
             const selector = 'div span ~ li';
-            expect(translate(selector)).to.eq(
+            expect(getTranslation(selector)).to.eq(
                 `An '<li>' element after a sibling which is a '<span>' element within a '<div>' element`
             );
             expect(visualize(selector)).to.deep.eq([{ tag: 'div', children: [{ tag: 'span' }, { tag: 'li' }] }]);
@@ -165,7 +167,7 @@ describe('Relationships', () => {
 
         it('div + span ~ li', function () {
             const selector = 'div + span ~ li';
-            expect(translate(selector)).to.eq(
+            expect(getTranslation(selector)).to.eq(
                 `An '<li>' element after a sibling which is a '<span>' element directly adjacent sibling to a '<div>' element`
             );
             expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'span' }, { tag: 'span' }, { tag: 'li' }]);
@@ -173,7 +175,7 @@ describe('Relationships', () => {
 
         it('div + span ~ li + b ~ c + d', function () {
             const selector = 'div + span ~ li + b ~ c + d';
-            expect(translate(selector)).to.eq(
+            expect(getTranslation(selector)).to.eq(
                 `A '<d>' element directly adjacent sibling to a '<c>' element after a sibling which is a '<b>' element directly adjacent sibling to an '<li>' element after a sibling which is a '<span>' element directly adjacent sibling to a '<div>' element`
             );
             expect(visualize(selector)).to.deep.eq([
@@ -189,7 +191,7 @@ describe('Relationships', () => {
 
         it('a b c d ~ d', function () {
             const selector = 'a b c d ~ d';
-            expect(translate(selector)).to.eq(
+            expect(getTranslation(selector)).to.eq(
                 `A '<d>' element after a sibling which is a '<d>' element within a '<c>' element within a '<b>' element within an '<a>' element`
             );
             expect(visualize(selector)).to.deep.eq([
@@ -204,16 +206,16 @@ describe('Relationships', () => {
     describe('Errors', function () {
         // No visualization for errors
         it('Empty >', function () {
-            expect(translate('li >')).to.eq(`Error: You Specified an empty combinator '>'`);
-            expect(translate('ul > li >')).to.eq(`Error: You Specified an empty combinator '>'`);
+            expect(getTranslation('li >')).to.eq(`Error: You Specified an empty combinator '>'`);
+            expect(getTranslation('ul > li >')).to.eq(`Error: You Specified an empty combinator '>'`);
         });
         it('Empty +', function () {
             const selector = 'li +';
-            expect(translate(selector)).to.eq(`Error: You Specified an empty combinator '+'`);
+            expect(getTranslation(selector)).to.eq(`Error: You Specified an empty combinator '+'`);
         });
         it('Empty ~', function () {
             const selector = 'li ~';
-            expect(translate(selector)).to.eq(`Error: You Specified an empty combinator '~'`);
+            expect(getTranslation(selector)).to.eq(`Error: You Specified an empty combinator '~'`);
         });
     });
 });

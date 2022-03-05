@@ -1,4 +1,4 @@
-import { parseCssSelector, groupCompoundSelectors } from '@tokey/css-selector-parser';
+import { parseCssSelector, groupCompoundSelectors, calcSpecificity } from '@tokey/css-selector-parser';
 import { EXIST, FULL } from './helpers/parse-attribute';
 import { PSEUDO_ELEMENTS_DESCRIPTORS } from './helpers/pseudo-elements';
 import { getPseudoClassesString } from './helpers/pseudo-classes';
@@ -13,6 +13,7 @@ const getClassesString = (cls: string[]) => (cls.length > 1 ? `classes ${joiner(
 export function translate(selector: string) {
     const errors: string[] = [];
     const selectorList = parseCssSelector(selector);
+    const specificity = selectorList.map((selector) => `[${calcSpecificity(selector).toString()}]`).join(', ');
     const compoundSelectorList = groupCompoundSelectors(selectorList);
     const translations: string[] = [];
     let pseudoElementCount = 0;
@@ -85,7 +86,8 @@ export function translate(selector: string) {
         }
         translations.push(translation.join(' '));
     }
-    return errors.length ? `Error: ${errors[0]}` : capitalizeFirstLetter(joiner(translations));
+    const translation = capitalizeFirstLetter(joiner(translations));
+    return errors.length ? { translation: `Error: ${errors[0]}` } : { translation, specificity };
 }
 
 function isVowelPrefix(str: string) {

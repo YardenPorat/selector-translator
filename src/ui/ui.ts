@@ -10,6 +10,9 @@ export class App {
     private result = document.querySelector('#result') as HTMLDivElement;
     private visualization = document.querySelector(visualizationSelector) as HTMLDivElement;
     private visualizationStyle = document.querySelector('#visualization-style') as HTMLStyleElement;
+    private specificityLink = document.querySelector('#specificity-link') as HTMLAnchorElement;
+    private specificityResult = document.querySelector('#specificity-result') as HTMLDivElement;
+
     private previousInput = '';
 
     constructor() {
@@ -35,10 +38,17 @@ export class App {
     };
 
     private translate(value: string) {
-        const translation = translate(value);
-        const withTags = this.getTags(translation);
+        const { translation, specificity } = translate(value);
+        const taggedTranslation = this.getTags(translation);
 
-        this.result.innerHTML = withTags;
+        this.result.innerHTML = taggedTranslation;
+        if (specificity) {
+            this.specificityLink.href = `https://polypane.app/css-specificity-calculator/#selector=${encodeURIComponent(
+                value
+            )}`;
+            this.specificityLink.innerText = 'Specificity';
+            this.specificityResult.innerText = `: ${specificity}`;
+        }
         this.updateQueryParam(value);
         this.visualization.innerHTML = '';
 
