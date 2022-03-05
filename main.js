@@ -2405,6 +2405,7 @@ const getClassesString = (cls) => (cls.length > 1 ? `classes ${joiner(cls)}` : `
 function translate(selector) {
     const errors = [];
     const selectorList = (0,dist.parseCssSelector)(selector);
+    const specificity = selectorList.map((selector) => `[${(0,dist.calcSpecificity)(selector).toString()}]`).join(', ');
     const compoundSelectorList = (0,dist.groupCompoundSelectors)(selectorList);
     const translations = [];
     let pseudoElementCount = 0;
@@ -2478,7 +2479,8 @@ function translate(selector) {
         }
         translations.push(translation.join(' '));
     }
-    return errors.length ? `Error: ${errors[0]}` : capitalizeFirstLetter(joiner(translations));
+    const translation = capitalizeFirstLetter(joiner(translations));
+    return errors.length ? { translation: `Error: ${errors[0]}` } : { translation, specificity };
 }
 function isVowelPrefix(str) {
     if (['ul'].includes(str)) {
@@ -2593,6 +2595,8 @@ class App {
         this.result = document.querySelector('#result');
         this.visualization = document.querySelector(visualizationSelector);
         this.visualizationStyle = document.querySelector('#visualization-style');
+        this.specificityLink = document.querySelector('#specificity-link');
+        this.specificityResult = document.querySelector('#specificity-result');
         this.previousInput = '';
         this.initiate = () => {
             const input = this.input.value.trim();
@@ -2624,9 +2628,14 @@ class App {
         this.input.addEventListener('input', this.initiate);
     }
     translate(value) {
-        const translation = translate(value);
-        const withTags = this.getTags(translation);
-        this.result.innerHTML = withTags;
+        const { translation, specificity } = translate(value);
+        const taggedTranslation = this.getTags(translation);
+        this.result.innerHTML = taggedTranslation;
+        if (specificity) {
+            this.specificityLink.href = `https://polypane.app/css-specificity-calculator/#selector=${encodeURIComponent(value)}`;
+            this.specificityLink.innerText = 'Specificity';
+            this.specificityResult.innerText = `: ${specificity}`;
+        }
         this.updateQueryParam(value);
         this.visualization.innerHTML = '';
         const unsupportedMessage = this.validateInputForVisualization(value, translation);
