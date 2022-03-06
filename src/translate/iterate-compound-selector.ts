@@ -7,6 +7,7 @@ import {
     type NthOffset,
     type NthStep,
 } from '@tokey/css-selector-parser';
+import { translate } from './translate';
 import { parsePseudoClassNode } from './helpers/pseudo-classes';
 import { parseAttribute, ERROR } from './helpers/parse-attribute';
 import { isPseudoElement, type PseudoElement } from './helpers/pseudo-elements';
@@ -62,6 +63,19 @@ export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
             } else if (isPseudoElement(value)) {
                 result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
                 break;
+            } else if (value === 'not') {
+                const innerNodes = nodes![0].nodes;
+                if (innerNodes.length === 1 && innerNodes[0].type === 'universal') {
+                    result.err = ERRORS.ABUSED_NOT_PSEUDO_CLASS;
+                    break;
+                }
+                if (innerNodes.some((node) => node.type === 'pseudo_class' && node.value === 'not')) {
+                    result.err = ERRORS.NESTED_NOT_PSEUDO_CLASS;
+                    break;
+                }
+                const innerSelector = stringifySelectorAst(nodes!); // validated that nodes is not empty
+                const { translation } = translate(innerSelector, { not: true });
+                result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
             } else if (nodes?.length && (nodes[0].nodes as NthNode[])) {
                 const innerNodes = nodes[0].nodes as (NthStep | NthOffset | NthDash | NthOf)[];
 

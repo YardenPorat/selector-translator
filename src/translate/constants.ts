@@ -1,4 +1,11 @@
-export const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
+export const pseudoClassWithNodes = new Set([
+    'nth-child',
+    'nth-last-child',
+    'nth-of-type',
+    'nth-last-of-type',
+    'lang',
+    'not',
+]);
 
 export const ERRORS = {
     TWO_IDS: 'An element cannot have two ids',
@@ -15,4 +22,7 @@ export const ERRORS = {
     EMPTY_REQUIRED_NODE: 'You specified a pseudo class with an empty node',
     INCORRECT_PSEUDO_CLASS_NODE: (node: string) => `Incorrect pseudo class node was specified: '${node}'`,
     NTH_OF_NOT_SUPPORTED: 'Nth of syntax is not supported',
+    NESTED_NOT_PSEUDO_CLASS: 'The pseudo class "not" cannot be nested',
+    ABUSED_NOT_PSEUDO_CLASS:
+        'Having a universal selector within a not pseudo class is meaningless (select everything which is not everything)',
 };

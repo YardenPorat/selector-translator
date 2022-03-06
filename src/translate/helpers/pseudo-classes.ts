@@ -37,6 +37,7 @@ export const PSEUDO_CLASS_STATE = {
     'nth-last-child': { state: 'child from the end of its parent', text: '' },
     'nth-of-type': { state: 'child of its type in his parent', text: '' },
     'nth-last-of-type': { state: 'child of its type from the end in his parent', text: '' },
+    not: { state: 'not', text: '' },
 };
 
 export const PSEUDO_CLASS_ATTRIBUTES = {
@@ -46,6 +47,10 @@ export const PSEUDO_CLASS_ATTRIBUTES = {
 export type PseudoClassWithDifferentAttributeName = keyof typeof PSEUDO_CLASS_ATTRIBUTES;
 
 function pseudoClassDescriptor({ name, value }: { name: PseudoClassName; value: string }) {
+    if (name === 'not') {
+        return `${PSEUDO_CLASS_STATE[name].state} ${value}`;
+    }
+
     // language is en
     return `${PSEUDO_CLASS_STATE[name].state} is '${value}'`;
 }

@@ -240,6 +240,59 @@ describe('Pseudo Class', () => {
         ]);
     });
 
+    describe(':not()', function () {
+        it(':not(element)', function () {
+            const selector = ':not(p)';
+            expect(getTranslation(selector), selector).to.eq(`Any element when its not a '<p>' element`);
+        });
+
+        it(':not(class)', function () {
+            const selector = ':not(.cls)';
+            expect(getTranslation(selector), selector).to.eq(
+                `Any element when its not an element with a class of 'cls'`
+            );
+        });
+
+        it(':not(el):not(el)', function () {
+            const selector = ':not(div):not(span)';
+            expect(getTranslation(selector), selector).to.eq(
+                `Any element when its not a '<div>' element and not a '<span>' element`
+            );
+        });
+
+        it(':not(el, cls)', function () {
+            const selector = ':not(div, .fancy)';
+            expect(getTranslation(selector), selector).to.eq(
+                `Any element when its not a '<div>' element or an element with a class of 'fancy'`
+            );
+        });
+
+        it('el :not(el, cls)', function () {
+            expect(getTranslation('body :not(div, .fancy)')).to.eq(
+                `An element when its not a '<div>' element or an element with a class of 'fancy' within a '<body>' element`
+            );
+            expect(getTranslation('h2 :not(span.foo)')).to.eq(
+                `An element when its not a '<span>' element with a class of 'foo' within an '<h2>' element`
+            );
+        });
+
+        describe('Errors', function () {
+            it(':not()', function () {
+                const selector = ':not()';
+                expect(getTranslation(selector)).to.eq(`Error: You specified a pseudo class with an empty node`);
+            });
+            it(':not(:not(el))', function () {
+                const selector = ':not(:not(el))';
+                expect(getTranslation(selector)).to.eq(`Error: The pseudo class "not" cannot be nested`);
+            });
+            it(':not(*)', function () {
+                expect(getTranslation(':not(*)')).to.eq(
+                    `Error: Having a universal selector within a not pseudo class is meaningless (select everything which is not everything)`
+                );
+            });
+        });
+    });
+
     describe('Formulas', () => {
         describe('Offset only', () => {
             it('element + nth-child(1)', function () {
@@ -475,7 +528,7 @@ describe('Pseudo Class', () => {
 
         it('Pseudo-class with missing required node', function () {
             const expectedError =
-                'Error: You specified a pseudo class which is expected to have a node (nth-child, nth-last-child, nth-of-type, nth-last-of-type, lang)';
+                'Error: You specified a pseudo class which is expected to have a node (nth-child, nth-last-child, nth-of-type, nth-last-of-type, lang, not)';
             expect(getTranslation(':nth-child')).to.eq(expectedError);
             expect(getTranslation(':nth-last-child')).to.eq(expectedError);
             expect(getTranslation(':nth-of-type')).to.eq(expectedError);

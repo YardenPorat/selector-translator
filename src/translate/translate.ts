@@ -10,7 +10,7 @@ const capitalizeFirstLetter = (str: string) => (str?.length ? str.charAt(0).toUp
 const addSingleQuotes = (items: string[]) => items.map((item) => `'${item}'`);
 const getClassesString = (cls: string[]) => (cls.length > 1 ? `classes ${joiner(cls)}` : `a class of ${cls[0]}`);
 
-export function translate(selector: string) {
+export function translate(selector: string, options = { not: false }) {
     const errors: string[] = [];
     const selectorList = parseCssSelector(selector);
     const specificity = selectorList.map((selector) => `[${calcSpecificity(selector).toString()}]`).join(', ');
@@ -86,7 +86,7 @@ export function translate(selector: string) {
         }
         translations.push(translation.join(' '));
     }
-    const translation = capitalizeFirstLetter(joiner(translations));
+    const translation = capitalizeFirstLetter(joiner(translations, options));
     return errors.length ? { translation: `Error: ${errors[0]}` } : { translation, specificity };
 }
 
@@ -94,5 +94,5 @@ function isVowelPrefix(str: string) {
     if (['ul'].includes(str)) {
         return false;
     }
-    return ['li'].includes(str) || ['a', 'e', 'o', 'i', 'u'].includes(str[0]);
+    return ['li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(str) || ['a', 'e', 'o', 'i', 'u'].includes(str[0]);
 }
