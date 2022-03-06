@@ -1757,12 +1757,13 @@ __webpack_require__.d(__webpack_exports__, {
 // EXTERNAL MODULE: ./node_modules/@tokey/css-selector-parser/dist/index.js
 var dist = __webpack_require__(774);
 ;// CONCATENATED MODULE: ./src/translate/helpers/string-manipulation.ts
-function joiner(items) {
+function joiner(items, options = { not: false }) {
+    const joinWord = options.not ? 'or' : 'and';
     if (items.length === 2) {
-        return `${items[0]} and ${items[1]}`;
+        return `${items[0]} ${joinWord} ${items[1]}`;
     }
     if (items.length > 2) {
-        return `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
+        return `${items.slice(0, -1).join(', ')} ${joinWord} ${items.at(-1)}`;
     }
     return items[0];
 }
@@ -1803,11 +1804,15 @@ const PSEUDO_CLASS_STATE = {
     'nth-last-child': { state: 'child from the end of its parent', text: '' },
     'nth-of-type': { state: 'child of its type in his parent', text: '' },
     'nth-last-of-type': { state: 'child of its type from the end in his parent', text: '' },
+    not: { state: 'not', text: '' },
 };
 const PSEUDO_CLASS_ATTRIBUTES = {
     'read-only': 'readonly',
 };
 function pseudoClassDescriptor({ name, value }) {
+    if (name === 'not') {
+        return `${PSEUDO_CLASS_STATE[name].state} ${value}`;
+    }
     // language is en
     return `${PSEUDO_CLASS_STATE[name].state} is '${value}'`;
 }
@@ -2273,7 +2278,14 @@ const PSEUDO_ELEMENTS_DESCRIPTORS = {
 const isPseudoElement = (value) => Object.keys(PSEUDO_ELEMENTS_DESCRIPTORS).includes(value);
 
 ;// CONCATENATED MODULE: ./src/translate/constants.ts
-const pseudoClassWithNodes = new Set(['nth-child', 'nth-last-child', 'nth-of-type', 'nth-last-of-type', 'lang']);
+const pseudoClassWithNodes = new Set([
+    'nth-child',
+    'nth-last-child',
+    'nth-of-type',
+    'nth-last-of-type',
+    'lang',
+    'not',
+]);
 const ERRORS = {
     TWO_IDS: 'An element cannot have two ids',
     EMPTY_CLASS: 'You specified an empty class',
@@ -2289,9 +2301,12 @@ const ERRORS = {
     EMPTY_REQUIRED_NODE: 'You specified a pseudo class with an empty node',
     INCORRECT_PSEUDO_CLASS_NODE: (node) => `Incorrect pseudo class node was specified: '${node}'`,
     NTH_OF_NOT_SUPPORTED: 'Nth of syntax is not supported',
+    NESTED_NOT_PSEUDO_CLASS: 'The pseudo class "not" cannot be nested',
+    ABUSED_NOT_PSEUDO_CLASS: 'Having a universal selector within a not pseudo class is meaningless (select everything which is not everything)',
 };
 
 ;// CONCATENATED MODULE: ./src/translate/iterate-compound-selector.ts
+
 
 
 
@@ -2362,6 +2377,20 @@ function iterateCompoundSelector(compoundSelector) {
                 result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
                 break;
             }
+            else if (value === 'not') {
+                const innerNodes = nodes[0].nodes;
+                if (innerNodes.length === 1 && innerNodes[0].type === 'universal') {
+                    result.err = ERRORS.ABUSED_NOT_PSEUDO_CLASS;
+                    break;
+                }
+                if (innerNodes.some((node) => node.type === 'pseudo_class' && node.value === 'not')) {
+                    result.err = ERRORS.NESTED_NOT_PSEUDO_CLASS;
+                    break;
+                }
+                const innerSelector = (0,dist.stringifySelectorAst)(nodes); // validated that nodes is not empty
+                const { translation } = translate(innerSelector, { not: true });
+                result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
+            }
             else if ((nodes === null || nodes === void 0 ? void 0 : nodes.length) && nodes[0].nodes) {
                 const innerNodes = nodes[0].nodes;
                 if (innerNodes.some((node) => node.invalid === true)) {
@@ -2402,7 +2431,7 @@ function iterateCompoundSelector(compoundSelector) {
 const capitalizeFirstLetter = (str) => ((str === null || str === void 0 ? void 0 : str.length) ? str.charAt(0).toUpperCase() + str.slice(1) : str);
 const addSingleQuotes = (items) => items.map((item) => `'${item}'`);
 const getClassesString = (cls) => (cls.length > 1 ? `classes ${joiner(cls)}` : `a class of ${cls[0]}`);
-function translate(selector) {
+function translate(selector, options = { not: false }) {
     const errors = [];
     const selectorList = (0,dist.parseCssSelector)(selector);
     const specificity = selectorList.map((selector) => `[${(0,dist.calcSpecificity)(selector).toString()}]`).join(', ');
@@ -2479,14 +2508,14 @@ function translate(selector) {
         }
         translations.push(translation.join(' '));
     }
-    const translation = capitalizeFirstLetter(joiner(translations));
+    const translation = capitalizeFirstLetter(joiner(translations, options));
     return errors.length ? { translation: `Error: ${errors[0]}` } : { translation, specificity };
 }
 function isVowelPrefix(str) {
     if (['ul'].includes(str)) {
         return false;
     }
-    return ['li'].includes(str) || ['a', 'e', 'o', 'i', 'u'].includes(str[0]);
+    return ['li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(str) || ['a', 'e', 'o', 'i', 'u'].includes(str[0]);
 }
 
 ;// CONCATENATED MODULE: ./src/ui/visualization/create-element.ts
