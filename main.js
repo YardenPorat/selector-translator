@@ -20,26 +20,26 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.tokenize = void 0;
 function tokenize(source, { isDelimiter, isStringDelimiter, isWhitespace, shouldAddToken, createToken, getCommentStartType, isCommentEnd, getUnclosedComment, offset = 0, }) {
     const tokens = [];
-    let previousChar = "";
-    let buffer = "";
-    let inComment = "";
-    let inString = "";
+    let previousChar = '';
+    let buffer = '';
+    let inComment = '';
+    let inString = '';
     let start = offset;
     let nextCharIndex = 0;
     for (const ch of source) {
         nextCharIndex += ch.length;
         if (inString) {
             buffer += ch;
-            if (ch === inString && previousChar !== "\\") {
-                pushBuffer("string");
-                inString = "";
+            if (ch === inString && previousChar !== '\\') {
+                pushBuffer('string');
+                inString = '';
             }
         }
         else if (inComment) {
             buffer += ch;
             if (isCommentEnd(inComment, ch, source, nextCharIndex, previousChar)) {
                 pushBuffer(inComment);
-                inComment = "";
+                inComment = '';
             }
         }
         else if ((inComment = getCommentStartType(ch, source, nextCharIndex))) {
@@ -74,7 +74,7 @@ function tokenize(source, { isDelimiter, isStringDelimiter, isWhitespace, should
             pushBuffer(getUnclosedComment(inComment));
         }
         else if (inString) {
-            pushBuffer("unclosed-string");
+            pushBuffer('unclosed-string');
         }
         else {
             pushBuffer();
@@ -85,12 +85,12 @@ function tokenize(source, { isDelimiter, isStringDelimiter, isWhitespace, should
             return;
         }
         const end = start + buffer.length;
-        type = type !== null && type !== void 0 ? type : (buffer.trim().length ? "text" : "space");
+        type = type !== null && type !== void 0 ? type : (buffer.trim().length ? 'text' : 'space');
         if (shouldAddToken(type, buffer)) {
             tokens[tokens.length] = createToken(buffer, type, start, end);
         }
         start = end;
-        buffer = "";
+        buffer = '';
     }
     return tokens;
 }
@@ -109,27 +109,25 @@ exports.last = exports.trimTokens = exports.groupTokens = exports.getText = expo
  * Checks if a token type is comment
  */
 function isComment(type) {
-    return (type === "line-comment" ||
-        type === "multi-comment" ||
-        type === "unclosed-comment");
+    return type === 'line-comment' || type === 'multi-comment' || type === 'unclosed-comment';
 }
 exports.isComment = isComment;
 /**
  * Checks if a token type is string
  */
 function isString(type) {
-    return type === "string" || type === "unclosed-string";
+    return type === 'string' || type === 'unclosed-string';
 }
 exports.isString = isString;
 /**
  * Checks for a set of JS strings
  */
-const isStringDelimiter = (char) => char === `'` || char === `"` || char === "`";
+const isStringDelimiter = (char) => char === `'` || char === `"` || char === '`';
 exports.isStringDelimiter = isStringDelimiter;
 /**
  * Checks for a set of Whitespace
  */
-const isWhitespace = (char) => char === " " || char === `\t` || char === `\r` || char === "\n";
+const isWhitespace = (char) => char === ' ' || char === `\t` || char === `\r` || char === '\n';
 exports.isWhitespace = isWhitespace;
 /**
  * Creates a basic token
@@ -147,11 +145,11 @@ exports.createToken = createToken;
  * Get JS type of comments for a specific set of start chars when no comment is detected empty string is used
  */
 function getJSCommentStartType(ch, source, nextCharIndex) {
-    if (ch === "/" && source[nextCharIndex] === "/") {
-        return "line-comment";
+    if (ch === '/' && source[nextCharIndex] === '/') {
+        return 'line-comment';
     }
     else {
-        return ch === "/" && source[nextCharIndex] === "*" ? "multi-comment" : "";
+        return ch === '/' && source[nextCharIndex] === '*' ? 'multi-comment' : '';
     }
 }
 exports.getJSCommentStartType = getJSCommentStartType;
@@ -159,19 +157,17 @@ exports.getJSCommentStartType = getJSCommentStartType;
  * Get CSS type of comments for a specific set of start chars when no comment is detected empty string is used
  */
 function getMultilineCommentStartType(ch, source, nextCharIndex) {
-    return ch === "/" && source[nextCharIndex] === "*" ? "multi-comment" : "";
+    return ch === '/' && source[nextCharIndex] === '*' ? 'multi-comment' : '';
 }
 exports.getMultilineCommentStartType = getMultilineCommentStartType;
 /**
  * Given a JS comment type determine if this is the end of the comment
  */
 function isCommentEnd(commentType, ch, _source, _nextCharIndex, previousChar) {
-    if (commentType === "line-comment" && ch === "\n") {
+    if (commentType === 'line-comment' && ch === '\n') {
         return true;
     }
-    else if (commentType === "multi-comment" &&
-        ch === "/" &&
-        previousChar === "*") {
+    else if (commentType === 'multi-comment' && ch === '/' && previousChar === '*') {
         return true;
     }
     return false;
@@ -181,11 +177,11 @@ exports.isCommentEnd = isCommentEnd;
  * Get the type of unclosed comment
  */
 function getUnclosedComment(commentType) {
-    if (commentType === "line-comment") {
+    if (commentType === 'line-comment') {
         return commentType;
     }
     else {
-        return "unclosed-comment";
+        return 'unclosed-comment';
     }
 }
 exports.getUnclosedComment = getUnclosedComment;
@@ -196,7 +192,7 @@ exports.getUnclosedComment = getUnclosedComment;
  */
 function getText(tokens, startIndex = 0, upToIndex = -1, source) {
     if (tokens.length === 0) {
-        return "";
+        return '';
     }
     if (upToIndex === -1) {
         upToIndex = tokens.length;
@@ -205,7 +201,7 @@ function getText(tokens, startIndex = 0, upToIndex = -1, source) {
         return source.slice(tokens[startIndex].start, tokens[upToIndex - 1].end);
     }
     else {
-        let res = "";
+        let res = '';
         for (let i = startIndex; i < upToIndex; i++) {
             res += tokens[i].value;
         }
@@ -218,7 +214,7 @@ exports.getText = getText;
  * If source is provided the value will contain the text between the tokens,
  * instead of the tokens concatenated text.
  */
-function groupTokens(tokens, type = "tokens", source) {
+function groupTokens(tokens, type = 'tokens', source) {
     return {
         type,
         start: tokens[0].start,
@@ -270,7 +266,11 @@ exports.last = last;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -303,22 +303,28 @@ class Seeker {
     }
     next() {
         this.index++;
-        return this.tokens[this.index] || { type: "" };
+        return this.tokens[this.index] || { type: '' };
     }
     back() {
         this.index--;
     }
     peekBack() {
-        return this.tokens[this.index - 1] || { type: "" };
+        return this.tokens[this.index - 1] || { type: '' };
     }
     peek(num = 1) {
-        return this.tokens[this.index + num] || { type: "" };
+        return this.tokens[this.index + num] || { type: '' };
     }
     take(type) {
         if (this.peek().type === type) {
             return this.next();
         }
         return undefined;
+    }
+    eat(type) {
+        while (this.peek().type === type) {
+            this.index++;
+        }
+        return this;
     }
     takeMany(type) {
         const tokens = [];
@@ -396,6 +402,17 @@ function groupCompoundSelectors(input, options) {
         }
         else {
             // second level: (parents.length === 1)
+            if ((options === null || options === void 0 ? void 0 : options.deep) && `nodes` in node) {
+                // compound nested selectors
+                /* This `nodes` type is hard since it's internal we use any[] here. sorry */
+                const nodes = [];
+                for (const nested of node.nodes) {
+                    nodes.push(nested.type === `selector`
+                        ? groupCompoundSelectors(nested, options)
+                        : nested);
+                }
+                node = { ...node, nodes };
+            }
             context.handleNode(node);
             // don't go deeper - shallow group
             return walk_1.walk.skipNested;
@@ -405,7 +422,7 @@ function groupCompoundSelectors(input, options) {
     return `length` in input ? context.output : context.output[0];
 }
 exports.groupCompoundSelectors = groupCompoundSelectors;
-function createCompoundContext({ splitPseudoElements = true, } = {}) {
+function createCompoundContext({ splitPseudoElements = true } = {}) {
     const output = [];
     let lastSelector;
     let lastCompound;
@@ -451,8 +468,7 @@ function createCompoundContext({ splitPseudoElements = true, } = {}) {
             if (!lastCompound.invalid && node.type !== `comment`) {
                 // validate compound parts after initial
                 if (lastCompoundInitialPart) {
-                    lastCompound.invalid =
-                        node.type === `universal` || node.type === `type`;
+                    lastCompound.invalid = node.type === `universal` || node.type === `type`;
                 }
                 lastCompoundInitialPart = node;
             }
@@ -561,10 +577,10 @@ const customPseudoClass = {
     where: () => {
         /* no specificity*/
     },
-    "nth-child": pseudoClassPlusMostSpecificInnerSelector,
-    "nth-last-child": pseudoClassPlusMostSpecificInnerSelector,
-    "nth-of-type": pseudoClassPlusMostSpecificInnerSelector,
-    "nth-last-of-type": pseudoClassPlusMostSpecificInnerSelector,
+    'nth-child': pseudoClassPlusMostSpecificInnerSelector,
+    'nth-last-child': pseudoClassPlusMostSpecificInnerSelector,
+    'nth-of-type': pseudoClassPlusMostSpecificInnerSelector,
+    'nth-last-of-type': pseudoClassPlusMostSpecificInnerSelector,
 };
 function pseudoClassPlusMostSpecificInnerSelector(node, result) {
     result[2]++;
@@ -626,7 +642,9 @@ const nestEnd = Symbol(`nest-end`);
 function walk(topNode, visit, options = {}) {
     var _a;
     // set initial top nodes to traverse
-    const toVisit = Array.isArray(topNode) ? [...topNode] : [topNode];
+    const toVisit = Array.isArray(topNode)
+        ? [...topNode]
+        : [topNode];
     // initiate context
     const context = createWalkContext(topNode);
     // iterate nodes
@@ -688,9 +706,7 @@ function createWalkContext(topNode) {
             context.indexInSelector = prevIndex.shift();
             const currentParents = context.parents;
             const currentParent = currentParents[currentParents.length - 1];
-            context.nodesInSelector = currentParent
-                ? currentParent.nodes
-                : topNode;
+            context.nodesInSelector = currentParent ? currentParent.nodes : topNode;
         },
         next() {
             context.indexInSelector++;
@@ -734,22 +750,22 @@ const core_1 = __webpack_require__(461);
 // create ast nodes
 function createEmptySelector() {
     return {
-        type: "selector",
+        type: 'selector',
         start: -1,
         end: -1,
-        before: "",
-        after: "",
+        before: '',
+        after: '',
         nodes: [],
     };
 }
 exports.createEmptySelector = createEmptySelector;
 function createEmptyNth() {
     return {
-        type: "nth",
+        type: 'nth',
         start: -1,
         end: -1,
-        before: "",
-        after: "",
+        before: '',
+        after: '',
         nodes: [],
     };
 }
@@ -767,7 +783,7 @@ function createCombinatorAst({ value, type, start, end, }) {
     };
 }
 exports.createCombinatorAst = createCombinatorAst;
-function createCommentAst({ value, start, end, }) {
+function createCommentAst({ value, start, end }) {
     return {
         type: `comment`,
         value,
@@ -780,10 +796,7 @@ function createCommentAst({ value, start, end, }) {
 exports.createCommentAst = createCommentAst;
 // type guards
 function isCombinatorToken(token) {
-    return (token.type === "space" ||
-        token.type === "+" ||
-        token.type === ">" ||
-        token.type === "~");
+    return token.type === 'space' || token.type === '+' || token.type === '>' || token.type === '~';
 }
 exports.isCombinatorToken = isCombinatorToken;
 function isNamespacedToken(token) {
@@ -812,18 +825,18 @@ function trimCombinators(selector) {
     const firstNode = nodes[0];
     const lastNode = (0, core_1.last)(nodes);
     // remove first space combinator and add to selector before
-    // (going between comment is not required for the start becuase they are taken care
+    // (going between comment is not required for the start because they are taken care
     // of during parsing)
-    if ((firstNode === null || firstNode === void 0 ? void 0 : firstNode.type) === "combinator" && firstNode.combinator === "space") {
+    if ((firstNode === null || firstNode === void 0 ? void 0 : firstNode.type) === 'combinator' && firstNode.combinator === 'space') {
         selector.nodes.shift();
         selector.before += firstNode.before + firstNode.value + firstNode.after;
     }
     // remove any edge space combinators (last and between comments)
-    if (lastNode !== firstNode) {
+    if (lastNode && lastNode !== firstNode) {
         let index = nodes.length - 1;
         let current = lastNode;
         let lastComment;
-        while ((current && current.type === `comment`) ||
+        while (current.type === `comment` ||
             (current.type === `combinator` && current.combinator === `space`)) {
             if (current.type === `combinator`) {
                 if (!lastComment) {
@@ -856,7 +869,11 @@ exports.trimCombinators = trimCombinators;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -911,9 +928,7 @@ class NthParser {
             switch (this.state) {
                 case `step`: {
                     // pickup 1 or more tokens for `5n` / `+5n` / `+5n-4` / `5`
-                    const nextToken = type === `+` && this.s.peek().type === `text`
-                        ? this.s.next()
-                        : undefined;
+                    const nextToken = type === `+` && this.s.peek().type === `text` ? this.s.next() : undefined;
                     this.breakFirstChunk({
                         type: `text`,
                         value: token.value + ((nextToken === null || nextToken === void 0 ? void 0 : nextToken.value) || ``),
@@ -923,9 +938,7 @@ class NthParser {
                     return true;
                 }
                 case `dash`: {
-                    const nextToken = type === `+` && this.s.peek().type === `text`
-                        ? this.s.next()
-                        : undefined;
+                    const nextToken = type === `+` && this.s.peek().type === `text` ? this.s.next() : undefined;
                     this.pushDash({
                         type: `text`,
                         value: token.value + ((nextToken === null || nextToken === void 0 ? void 0 : nextToken.value) || ``),
@@ -935,9 +948,7 @@ class NthParser {
                     return true;
                 }
                 case `offset`: {
-                    const nextToken = type === `+` && this.s.peek().type === `text`
-                        ? this.s.next()
-                        : undefined;
+                    const nextToken = type === `+` && this.s.peek().type === `text` ? this.s.next() : undefined;
                     this.pushOffset({
                         type: `text`,
                         value: token.value + ((nextToken === null || nextToken === void 0 ? void 0 : nextToken.value) || ``),
@@ -996,9 +1007,7 @@ class NthParser {
         else {
             const step = matchValidStart[1];
             const offset = matchValidStart[2];
-            if (!offset &&
-                !step.match(/[nN]+$/) &&
-                step.match(NthParser.validOffset)) {
+            if (!offset && !step.match(/[nN]+$/) && step.match(NthParser.validOffset)) {
                 // no `n` - just offset
                 this.pushOffset(token);
             }
@@ -1050,8 +1059,7 @@ class NthParser {
             start: token.start,
             end: token.end,
         };
-        isInvalid =
-            isInvalid !== undefined ? isInvalid : !value.match(NthParser.validStep);
+        isInvalid = isInvalid !== undefined ? isInvalid : !value.match(NthParser.validStep);
         if (isInvalid) {
             stepNode.invalid = true;
         }
@@ -1170,62 +1178,62 @@ function handleToken(token, selectors, source, s) {
     let t;
     const currentSelector = (0, helpers_1.ensureSelector)(selectors, token);
     const ast = currentSelector.nodes;
-    if (token.type === ".") {
-        const comments = s.takeMany("multi-comment").map(helpers_1.createCommentAst);
-        const name = s.take("text");
+    if (token.type === '.') {
+        const comments = s.takeMany('multi-comment').map(helpers_1.createCommentAst);
+        const name = s.take('text');
         ast.push({
-            type: "class",
-            value: (_a = name === null || name === void 0 ? void 0 : name.value) !== null && _a !== void 0 ? _a : "",
+            type: 'class',
+            value: (_a = name === null || name === void 0 ? void 0 : name.value) !== null && _a !== void 0 ? _a : '',
             start: token.start,
             end: (_d = (_b = name === null || name === void 0 ? void 0 : name.end) !== null && _b !== void 0 ? _b : (_c = (0, core_1.last)(comments)) === null || _c === void 0 ? void 0 : _c.end) !== null && _d !== void 0 ? _d : token.end,
             dotComments: comments,
         });
     }
-    else if (token.type === ":") {
-        const firstComments = s.takeMany("multi-comment").map(helpers_1.createCommentAst);
-        const type = s.take(":") || token;
+    else if (token.type === ':') {
+        const firstComments = s.takeMany('multi-comment').map(helpers_1.createCommentAst);
+        const type = s.take(':') || token;
         const isClass = token === type;
         if (isClass) {
-            const name = s.take("text");
+            const name = s.take('text');
             const endToken = name || (0, core_1.last)(firstComments) || type;
             ast.push({
-                type: "pseudo_class",
-                value: (_e = name === null || name === void 0 ? void 0 : name.value) !== null && _e !== void 0 ? _e : "",
+                type: 'pseudo_class',
+                value: (_e = name === null || name === void 0 ? void 0 : name.value) !== null && _e !== void 0 ? _e : '',
                 start: token.start,
                 end: (_f = name === null || name === void 0 ? void 0 : name.end) !== null && _f !== void 0 ? _f : endToken.end,
                 colonComments: firstComments,
             });
         }
         else {
-            const secondComments = s.takeMany("multi-comment").map(helpers_1.createCommentAst);
-            const name = s.take("text");
+            const secondComments = s.takeMany('multi-comment').map(helpers_1.createCommentAst);
+            const name = s.take('text');
             const endToken = name || (0, core_1.last)(secondComments) || type;
             ast.push({
-                type: "pseudo_element",
-                value: (_g = name === null || name === void 0 ? void 0 : name.value) !== null && _g !== void 0 ? _g : "",
+                type: 'pseudo_element',
+                value: (_g = name === null || name === void 0 ? void 0 : name.value) !== null && _g !== void 0 ? _g : '',
                 start: token.start,
                 end: (_h = name === null || name === void 0 ? void 0 : name.end) !== null && _h !== void 0 ? _h : endToken.end,
                 colonComments: { first: firstComments, second: secondComments },
             });
         }
     }
-    else if (token.type === "[") {
+    else if (token.type === '[') {
         const block = s.run((token, ast) => {
             ast.push(token);
-            return token.type !== "]";
+            return token.type !== ']';
         }, [token], source);
-        const closed = ((_j = (0, core_1.last)(block)) === null || _j === void 0 ? void 0 : _j.type) === "]";
+        const closed = ((_j = (0, core_1.last)(block)) === null || _j === void 0 ? void 0 : _j.type) === ']';
         if (closed) {
             ast.push({
-                type: "attribute",
-                value: block.length > 2 ? (0, core_1.getText)(block, 1, block.length - 1, source) : "",
+                type: 'attribute',
+                value: block.length > 2 ? (0, core_1.getText)(block, 1, block.length - 1, source) : '',
                 start: token.start,
                 end: (_l = (_k = (0, core_1.last)(block)) === null || _k === void 0 ? void 0 : _k.end) !== null && _l !== void 0 ? _l : token.end,
             });
         }
         else {
             ast.push({
-                type: "invalid",
+                type: 'invalid',
                 value: (0, core_1.getText)(block, undefined, undefined, source),
                 start: token.start,
                 end: (_o = (_m = (0, core_1.last)(block)) === null || _m === void 0 ? void 0 : _m.end) !== null && _o !== void 0 ? _o : token.end,
@@ -1263,15 +1271,12 @@ function handleToken(token, selectors, source, s) {
                     lastAst.after += next.value;
                     lastAst.end = next.end;
                 }
-                else if (lastAst === lastCombinatorAst &&
-                    lastAst.combinator === "space") {
+                else if (lastAst === lastCombinatorAst && lastAst.combinator === 'space') {
                     // combine next combinator into previous (space)
                     const nextCombinator = (0, helpers_1.createCombinatorAst)(next);
                     lastCombinatorAst.combinator = nextCombinator.combinator;
                     lastCombinatorAst.before +=
-                        lastCombinatorAst.after +
-                            lastCombinatorAst.value +
-                            nextCombinator.before;
+                        lastCombinatorAst.after + lastCombinatorAst.value + nextCombinator.before;
                     lastCombinatorAst.after = nextCombinator.after;
                     lastCombinatorAst.value = nextCombinator.value;
                     lastCombinatorAst.end = nextCombinator.end;
@@ -1327,32 +1332,32 @@ function handleToken(token, selectors, source, s) {
             s.back();
         }
     }
-    else if (token.type === "text") {
+    else if (token.type === 'text') {
         ast.push({
-            type: "type",
+            type: 'type',
             value: token.value,
             start: token.start,
             end: token.end,
         });
     }
-    else if (token.type === "#") {
-        t = s.take("text");
+    else if (token.type === '#') {
+        t = s.take('text');
         ast.push({
-            type: "id",
-            value: (_p = t === null || t === void 0 ? void 0 : t.value) !== null && _p !== void 0 ? _p : "",
+            type: 'id',
+            value: (_p = t === null || t === void 0 ? void 0 : t.value) !== null && _p !== void 0 ? _p : '',
             start: token.start,
             end: (_q = t === null || t === void 0 ? void 0 : t.end) !== null && _q !== void 0 ? _q : token.end,
         });
     }
-    else if (token.type === "*") {
+    else if (token.type === '*') {
         ast.push({
-            type: "universal",
-            value: "*",
+            type: 'universal',
+            value: '*',
             start: token.start,
             end: token.end,
         });
     }
-    else if (token.type === "|") {
+    else if (token.type === '|') {
         // search backwards compatible namespace in ast
         let prevAst;
         let prevInvalidAst;
@@ -1431,9 +1436,7 @@ function handleToken(token, selectors, source, s) {
         nsAst.namespace = {
             value: (prevAst === null || prevAst === void 0 ? void 0 : prevAst.value) || ``,
             beforeComments: validNamespace ? beforeComments : [],
-            afterComments: validTarget
-                ? potentialAfterComments.map(helpers_1.createCommentAst)
-                : [],
+            afterComments: validTarget ? potentialAfterComments.map(helpers_1.createCommentAst) : [],
         };
         nsAst.value = (target === null || target === void 0 ? void 0 : target.value) || ``;
         nsAst.end = (target === null || target === void 0 ? void 0 : target.end) || token.end;
@@ -1446,7 +1449,7 @@ function handleToken(token, selectors, source, s) {
             ast.push(nsAst);
         }
     }
-    else if (token.type === "(") {
+    else if (token.type === '(') {
         const prev = (0, core_1.last)(ast);
         const res = [];
         // handle nth selector
@@ -1479,7 +1482,7 @@ function handleToken(token, selectors, source, s) {
         // get all tokens until closed
         s.run((token, selectors) => {
             var _a, _b;
-            if (token.type === ")") {
+            if (token.type === ')') {
                 const currentSelector = (0, core_1.last)(selectors);
                 if (currentSelector) {
                     currentSelector.end =
@@ -1491,25 +1494,25 @@ function handleToken(token, selectors, source, s) {
         }, res, source);
         const ended = s.peek(0);
         if (!prev ||
-            "nodes" in prev ||
-            prev.type === "invalid" ||
-            prev.type === "combinator" ||
-            prev.type === "comment" ||
-            prev.type === "nth_step" ||
-            prev.type === "nth_dash" ||
-            prev.type === "nth_offset" ||
-            prev.type === "nth_of" ||
-            ended.type !== ")") {
+            'nodes' in prev ||
+            prev.type === 'invalid' ||
+            prev.type === 'combinator' ||
+            prev.type === 'comment' ||
+            prev.type === 'nth_step' ||
+            prev.type === 'nth_dash' ||
+            prev.type === 'nth_offset' ||
+            prev.type === 'nth_of' ||
+            ended.type !== ')') {
             ast.push({
-                type: "invalid",
+                type: 'invalid',
                 value: (0, core_1.getText)([token, ended], undefined, undefined, source),
                 start: token.start,
                 end: (_s = ended === null || ended === void 0 ? void 0 : ended.end) !== null && _s !== void 0 ? _s : s.peekBack().end,
             });
         }
         else {
-            if (res.length) {
-                const lastSelector = (0, core_1.last)(res);
+            const lastSelector = (0, core_1.last)(res);
+            if (lastSelector) {
                 (0, helpers_1.trimCombinators)(lastSelector);
             }
             prev.nodes = res;
@@ -1519,7 +1522,8 @@ function handleToken(token, selectors, source, s) {
     else if ((0, core_1.isComment)(token.type)) {
         ast.push((0, helpers_1.createCommentAst)(token));
     }
-    else if (token.type === ",") {
+    else if (token.type === ',') {
+        // we ensure at least one selector present
         const selector = (0, core_1.last)(selectors);
         selector.end = token.start;
         (0, helpers_1.trimCombinators)(selector);
@@ -1533,25 +1537,24 @@ function handleToken(token, selectors, source, s) {
         }
         selectors.push(newSelector);
     }
-    else if (token.type === "&") {
+    else if (token.type === '&') {
         ast.push({
-            type: "nesting",
-            value: "&",
+            type: 'nesting',
+            value: '&',
             start: token.start,
             end: token.end,
         });
     }
     else {
         ast.push({
-            type: "invalid",
+            type: 'invalid',
             value: token.value,
             start: token.start,
             end: token.end,
         });
     }
     if (s.done()) {
-        currentSelector.end =
-            (_u = (_t = (0, core_1.last)(currentSelector.nodes)) === null || _t === void 0 ? void 0 : _t.end) !== null && _u !== void 0 ? _u : currentSelector.start;
+        currentSelector.end = (_u = (_t = (0, core_1.last)(currentSelector.nodes)) === null || _t === void 0 ? void 0 : _t.end) !== null && _u !== void 0 ? _u : currentSelector.start;
         (0, helpers_1.trimCombinators)(currentSelector);
     }
 }
@@ -1567,26 +1570,26 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.stringifySelectorAst = void 0;
 const nth_parser_1 = __webpack_require__(780);
 function stringifySelectorAst(value) {
-    return "length" in value ? stringifySelectors(value) : stringifyNode(value);
+    return 'length' in value ? stringifySelectors(value) : stringifyNode(value);
 }
 exports.stringifySelectorAst = stringifySelectorAst;
 const printers = {
     id: (node) => `#${node.value}${stringifyNested(node)}`,
-    class: (node) => `.${node.dotComments.map(stringifyNode).join("")}${node.value}${stringifyNested(node)}`,
+    class: (node) => `.${node.dotComments.map(stringifyNode).join('')}${node.value}${stringifyNested(node)}`,
     type: (node) => `${stringifyNamespace(node)}${node.value}${stringifyNested(node)}`,
     combinator: (node) => `${node.before}${node.value}${node.after}`,
     attribute: (node) => `[${node.value}]${stringifyNested(node)}`,
-    pseudo_class: (node) => `:${node.colonComments.map(stringifyNode).join("")}${node.value}${stringifyNested(node)}`,
-    pseudo_element: (node) => `:${node.colonComments.first
+    pseudo_class: (node) => `:${node.colonComments.map(stringifyNode).join('')}${node.value}${stringifyNested(node)}`,
+    pseudo_element: (node) => `:${node.colonComments.first.map(stringifyNode).join('')}:${node.colonComments.second
         .map(stringifyNode)
-        .join("")}:${node.colonComments.second.map(stringifyNode).join("")}${node.value}${stringifyNested(node)}`,
+        .join('')}${node.value}${stringifyNested(node)}`,
     comment: ({ before, value, after }) => `${before}${value}${after}`,
     universal: (node) => `${stringifyNamespace(node)}${node.value}${stringifyNested(node)}`,
     nesting: (node) => `${node.value}${stringifyNested(node)}`,
-    selector: (node) => `${node.before}${node.nodes.map(stringifyNode).join("")}${node.after}`,
-    compound_selector: (node) => `${node.before}${node.nodes.map(stringifyNode).join("")}${node.after}`,
+    selector: (node) => `${node.before}${node.nodes.map(stringifyNode).join('')}${node.after}`,
+    compound_selector: (node) => `${node.before}${node.nodes.map(stringifyNode).join('')}${node.after}`,
     invalid: (node) => node.value,
-    nth: (node) => `${node.before}${node.nodes.map(stringifyNode).join("")}${node.after}`,
+    nth: (node) => `${node.before}${node.nodes.map(stringifyNode).join('')}${node.after}`,
     nth_step: ({ before, value, after }) => `${before}${value}${after}`,
     nth_dash: ({ before, value, after }) => `${before}${value}${after}`,
     nth_offset: ({ before, value, after }) => `${before}${value}${after}`,
@@ -1594,7 +1597,7 @@ const printers = {
 };
 function stringifyNode(node) {
     var _a, _b;
-    return (_b = (_a = printers[node.type]) === null || _a === void 0 ? void 0 : _a.call(printers, node)) !== null && _b !== void 0 ? _b : "";
+    return (_b = (_a = printers[node.type]) === null || _a === void 0 ? void 0 : _a.call(printers, node)) !== null && _b !== void 0 ? _b : '';
 }
 function stringifySelectors(selectors) {
     const result = [];
@@ -1605,10 +1608,9 @@ function stringifySelectors(selectors) {
 }
 function stringifyNested(node) {
     var _a;
-    if ("nodes" in node) {
+    if ('nodes' in node) {
         if ((_a = node.nodes) === null || _a === void 0 ? void 0 : _a.length) {
-            if (node.type === `pseudo_class` &&
-                nth_parser_1.NthParser.isNthPseudoClass(node.value)) {
+            if (node.type === `pseudo_class` && nth_parser_1.NthParser.isNthPseudoClass(node.value)) {
                 const [nthNode, ...selectors] = node.nodes;
                 return `(${stringifyNode(nthNode)}${stringifySelectors(selectors)})`;
             }
@@ -1620,7 +1622,7 @@ function stringifyNested(node) {
             return `()`;
         }
     }
-    return "";
+    return '';
 }
 function stringifyNamespace({ namespace }) {
     let ns = ``;
@@ -1666,23 +1668,23 @@ function tokenizeSelector(source, options = {}) {
     });
 }
 exports.tokenizeSelector = tokenizeSelector;
-const isDelimiter = (char, previousChar) => previousChar !== "\\" &&
-    (char === "[" ||
-        char === "]" ||
-        char === "(" ||
-        char === ")" ||
-        char === "," ||
-        char === "*" ||
-        char === "|" ||
-        char === ":" ||
-        char === "." ||
-        char === "#" ||
-        char === ">" ||
-        char === "~" ||
-        char === "+" ||
-        char === "{" ||
-        char === "}" ||
-        char === "&");
+const isDelimiter = (char, previousChar) => previousChar !== '\\' &&
+    (char === '[' ||
+        char === ']' ||
+        char === '(' ||
+        char === ')' ||
+        char === ',' ||
+        char === '*' ||
+        char === '|' ||
+        char === ':' ||
+        char === '.' ||
+        char === '#' ||
+        char === '>' ||
+        char === '~' ||
+        char === '+' ||
+        char === '{' ||
+        char === '}' ||
+        char === '&');
 //# sourceMappingURL=tokenizer.js.map
 
 /***/ })
