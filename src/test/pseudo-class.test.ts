@@ -244,6 +244,7 @@ describe('Pseudo Class', () => {
         it(':not(element)', function () {
             const selector = ':not(p)';
             expect(getTranslation(selector), selector).to.eq(`Any element when its not a '<p>' element`);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
         });
 
         it(':not(class)', function () {
@@ -251,9 +252,10 @@ describe('Pseudo Class', () => {
             expect(getTranslation(selector), selector).to.eq(
                 `Any element when its not an element with a class of 'cls'`
             );
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'div', classes: ['cls'] }]);
         });
 
-        it(':not(el):not(el)', function () {
+        it(':not(el1):not(el2)', function () {
             const selector = ':not(div):not(span)';
             expect(getTranslation(selector), selector).to.eq(
                 `Any element when its not a '<div>' element and not a '<span>' element`

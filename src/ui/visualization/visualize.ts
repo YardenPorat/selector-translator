@@ -1,4 +1,4 @@
-import { parseCssSelector, PseudoClass } from '@tokey/css-selector-parser';
+import { parseCssSelector, PseudoClass, stringifySelectorAst } from '@tokey/css-selector-parser';
 import {
     parsePseudoClassNode,
     parseStep,
@@ -50,14 +50,13 @@ function getAttribute(attribute: string) {
 const getLastIndex = (arr: any[]) => arr.length - 1;
 
 let currentElement: VisualizationElement;
-let siblingArrayRef: VisualizationElement[];
 const baseElement: VisualizationElement = { tag: 'div' };
 
 export function visualize(selector: string) {
     const [selectorList] = parseCssSelector(selector); // first selector, before the ','
 
     const elements: VisualizationElement[] = [{ ...baseElement }];
-    siblingArrayRef = elements;
+    let siblingArrayRef = elements;
     currentElement = elements[0];
     let duplicateNext = false;
     let duplicateAsSibling = false;
@@ -72,44 +71,55 @@ export function visualize(selector: string) {
         } else if (selector.type === 'id') {
             Object.assign(currentElement, { id: selector.value });
         } else if (selector.type === 'attribute') {
-            // tags[tags.length - 1] = appendAttribute(selector.value, tags.at(-1));
             const { attr, value } = getAttribute(selector.value);
             addAttributes([[attr, value]]);
         } else if (selector.type === 'pseudo_element') {
             if (selector.value === 'first-line') {
-                addChild(currentElement, {
-                    tag: 'div',
-                    innerText: 'First line',
-                    attributes: { data: 'first-child' },
-                    hideTag: true,
-                });
-                addChild(currentElement, { tag: 'div', innerText: 'Second line', hideTag: true });
-                addSibling(
-                    currentElement,
-                    {
-                        tag: currentElement.tag,
-                        innerText: `</${currentElement.tag}>`,
+                addChild({
+                    parent: currentElement,
+                    child: {
+                        tag: 'div',
+                        innerText: 'First line',
+                        attributes: { data: 'first-child' },
                         hideTag: true,
                     },
-                    { adjacent: true }
-                );
+                });
+                addChild({ parent: currentElement, child: { tag: 'div', innerText: 'Second line', hideTag: true } });
+                addSiblings({
+                    element: currentElement,
+                    siblings: [
+                        {
+                            tag: currentElement.tag,
+                            innerText: `</${currentElement.tag}>`,
+                            hideTag: true,
+                        },
+                    ],
+                    adjacent: true,
+                    siblingArrayRef,
+                });
             }
             if (selector.value === 'first-letter') {
-                addChild(currentElement, {
-                    tag: 'div',
-                    innerText: 'First letter only',
-                    attributes: { data: 'first-letter' },
-                    hideTag: true,
-                });
-                addSibling(
-                    currentElement,
-                    {
-                        tag: currentElement.tag,
-                        innerText: `</${currentElement.tag}>`,
+                addChild({
+                    parent: currentElement,
+                    child: {
+                        tag: 'div',
+                        innerText: 'First letter only',
+                        attributes: { data: 'first-letter' },
                         hideTag: true,
                     },
-                    { adjacent: true }
-                );
+                });
+                addSiblings({
+                    element: currentElement,
+                    siblings: [
+                        {
+                            tag: currentElement.tag,
+                            innerText: `</${currentElement.tag}>`,
+                            hideTag: true,
+                        },
+                    ],
+                    siblingArrayRef,
+                    adjacent: true,
+                });
             }
         } else if (selector.type === 'pseudo_class') {
             const value = selector.value as PseudoClassName;
@@ -122,20 +132,26 @@ export function visualize(selector: string) {
                     addAttributes([[parsedPseudoClass.name, parsedPseudoClass.value!]]);
                 } else if (parsedPseudoClass.offset && !parsedPseudoClass.step) {
                     const offset = Number(parsedPseudoClass.offset);
-                    appendMultipleSiblings(offset);
-                    moveRefToSiblingByIndex(offset - 1); // 1 based
+                    duplicateMultipleSiblings(offset, siblingArrayRef);
+                    moveRefToSiblingByIndex(offset - 1, siblingArrayRef); // 1 based
                 } else if (parsedPseudoClass.offset && parsedPseudoClass.step) {
                     const offset = Math.abs(Number(parsedPseudoClass.offset));
-                    appendMultipleSiblings(offset * 2);
-                    moveRefToSiblingByIndex(offset - 1); // 1 based
+                    duplicateMultipleSiblings(offset * 2, siblingArrayRef);
+                    moveRefToSiblingByIndex(offset - 1, siblingArrayRef); // 1 based
                 } else if (!parsedPseudoClass.offset && parsedPseudoClass.step) {
                     if (['odd', 'even'].includes(parsedPseudoClass.step)) {
-                        appendMultipleSiblings(4);
-                        moveRefToSiblingByIndex(parsedPseudoClass.step === 'even' ? 3 : 4); // last even sibling
+                        duplicateMultipleSiblings(4, siblingArrayRef);
+                        const index = parsedPseudoClass.step === 'even' ? 3 : 4;
+                        moveRefToSiblingByIndex(index, siblingArrayRef); // last even sibling
                     } else {
                         const step = Math.abs(parseStep(parsedPseudoClass.step));
-                        appendMultipleSiblings(step * 2, { moveRefToLast: true });
+                        duplicateMultipleSiblings(step * 2, siblingArrayRef, { moveRefToLast: true });
                     }
+                } else if (parsedPseudoClass.name === 'not') {
+                    const notElements = visualize(parsedPseudoClass.value ?? stringifySelectorAst(selector.nodes![0]));
+                    addSiblings({ element: currentElement, siblings: notElements, siblingArrayRef });
+                    // const step = Math.abs(parseStep(parsedPseudoClass.step));
+                    // appendMultipleSiblings(step * 2, { moveRefToLast: true });
                 }
             } else if (['disabled', 'required', 'read-only'].includes(value)) {
                 const attrName = getAttributeName(value);
@@ -161,40 +177,40 @@ export function visualize(selector: string) {
             }
 
             if (value === 'last-child' || value === 'last-of-type') {
-                duplicateElementAsSibling(currentElement, { moveRef: true });
+                duplicateElementAsSibling(currentElement, siblingArrayRef, { moveRef: true });
             }
             if (value === 'first-child' || value === 'first-of-type') {
-                duplicateElementAsSibling(currentElement, { moveRef: false });
+                duplicateElementAsSibling(currentElement, siblingArrayRef, { moveRef: false });
             }
         } else if (selector.type === 'combinator') {
             const [combinator] = selector.value;
 
             if (combinator === ' ') {
                 // Child combinators
-                addChild(currentElement, baseElement, { moveSiblingsRef: true, moveRefToChild: true });
+                siblingArrayRef = addChild({ parent: currentElement, child: baseElement, moveRefToChild: true });
             } else if (combinator === '>') {
-                addChild(currentElement, baseElement, { moveSiblingsRef: true, moveRefToChild: true });
+                siblingArrayRef = addChild({ parent: currentElement, moveRefToChild: true });
                 duplicateNext = true;
                 continue;
             } else if (combinator === '+') {
                 adjacentCount--;
                 siblingArrayRef.push({ ...baseElement });
-                moveRefToSiblingByIndex(-1);
+                moveRefToSiblingByIndex(-1, siblingArrayRef);
                 if (adjacentCount === 0) {
                     // Only last element of adjacent combinator will be duplicated
                     duplicateAsSibling = true;
                 }
             } else if (combinator === '~') {
-                addSibling(currentElement, baseElement, { moveRef: true });
+                addSiblings({ element: currentElement, siblingArrayRef, moveRef: true });
             }
         } else if (selector.type === 'universal') {
             // not moving the reference allow adding children to adjacent elements
-            addSibling(currentElement, { ...baseElement, tag: 'span' });
-            addSibling(currentElement, { ...baseElement, tag: 'a' });
+            addSiblings({ element: currentElement, siblings: [{ ...baseElement, tag: 'span' }], siblingArrayRef });
+            addSiblings({ element: currentElement, siblings: [{ ...baseElement, tag: 'a' }], siblingArrayRef });
         }
 
         if (duplicateNext) {
-            addChild(currentElement, currentElement);
+            addChild({ parent: currentElement, child: currentElement });
             duplicateNext = false;
         }
 
@@ -213,9 +229,13 @@ function hasInnerNodes(selector: PseudoClass) {
 interface AppendMultipleSiblingsOptions {
     moveRefToLast?: boolean;
 }
-function appendMultipleSiblings(amount: number, options: AppendMultipleSiblingsOptions = {}) {
+function duplicateMultipleSiblings(
+    amount: number,
+    siblingArrayRef: VisualizationElement[],
+    options: AppendMultipleSiblingsOptions = {}
+) {
     for (let index = 0; index < amount; index++) {
-        duplicateElementAsSibling(currentElement, { moveRef: false });
+        duplicateElementAsSibling(currentElement, siblingArrayRef, { moveRef: false });
     }
 
     if (options.moveRefToLast) {
@@ -225,7 +245,11 @@ function appendMultipleSiblings(amount: number, options: AppendMultipleSiblingsO
 interface DuplicateElementAsSiblingOptions {
     moveRef?: boolean;
 }
-function duplicateElementAsSibling(element: VisualizationElement, options: DuplicateElementAsSiblingOptions = {}) {
+function duplicateElementAsSibling(
+    element: VisualizationElement,
+    siblingArrayRef: VisualizationElement[],
+    options: DuplicateElementAsSiblingOptions = {}
+) {
     const newSibling = { ...element };
     siblingArrayRef.push(newSibling);
     if (options.moveRef) {
@@ -234,45 +258,48 @@ function duplicateElementAsSibling(element: VisualizationElement, options: Dupli
 }
 
 interface AddChildOptions {
-    moveSiblingsRef?: boolean;
+    parent: VisualizationElement;
+    child?: VisualizationElement;
     moveRefToChild?: boolean;
 }
-function addChild(parent: VisualizationElement, child = baseElement, options: AddChildOptions = {}) {
+function addChild({ parent, child = baseElement, moveRefToChild }: AddChildOptions) {
     const newChild = { ...child };
 
     if (!parent.children) {
         parent.children = [];
     }
-    parent.children.push({ ...newChild });
+    parent.children.push(newChild);
 
-    if (options.moveSiblingsRef) {
-        siblingArrayRef = parent.children;
-    }
-
-    if (options.moveRefToChild) {
+    if (moveRefToChild) {
         currentElement = parent.children.at(-1)!;
     }
+
+    return parent.children;
 }
 
 interface AddSiblingOptions {
+    element: VisualizationElement;
+    siblingArrayRef: VisualizationElement[];
+    siblings?: VisualizationElement[];
     moveRef?: boolean;
     adjacent?: boolean;
 }
-function addSibling(element: VisualizationElement, sibling = baseElement, options: AddSiblingOptions = {}) {
+function addSiblings({ element, siblingArrayRef, siblings, moveRef, adjacent }: AddSiblingOptions) {
+    const newSiblings = siblings?.length ? [...siblings] : [{ ...baseElement }];
     const lastIndex = getLastIndex(siblingArrayRef);
-    if (options.adjacent) {
+    if (adjacent) {
         const currentElementIndex = siblingArrayRef.indexOf(element);
-        siblingArrayRef.splice(currentElementIndex + 1, 0, { ...sibling });
+        siblingArrayRef.splice(currentElementIndex + 1, 0, ...newSiblings);
     } else {
-        siblingArrayRef.push({ ...sibling });
+        siblingArrayRef.push(...newSiblings);
     }
 
-    if (options.moveRef) {
+    if (moveRef) {
         currentElement = siblingArrayRef.at(lastIndex + 1)!;
     }
 }
 
-function moveRefToSiblingByIndex(index: number) {
+function moveRefToSiblingByIndex(index: number, siblingArrayRef: VisualizationElement[]) {
     if (index === -1) {
         currentElement = siblingArrayRef[getLastIndex(siblingArrayRef)];
         return;

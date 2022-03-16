@@ -8,7 +8,9 @@
   - [x] after, before, first-line
 - [x] Visualize attributes
 - [x] Handle TODOs
-- [ ] Support not:
+- [ ] Support not
+  - [x] text
+  - [ ] visualization
 - [ ] Support where:
 - [ ] allow history back\forward functionality
 - [ ] throttle input changes ?
