@@ -2,6 +2,7 @@ import { visualize } from './visualization/visualize';
 import { translate } from '../translate/translate';
 import { createVisualizationElement, getVisualizationStyle } from './visualization/create-element';
 import './style.css';
+import type { Specificity } from '@tokey/css-selector-parser';
 
 const visualizationSelector = '#visualization';
 
@@ -42,25 +43,24 @@ export class App {
         const taggedTranslation = this.getTags(translation);
 
         this.result.innerHTML = taggedTranslation;
-        if (specificity) {
+
+        this.updateQueryParam(value);
+        this.visualization.innerHTML = '';
+
+        const unsupportedMessage = this.validateInputForVisualization(specificity ?? [], translation);
+        if (unsupportedMessage) {
+            this.visualization.innerHTML = unsupportedMessage;
+        } else {
             this.specificityLink.href = `https://polypane.app/css-specificity-calculator/#selector=${encodeURIComponent(
                 value
             )}`;
             this.specificityLink.innerText = 'Specificity';
-            this.specificityResult.innerText = `: ${specificity}`;
-        }
-        this.updateQueryParam(value);
-        this.visualization.innerHTML = '';
-
-        const unsupportedMessage = this.validateInputForVisualization(value, translation);
-        if (unsupportedMessage) {
-            this.visualization.innerHTML = unsupportedMessage;
-        } else {
+            this.specificityResult.innerText = `: [${specificity!.join('], [ ')}]`;
             this.visualize(value);
         }
     }
 
-    private validateInputForVisualization(value: string, translation: string) {
+    private validateInputForVisualization(specificity: Specificity[], translation: string) {
         if (translation.includes('Error')) {
             return 'No visualization due to selector input error';
         }
@@ -70,7 +70,7 @@ export class App {
         if (translation.includes('<script>')) {
             return 'No visualization for script element';
         }
-        if (value.includes(',')) {
+        if (specificity.length > 1) {
             return 'Visualization not supported for multiple selectors';
         }
     }

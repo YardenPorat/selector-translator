@@ -145,6 +145,7 @@ h3 {
   display: block;
   text-decoration: none; /* s */
   list-style-type: none; /* li */
+  font-size: inherit; /* to reset h1-h6 */
 }
 #visualization > * {
   margin: 0 0 3px 0;

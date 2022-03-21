@@ -10,7 +10,7 @@
 - [x] Handle TODOs
 - [ ] Support not
   - [x] text
-  - [ ] visualization
+  - [x] visualization <--
 - [ ] Support where:
 - [ ] allow history back\forward functionality
 - [ ] throttle input changes ?

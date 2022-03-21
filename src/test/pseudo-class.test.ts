@@ -249,33 +249,74 @@ describe('Pseudo Class', () => {
 
         it(':not(class)', function () {
             const selector = ':not(.cls)';
-            expect(getTranslation(selector), selector).to.eq(
-                `Any element when its not an element with a class of 'cls'`
-            );
+            expect(getTranslation(selector)).to.eq(`Any element when its not an element with a class of 'cls'`);
             expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'div', classes: ['cls'] }]);
         });
 
-        it(':not(el1):not(el2)', function () {
+        it(':not(div):not(el2)', function () {
             const selector = ':not(div):not(span)';
             expect(getTranslation(selector), selector).to.eq(
                 `Any element when its not a '<div>' element and not a '<span>' element`
             );
+            expect(visualize(selector)).to.deep.eq([{ tag: 'some-other-element' }, { tag: 'div' }, { tag: 'span' }]);
+        });
+
+        it(':not(el1):not(el2)', function () {
+            const selector = ':not(span):not(a)';
+            expect(getTranslation(selector), selector).to.eq(
+                `Any element when its not a '<span>' element and not an '<a>' element`
+            );
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'span' }, { tag: 'a' }]);
+        });
+
+        it(':not(div, cls)', function () {
+            const selector = ':not(div, .fancy)';
+            expect(getTranslation(selector)).to.eq(
+                `Any element when its not a '<div>' element or an element with a class of 'fancy'`
+            );
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'some-other-element' },
+                { tag: 'div' },
+                { tag: 'div', classes: ['fancy'] },
+            ]);
         });
 
         it(':not(el, cls)', function () {
-            const selector = ':not(div, .fancy)';
-            expect(getTranslation(selector), selector).to.eq(
-                `Any element when its not a '<div>' element or an element with a class of 'fancy'`
+            const selector = ':not(span, .fancy)';
+            expect(getTranslation(selector)).to.eq(
+                `Any element when its not a '<span>' element or an element with a class of 'fancy'`
             );
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'div' },
+                { tag: 'span' },
+                { tag: 'div', classes: ['fancy'] },
+            ]);
         });
 
-        it('el :not(el, cls)', function () {
-            expect(getTranslation('body :not(div, .fancy)')).to.eq(
+        it('el :not(div, cls)', function () {
+            const selector = 'body :not(div, .fancy)';
+            expect(getTranslation(selector)).to.eq(
                 `An element when its not a '<div>' element or an element with a class of 'fancy' within a '<body>' element`
             );
-            expect(getTranslation('h2 :not(span.foo)')).to.eq(
+            expect(visualize(selector)).to.deep.eq([
+                {
+                    tag: 'body',
+                    children: [{ tag: 'some-other-element' }, { tag: 'div' }, { tag: 'div', classes: ['fancy'] }],
+                },
+            ]);
+        });
+
+        it('el :not(el.cls)', function () {
+            const selector = 'h2 :not(span.foo)';
+            expect(getTranslation(selector)).to.eq(
                 `An element when its not a '<span>' element with a class of 'foo' within an '<h2>' element`
             );
+            expect(visualize(selector)).to.deep.eq([
+                {
+                    tag: 'h2',
+                    children: [{ tag: 'div' }, { tag: 'span', classes: ['foo'] }],
+                },
+            ]);
         });
 
         describe('Errors', function () {

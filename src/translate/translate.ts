@@ -13,7 +13,7 @@ const getClassesString = (cls: string[]) => (cls.length > 1 ? `classes ${joiner(
 export function translate(selector: string, options = { not: false }) {
     const errors: string[] = [];
     const selectorList = parseCssSelector(selector);
-    const specificity = selectorList.map((selector) => `[${calcSpecificity(selector).toString()}]`).join(', ');
+    const specificity = selectorList.map((selector) => calcSpecificity(selector));
     const compoundSelectorList = groupCompoundSelectors(selectorList);
     const translations: string[] = [];
     let pseudoElementCount = 0;

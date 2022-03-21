@@ -148,10 +148,23 @@ export function visualize(selector: string) {
                         duplicateMultipleSiblings(step * 2, siblingArrayRef, { moveRefToLast: true });
                     }
                 } else if (parsedPseudoClass.name === 'not') {
-                    const notElements = visualize(parsedPseudoClass.value ?? stringifySelectorAst(selector.nodes![0]));
-                    addSiblings({ element: currentElement, siblings: notElements, siblingArrayRef });
-                    // const step = Math.abs(parseStep(parsedPseudoClass.step));
-                    // appendMultipleSiblings(step * 2, { moveRefToLast: true });
+                    const notElements = selector.nodes!.flatMap((node) => visualize(stringifySelectorAst(node)));
+                    currentElement = siblingArrayRef.at(-1) ?? baseElement;
+
+                    const appendOtherElement = notElements.some(
+                        (notElement) => JSON.stringify(notElement) === JSON.stringify(currentElement)
+                    );
+
+                    if (appendOtherElement) {
+                        Object.assign(currentElement, { tag: 'some-other-element' });
+                    }
+
+                    if (siblingArrayRef)
+                        addSiblings({
+                            element: currentElement,
+                            siblings: notElements,
+                            siblingArrayRef,
+                        });
                 }
             } else if (['disabled', 'required', 'read-only'].includes(value)) {
                 const attrName = getAttributeName(value);
