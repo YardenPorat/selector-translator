@@ -2075,10 +2075,18 @@ function visualize(selector) {
                     }
                 }
                 else if (parsedPseudoClass.name === 'not') {
-                    const notElements = visualize((_b = parsedPseudoClass.value) !== null && _b !== void 0 ? _b : (0,dist.stringifySelectorAst)(selector.nodes[0]));
-                    addSiblings({ element: currentElement, siblings: notElements, siblingArrayRef });
-                    // const step = Math.abs(parseStep(parsedPseudoClass.step));
-                    // appendMultipleSiblings(step * 2, { moveRefToLast: true });
+                    const notElements = selector.nodes.flatMap((node) => visualize((0,dist.stringifySelectorAst)(node)));
+                    currentElement = (_b = siblingArrayRef.at(-1)) !== null && _b !== void 0 ? _b : baseElement;
+                    const appendOtherElement = notElements.some((notElement) => JSON.stringify(notElement) === JSON.stringify(currentElement));
+                    if (appendOtherElement) {
+                        Object.assign(currentElement, { tag: 'some-other-element' });
+                    }
+                    if (siblingArrayRef)
+                        addSiblings({
+                            element: currentElement,
+                            siblings: notElements,
+                            siblingArrayRef,
+                        });
                 }
             }
             else if (['disabled', 'required', 'read-only'].includes(value)) {
@@ -2460,7 +2468,7 @@ const getClassesString = (cls) => (cls.length > 1 ? `classes ${joiner(cls)}` : `
 function translate(selector, options = { not: false }) {
     const errors = [];
     const selectorList = (0,dist.parseCssSelector)(selector);
-    const specificity = selectorList.map((selector) => `[${(0,dist.calcSpecificity)(selector).toString()}]`).join(', ');
+    const specificity = selectorList.map((selector) => (0,dist.calcSpecificity)(selector));
     const compoundSelectorList = (0,dist.groupCompoundSelectors)(selectorList);
     const translations = [];
     let pseudoElementCount = 0;
@@ -2686,22 +2694,20 @@ class App {
         const { translation, specificity } = translate(value);
         const taggedTranslation = this.getTags(translation);
         this.result.innerHTML = taggedTranslation;
-        if (specificity) {
-            this.specificityLink.href = `https://polypane.app/css-specificity-calculator/#selector=${encodeURIComponent(value)}`;
-            this.specificityLink.innerText = 'Specificity';
-            this.specificityResult.innerText = `: ${specificity}`;
-        }
         this.updateQueryParam(value);
         this.visualization.innerHTML = '';
-        const unsupportedMessage = this.validateInputForVisualization(value, translation);
+        const unsupportedMessage = this.validateInputForVisualization(specificity !== null && specificity !== void 0 ? specificity : [], translation);
         if (unsupportedMessage) {
             this.visualization.innerHTML = unsupportedMessage;
         }
         else {
+            this.specificityLink.href = `https://polypane.app/css-specificity-calculator/#selector=${encodeURIComponent(value)}`;
+            this.specificityLink.innerText = 'Specificity';
+            this.specificityResult.innerText = `: [${specificity.join('], [ ')}]`;
             this.visualize(value);
         }
     }
-    validateInputForVisualization(value, translation) {
+    validateInputForVisualization(specificity, translation) {
         if (translation.includes('Error')) {
             return 'No visualization due to selector input error';
         }
@@ -2711,7 +2717,7 @@ class App {
         if (translation.includes('<script>')) {
             return 'No visualization for script element';
         }
-        if (value.includes(',')) {
+        if (specificity.length > 1) {
             return 'Visualization not supported for multiple selectors';
         }
     }
