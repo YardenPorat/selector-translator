@@ -5,6 +5,7 @@ export const pseudoClassWithNodes = new Set([
     'nth-last-of-type',
     'lang',
     'not',
+    'where',
 ]);
 
 export const ERRORS = {

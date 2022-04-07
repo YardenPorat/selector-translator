@@ -76,6 +76,10 @@ export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
                 const innerSelector = stringifySelectorAst(nodes!); // validated that nodes is not empty
                 const { translation } = translate(innerSelector, { not: true });
                 result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
+            } else if (value === 'where') {
+                const innerSelector = stringifySelectorAst(nodes!); // validated that nodes is not empty
+                const { translation } = translate(innerSelector, { where: true });
+                result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
             } else if (nodes?.length && (nodes[0].nodes as NthNode[])) {
                 const innerNodes = nodes[0].nodes as (NthStep | NthOffset | NthDash | NthOf)[];
 

@@ -38,6 +38,7 @@ export const PSEUDO_CLASS_STATE = {
     'nth-of-type': { state: 'child of its type in his parent', text: '' },
     'nth-last-of-type': { state: 'child of its type from the end in his parent', text: '' },
     not: { state: 'not', text: '' },
+    where: { state: 'where its', text: '' },
 };
 
 export const PSEUDO_CLASS_ATTRIBUTES = {
@@ -45,15 +46,6 @@ export const PSEUDO_CLASS_ATTRIBUTES = {
 };
 
 export type PseudoClassWithDifferentAttributeName = keyof typeof PSEUDO_CLASS_ATTRIBUTES;
-
-function pseudoClassDescriptor({ name, value }: { name: PseudoClassName; value: string }) {
-    if (name === 'not') {
-        return `${PSEUDO_CLASS_STATE[name].state} ${value}`;
-    }
-
-    // language is en
-    return `${PSEUDO_CLASS_STATE[name].state} is '${value}'`;
-}
 
 function offsetDescriptor(value: number) {
     return `the ${value}${getNumberSuffix(value)}`;
@@ -94,21 +86,30 @@ export function getPseudoClassesString(pseudoClasses: PseudoClass[]) {
         if (offset || step) {
             return handleFormulas({ offset, step, name });
         }
-        if (value && PSEUDO_CLASS_STATE[name]) {
-            return pseudoClassDescriptor({ name, value });
+        const state = PSEUDO_CLASS_STATE[name]?.state;
+
+        if (!state) {
+            return `${name} (unknown pseudo class)`;
         }
 
-        if (PSEUDO_CLASS_STATE[name]) {
-            return PSEUDO_CLASS_STATE[name].state;
+        if (value) {
+            if (name === 'not') {
+                const descriptor = `${state}${state ? ' ' : ''}${value}`;
+                return descriptor;
+            }
+
+            if (name === 'where') {
+                return value;
+            }
+
+            // language is en
+            return `${state} is '${value}'`;
         }
 
-        return `'${name}' (unknown pseudo class)`;
+        return `${state}`;
     });
 
-    if (state.length > 1) {
-        return joiner(state);
-    }
-    return state[0];
+    return state.length > 1 ? joiner(state) : state[0];
 }
 
 function handleFormulas({ offset, step, name }: PseudoClass) {

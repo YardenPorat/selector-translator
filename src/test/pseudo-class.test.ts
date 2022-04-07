@@ -336,6 +336,96 @@ describe('Pseudo Class', () => {
         });
     });
 
+    describe(':where()', function () {
+        it(':where(element)', function () {
+            const selector = ':where(p)';
+            expect(getTranslation(selector)).to.eq(`Any element when its a '<p>' element`);
+            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+
+        it(':where(el, el, el)', function () {
+            const selector = ':where(a, b, c)';
+            expect(getTranslation(selector)).to.eq(
+                `Any element when its an '<a>' element, a '<b>' element or a '<c>' element`
+            );
+            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+
+        it(':where(el, el, el)', function () {
+            /* Selects any paragraph inside a header, main or footer element that is being hovered */
+            const selector = ':where(a, b, c) p:hover';
+            expect(getTranslation(selector)).to.eq(
+                `A '<p>' element when its hovered within an element when its an '<a>' element, a '<b>' element or a '<c>' element`
+            );
+            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+
+        it(':where(:valid)', function () {
+            const selector = ':where(:valid)';
+            expect(getTranslation(selector)).to.eq(`Any element when its valid`);
+            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+
+        it('Forgiving Selector Parsing (:valid, :unsupported)', function () {
+            const selector = ':where(:valid, :unsupported)';
+            expect(getTranslation(selector)).to.eq(`Any element when its valid or unsupported (unknown pseudo class)`);
+            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+
+        it(':where(section.where-styling, aside.where-styling, footer.where-styling) a', function () {
+            const selector = ':where(section.where-styling, aside.where-styling, footer.where-styling) a';
+            expect(getTranslation(selector)).to.eq(
+                `An '<a>' element within an element when its a '<section>' element with a class of 'where-styling', an '<aside>' element with a class of 'where-styling' or a '<footer>' element with a class of 'where-styling'`
+            );
+            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+        it('main :where(h1, h2, h3)', function () {
+            const selector = 'main :where(h1, h2, h3)';
+            expect(getTranslation(selector)).to.eq(
+                `An element when its an '<h1>' element, an '<h2>' element or an '<h3>' element within a '<main>' element`
+            );
+            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+
+        it(':where(.header, .footer) a', function () {
+            const selector = ':where(.header, .footer) a';
+            expect(getTranslation(selector)).to.eq(
+                `An '<a>' element within an element with a class of 'header' or with a class of 'footer'`
+            );
+            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+
+        it('h3:where(#specific-header)', function () {
+            const selector = 'h3:where(#specific-header)';
+            expect(getTranslation(selector)).to.eq(`An '<h3>' element when its with the id of 'specific-header'`);
+            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+
+        it('.dim-theme :where(button, a)', function () {
+            const selector = '.dim-theme :where(button, a)';
+            expect(getTranslation(selector)).to.eq(
+                `An element when its a '<button>' element or an '<a>' element within an element with a class of 'dim-theme'`
+            );
+            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+
+        it(':where(.dark-theme, .dim-theme) :where(button, a)', function () {
+            const selector = ':where(.dark-theme, .dim-theme) :where(button, a)';
+            expect(getTranslation(selector)).to.eq(
+                `An element when its a '<button>' element or an '<a>' element within an element with a class of 'dark-theme' or with a class of 'dim-theme'`
+            );
+            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+
+        it(':where(ol[class])', function () {
+            const selector = ':where(ol[class])';
+            expect(getTranslation(selector)).to.eq(
+                `Any element when its an '<ol>' element with an attribute of 'class'`
+            );
+            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+    });
+
     describe('Formulas', () => {
         describe('Offset only', () => {
             it('element + nth-child(1)', function () {
@@ -541,18 +631,18 @@ describe('Pseudo Class', () => {
         // No visualizations for unknown pseudo-classes
         it('without formula', function () {
             const selector = 'div:a';
-            expect(getTranslation(selector), selector).to.eq(`A '<div>' element when its 'a' (unknown pseudo class)`);
+            expect(getTranslation(selector), selector).to.eq(`A '<div>' element when its a (unknown pseudo class)`);
         });
 
         it('with formula', function () {
             expect(getTranslation('li:nth-last-lol(2n+1)')).to.eq(
-                `An '<li>' element when its 'nth-last-lol' (unknown pseudo class)`
+                `An '<li>' element when its nth-last-lol (unknown pseudo class)`
             );
         });
 
         it('With empty node', function () {
             expect(getTranslation(':nested-pseudo-class-x()')).to.eq(
-                `Any element when its 'nested-pseudo-class-x' (unknown pseudo class)`
+                `Any element when its nested-pseudo-class-x (unknown pseudo class)`
             );
         });
     });
@@ -571,7 +661,7 @@ describe('Pseudo Class', () => {
 
         it('Pseudo-class with missing required node', function () {
             const expectedError =
-                'Error: You specified a pseudo class which is expected to have a node (nth-child, nth-last-child, nth-of-type, nth-last-of-type, lang, not)';
+                'Error: You specified a pseudo class which is expected to have a node (nth-child, nth-last-child, nth-of-type, nth-last-of-type, lang, not, where)';
             expect(getTranslation(':nth-child')).to.eq(expectedError);
             expect(getTranslation(':nth-last-child')).to.eq(expectedError);
             expect(getTranslation(':nth-of-type')).to.eq(expectedError);

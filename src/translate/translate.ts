@@ -10,7 +10,11 @@ const capitalizeFirstLetter = (str: string) => (str?.length ? str.charAt(0).toUp
 const addSingleQuotes = (items: string[]) => items.map((item) => `'${item}'`);
 const getClassesString = (cls: string[]) => (cls.length > 1 ? `classes ${joiner(cls)}` : `a class of ${cls[0]}`);
 
-export function translate(selector: string, options = { not: false }) {
+export interface TranslateOptions {
+    not?: boolean;
+    where?: boolean;
+}
+export function translate(selector: string, options: TranslateOptions = { not: false, where: false }) {
     const errors: string[] = [];
     const selectorList = parseCssSelector(selector);
     const specificity = selectorList.map((selector) => calcSpecificity(selector));
@@ -39,11 +43,12 @@ export function translate(selector: string, options = { not: false }) {
                     isVowelPrefix(element) ? translation.push('an') : translation.push('a');
                     translation.push(`'<${element}>' element`);
                 } else if (
-                    hasUniversal ||
-                    (!element && topLevelSelectors.nodes.length === 1 && id.length + classes.size === 0)
+                    !options.where &&
+                    (hasUniversal ||
+                        (!element && topLevelSelectors.nodes.length === 1 && id.length + classes.size === 0))
                 ) {
                     translation.push('any element');
-                } else if (!pseudoElement) {
+                } else if (!options.where && !pseudoElement) {
                     translation.push('an element');
                 }
                 if (id.length) {
@@ -55,7 +60,9 @@ export function translate(selector: string, options = { not: false }) {
                 }
 
                 if (pseudoClasses.length) {
-                    translation.push(`when its ${getPseudoClassesString(pseudoClasses)}`);
+                    const pseudoClassString = getPseudoClassesString(pseudoClasses);
+                    const prefix = !options.where && !pseudoClassString.startsWith('with a') ? 'when its ' : '';
+                    translation.push(prefix + pseudoClassString);
                 }
 
                 if (attributes.length) {
