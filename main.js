@@ -1759,8 +1759,8 @@ __webpack_require__.d(__webpack_exports__, {
 // EXTERNAL MODULE: ./node_modules/@tokey/css-selector-parser/dist/index.js
 var dist = __webpack_require__(774);
 ;// CONCATENATED MODULE: ./src/translate/helpers/string-manipulation.ts
-function joiner(items, options = { not: false }) {
-    const joinWord = options.not ? 'or' : 'and';
+function joiner(items, options = { not: false, where: false }) {
+    const joinWord = options.not || options.where ? 'or' : 'and';
     if (items.length === 2) {
         return `${items[0]} ${joinWord} ${items[1]}`;
     }
@@ -1807,17 +1807,11 @@ const PSEUDO_CLASS_STATE = {
     'nth-of-type': { state: 'child of its type in his parent', text: '' },
     'nth-last-of-type': { state: 'child of its type from the end in his parent', text: '' },
     not: { state: 'not', text: '' },
+    where: { state: 'where its', text: '' },
 };
 const PSEUDO_CLASS_ATTRIBUTES = {
     'read-only': 'readonly',
 };
-function pseudoClassDescriptor({ name, value }) {
-    if (name === 'not') {
-        return `${PSEUDO_CLASS_STATE[name].state} ${value}`;
-    }
-    // language is en
-    return `${PSEUDO_CLASS_STATE[name].state} is '${value}'`;
-}
 function offsetDescriptor(value) {
     return `the ${value}${getNumberSuffix(value)}`;
 }
@@ -1843,21 +1837,28 @@ function nthAndStepDescriptor({ offset, step: stepString, name }) {
 }
 function getPseudoClassesString(pseudoClasses) {
     const state = pseudoClasses.map(({ name, value, offset, step }) => {
+        var _a;
         if (offset || step) {
             return handleFormulas({ offset, step, name });
         }
-        if (value && PSEUDO_CLASS_STATE[name]) {
-            return pseudoClassDescriptor({ name, value });
+        const state = (_a = PSEUDO_CLASS_STATE[name]) === null || _a === void 0 ? void 0 : _a.state;
+        if (!state) {
+            return `${name} (unknown pseudo class)`;
         }
-        if (PSEUDO_CLASS_STATE[name]) {
-            return PSEUDO_CLASS_STATE[name].state;
+        if (value) {
+            if (name === 'not') {
+                const descriptor = `${state}${state ? ' ' : ''}${value}`;
+                return descriptor;
+            }
+            if (name === 'where') {
+                return value;
+            }
+            // language is en
+            return `${state} is '${value}'`;
         }
-        return `'${name}' (unknown pseudo class)`;
+        return `${state}`;
     });
-    if (state.length > 1) {
-        return joiner(state);
-    }
-    return state[0];
+    return state.length > 1 ? joiner(state) : state[0];
 }
 function handleFormulas({ offset, step, name }) {
     const { state } = PSEUDO_CLASS_STATE[name];
@@ -2319,6 +2320,7 @@ const pseudoClassWithNodes = new Set([
     'nth-last-of-type',
     'lang',
     'not',
+    'where',
 ]);
 const ERRORS = {
     TWO_IDS: 'An element cannot have two ids',
@@ -2425,6 +2427,11 @@ function iterateCompoundSelector(compoundSelector) {
                 const { translation } = translate(innerSelector, { not: true });
                 result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
             }
+            else if (value === 'where') {
+                const innerSelector = (0,dist.stringifySelectorAst)(nodes); // validated that nodes is not empty
+                const { translation } = translate(innerSelector, { where: true });
+                result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
+            }
             else if ((nodes === null || nodes === void 0 ? void 0 : nodes.length) && nodes[0].nodes) {
                 const innerNodes = nodes[0].nodes;
                 if (innerNodes.some((node) => node.invalid === true)) {
@@ -2465,7 +2472,7 @@ function iterateCompoundSelector(compoundSelector) {
 const capitalizeFirstLetter = (str) => ((str === null || str === void 0 ? void 0 : str.length) ? str.charAt(0).toUpperCase() + str.slice(1) : str);
 const addSingleQuotes = (items) => items.map((item) => `'${item}'`);
 const getClassesString = (cls) => (cls.length > 1 ? `classes ${joiner(cls)}` : `a class of ${cls[0]}`);
-function translate(selector, options = { not: false }) {
+function translate(selector, options = { not: false, where: false }) {
     const errors = [];
     const selectorList = (0,dist.parseCssSelector)(selector);
     const specificity = selectorList.map((selector) => (0,dist.calcSpecificity)(selector));
@@ -2492,11 +2499,12 @@ function translate(selector, options = { not: false }) {
                     isVowelPrefix(element) ? translation.push('an') : translation.push('a');
                     translation.push(`'<${element}>' element`);
                 }
-                else if (hasUniversal ||
-                    (!element && topLevelSelectors.nodes.length === 1 && id.length + classes.size === 0)) {
+                else if (!options.where &&
+                    (hasUniversal ||
+                        (!element && topLevelSelectors.nodes.length === 1 && id.length + classes.size === 0))) {
                     translation.push('any element');
                 }
-                else if (!pseudoElement) {
+                else if (!options.where && !pseudoElement) {
                     translation.push('an element');
                 }
                 if (id.length) {
@@ -2506,7 +2514,9 @@ function translate(selector, options = { not: false }) {
                     translation.push(`with ${getClassesString(addSingleQuotes([...classes]))}`);
                 }
                 if (pseudoClasses.length) {
-                    translation.push(`when its ${getPseudoClassesString(pseudoClasses)}`);
+                    const pseudoClassString = getPseudoClassesString(pseudoClasses);
+                    const prefix = !options.where && !pseudoClassString.startsWith('with a') ? 'when its ' : '';
+                    translation.push(prefix + pseudoClassString);
                 }
                 if (attributes.length) {
                     for (const attribute of attributes) {
