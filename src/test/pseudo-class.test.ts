@@ -493,7 +493,7 @@ describe('Pseudo Class', () => {
                                     innerText: '</div>',
                                     tag: 'internal',
                                     attributes: {
-                                        style: 'margin-left: -9px',
+                                        style: 'margin-left: -5px',
                                     },
                                 },
                             ],

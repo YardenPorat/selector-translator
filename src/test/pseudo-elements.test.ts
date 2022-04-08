@@ -36,12 +36,15 @@ describe('Pseudo Elements', () => {
                             innerText: 'Second line',
                             tag: 'div',
                         },
+                        {
+                            hideTag: true,
+                            innerText: '</div>',
+                            tag: 'internal',
+                            attributes: {
+                                style: 'margin-left: -5px',
+                            },
+                        },
                     ],
-                },
-                {
-                    hideTag: true,
-                    innerText: '</div>',
-                    tag: 'div',
                 },
             ]);
         });
@@ -102,12 +105,15 @@ describe('Pseudo Elements', () => {
                             innerText: 'Second line',
                             tag: 'div',
                         },
+                        {
+                            hideTag: true,
+                            innerText: '</p>',
+                            tag: 'internal',
+                            attributes: {
+                                style: 'margin-left: -5px',
+                            },
+                        },
                     ],
-                },
-                {
-                    hideTag: true,
-                    innerText: '</p>',
-                    tag: 'p',
                 },
             ]);
         });

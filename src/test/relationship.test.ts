@@ -82,7 +82,7 @@ describe('Relationships', () => {
     });
 
     describe('Directly adjacent (+)', function () {
-        it('li + li', function () {
+        it('el + el', function () {
             const selector = 'li + li';
             expect(getTranslation(selector)).to.eq(`An '<li>' element directly adjacent sibling to an '<li>' element`);
             expect(visualize(selector)).to.deep.eq([{ tag: 'li' }, { tag: 'li' }, { tag: 'li' }]);
@@ -123,7 +123,7 @@ describe('Relationships', () => {
     });
 
     describe('Subsequent-sibling (~)', function () {
-        it('li ~ li', function () {
+        it('el ~ el', function () {
             const selector = 'li ~ li';
             expect(getTranslation(selector)).to.eq(`An '<li>' element after a sibling which is an '<li>' element`);
             expect(visualize(selector)).to.deep.eq([{ tag: 'li' }, { tag: 'li' }]);

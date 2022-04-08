@@ -163,27 +163,24 @@ describe('Browser tests', function () {
         it('::first-line', function () {
             const selector = '::first-line';
             const elements = getVisualizedElements(selector);
-            expect(elements.length).to.eq(2);
+            expect(elements.length).to.eq(1);
             const firstEl = elements[0];
             expect(getFirstNodeValue(firstEl)).to.eq('<div>');
             expect(getChildByIndex(firstEl, 0).innerText).to.eq('First line');
             expect(getChildByIndex(firstEl, 1).innerText).to.eq('Second line');
-            expect(getFirstNodeValue(elements[1])).to.eq('</div>');
+            expect(getChildByIndex(firstEl, 2).innerText).to.eq('</div>');
         });
 
         it('div + nth-child(2) + ::first-line', function () {
             const selector = 'div:nth-child(2)::first-line';
             const elements = getVisualizedElements(selector);
-            expect(elements.length).to.eq(4);
-            expect(elements[0]).to.deep.include({ innerText: '<div>', childElementCount: 0 });
+            expect(elements.length).to.eq(3);
 
-            expect(elements[1]).to.deep.include({ childElementCount: 2 });
+            expect(elements[1]).to.deep.include({ childElementCount: 3 });
             expect(getFirstNodeValue(elements[1])).to.eq('<div>');
             expect(getChildByIndex(elements[1], 0).innerText).to.eq('First line');
             expect(getChildByIndex(elements[1], 1).innerText).to.eq('Second line');
-
-            expect(elements[2]).to.deep.include({ innerText: '</div>', childElementCount: 0 });
-            expect(elements[3]).to.deep.include({ innerText: '<div>', childElementCount: 0 });
+            expect(getChildByIndex(elements[1], 2).innerText).to.eq('</div>');
         });
     });
     describe('Pseudo Classes', function () {
