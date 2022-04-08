@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { getTranslation } from './utils/get-translation';
 import { visualize } from '../ui/visualization/visualize';
-import type { VisualizationElement } from '../ui/visualization/create-element';
 
 describe('Pseudo Class', () => {
     it('element + hover', function () {
@@ -224,14 +223,14 @@ describe('Pseudo Class', () => {
     });
 
     it('element.class + element:Multiple pseudo classes', function () {
-        const selector = 'ul.phone_numbers li:last-child:hover';
+        const selector = 'ul.cls li:last-child:hover';
         expect(getTranslation(selector), selector).to.eq(
-            `An '<li>' element when its the last child of its parent and hovered within a '<ul>' element with a class of 'phone_numbers'`
+            `An '<li>' element when its the last child of its parent and hovered within a '<ul>' element with a class of 'cls'`
         );
         expect(visualize(selector)).to.deep.eq([
             {
                 tag: 'ul',
-                classes: ['phone_numbers'],
+                classes: ['cls'],
                 children: [
                     { tag: 'li', innerText: 'When its the last child of its parent' },
                     { tag: 'li', innerText: 'When its the last child of its parent and hovered' },
@@ -351,7 +350,7 @@ describe('Pseudo Class', () => {
             // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
         });
 
-        it(':where(el, el, el)', function () {
+        it(':where(el, el, el) el:pseudoClass', function () {
             /* Selects any paragraph inside a header, main or footer element that is being hovered */
             const selector = ':where(a, b, c) p:hover';
             expect(getTranslation(selector)).to.eq(
@@ -465,6 +464,43 @@ describe('Pseudo Class', () => {
                 );
                 expect(visualize(selector)).to.deep.eq(new Array(31).fill({ tag: 'li' }));
             });
+
+            it('el:nth-child(x)::first-line', function () {
+                const selector = 'div:nth-child(2)::first-line';
+                expect(getTranslation(selector), selector).to.eq(
+                    `The 'first line' of a '<div>' element when its the 2nd child of its parent`
+                );
+                expect(visualize(selector)).to.deep.eq(
+                    new Array(3).fill(undefined).flatMap(() => [
+                        {
+                            tag: 'div',
+                            children: [
+                                {
+                                    attributes: {
+                                        data: 'first-child',
+                                    },
+                                    hideTag: true,
+                                    innerText: 'First line',
+                                    tag: 'div',
+                                },
+                                {
+                                    hideTag: true,
+                                    innerText: 'Second line',
+                                    tag: 'div',
+                                },
+                                {
+                                    hideTag: true,
+                                    innerText: '</div>',
+                                    tag: 'internal',
+                                    attributes: {
+                                        style: 'margin-left: -9px',
+                                    },
+                                },
+                            ],
+                        },
+                    ])
+                );
+            });
         });
 
         describe('Offset and Step', () => {
@@ -572,13 +608,12 @@ describe('Pseudo Class', () => {
                 expect(visualize(selector)).to.deep.eq(new Array(5).fill({ tag: 'li' }));
             });
 
-            it('li:nth-child(even) span', function () {
+            it('el1:nth-child(even) el2', function () {
                 const selector = 'li:nth-child(even) span';
                 expect(getTranslation(selector), selector).to.eq(
                     `A '<span>' element within an '<li>' element when its every even child of its parent`
                 );
-                const expected = new Array(5).fill(undefined).map(() => ({ tag: 'li' })) as VisualizationElement[];
-                expected[3].children = [{ tag: 'span' }];
+                const expected = new Array(5).fill(undefined).map(() => ({ tag: 'li', children: [{ tag: 'span' }] }));
                 expect(visualize(selector)).to.deep.eq(expected);
             });
 
@@ -590,12 +625,12 @@ describe('Pseudo Class', () => {
                 expect(visualize(selector)).to.deep.eq(new Array(5).fill({ tag: 'li' }));
             });
 
-            it('li:nth-child(odd) span', function () {
+            it('el1:nth-child(odd) el2', function () {
                 const selector = 'li:nth-child(odd) span';
                 expect(getTranslation(selector), selector).to.eq(
                     `A '<span>' element within an '<li>' element when its every odd child of its parent`
                 );
-                const expected = new Array(5).fill(undefined).map(() => ({ tag: 'li' })) as VisualizationElement[];
+                const expected = new Array(5).fill(undefined).map(() => ({ tag: 'li', children: [{ tag: 'span' }] }));
                 expected[4].children = [{ tag: 'span' }];
                 expect(visualize(selector)).to.deep.eq(expected);
             });
