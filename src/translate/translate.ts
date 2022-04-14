@@ -5,6 +5,7 @@ import { getPseudoClassesString } from './helpers/pseudo-classes';
 import { joiner } from './helpers/string-manipulation';
 import { iterateCompoundSelector } from './iterate-compound-selector';
 import { ERRORS } from './constants';
+import { getVowelPrefix } from './helpers/english';
 
 const capitalizeFirstLetter = (str: string) => (str?.length ? str.charAt(0).toUpperCase() + str.slice(1) : str);
 const addSingleQuotes = (items: string[]) => items.map((item) => `'${item}'`);
@@ -40,7 +41,7 @@ export function translate(selector: string, options: TranslateOptions = { not: f
                     translation.push(PSEUDO_ELEMENTS_DESCRIPTORS[pseudoElement]);
                 }
                 if (element) {
-                    isVowelPrefix(element) ? translation.push('an') : translation.push('a');
+                    translation.push(getVowelPrefix(element));
                     translation.push(`'<${element}>' element`);
                 } else if (
                     !options.where &&
@@ -95,11 +96,4 @@ export function translate(selector: string, options: TranslateOptions = { not: f
     }
     const translation = capitalizeFirstLetter(joiner(translations, options));
     return errors.length ? { translation: `Error: ${errors[0]}` } : { translation, specificity };
-}
-
-function isVowelPrefix(str: string) {
-    if (['ul'].includes(str)) {
-        return false;
-    }
-    return ['li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(str) || ['a', 'e', 'o', 'i', 'u'].includes(str[0]);
 }

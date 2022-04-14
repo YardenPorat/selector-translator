@@ -1,4 +1,5 @@
 import {
+    SelectorList,
     stringifySelectorAst,
     type CompoundSelector,
     type NthDash,
@@ -77,6 +78,13 @@ export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
                 const { translation } = translate(innerSelector, { not: true });
                 result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
             } else if (value === 'where') {
+                if (result.element) {
+                    const element = checkForInnerElements(nodes as SelectorList);
+                    if (element) {
+                        result.err = ERRORS.ELEMENT_WHERE_OTHER_ELEMENT(result.element, element);
+                    }
+                }
+
                 const innerSelector = stringifySelectorAst(nodes!); // validated that nodes is not empty
                 const { translation } = translate(innerSelector, { where: true });
                 result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
@@ -111,4 +119,14 @@ export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
         }
     }
     return result;
+}
+
+function checkForInnerElements(nodes: SelectorList) {
+    for (const node of nodes) {
+        for (const innerNode of node.nodes) {
+            if (innerNode.type === 'type') {
+                return innerNode.value;
+            }
+        }
+    }
 }

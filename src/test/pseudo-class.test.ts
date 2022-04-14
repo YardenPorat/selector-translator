@@ -339,7 +339,7 @@ describe('Pseudo Class', () => {
         it(':where(element)', function () {
             const selector = ':where(p)';
             expect(getTranslation(selector)).to.eq(`Any element when its a '<p>' element`);
-            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
         });
 
         it(':where(el, el, el)', function () {
@@ -347,43 +347,62 @@ describe('Pseudo Class', () => {
             expect(getTranslation(selector)).to.eq(
                 `Any element when its an '<a>' element, a '<b>' element or a '<c>' element`
             );
-            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'a' }, { tag: 'b' }, { tag: 'c' }]);
         });
 
         it(':where(el, el, el) el:pseudoClass', function () {
-            /* Selects any paragraph inside a header, main or footer element that is being hovered */
             const selector = ':where(a, b, c) p:hover';
             expect(getTranslation(selector)).to.eq(
                 `A '<p>' element when its hovered within an element when its an '<a>' element, a '<b>' element or a '<c>' element`
             );
-            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'div' },
+                {
+                    children: [
+                        {
+                            innerText: 'When its hovered',
+                            tag: 'p',
+                        },
+                    ],
+                    tag: 'a',
+                },
+                { tag: 'b' },
+                { tag: 'c' },
+            ]);
         });
 
-        it(':where(:valid)', function () {
-            const selector = ':where(:valid)';
-            expect(getTranslation(selector)).to.eq(`Any element when its valid`);
-            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        it(':where(:hover)', function () {
+            const selector = ':where(:hover)';
+            expect(getTranslation(selector)).to.eq(`Any element when its hovered`);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { innerText: 'When its hovered', tag: 'div' }]);
         });
 
         it('Forgiving Selector Parsing (:valid, :unsupported)', function () {
             const selector = ':where(:valid, :unsupported)';
             expect(getTranslation(selector)).to.eq(`Any element when its valid or unsupported (unknown pseudo class)`);
-            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+            // No visualization due to unknown pseudo class
         });
 
         it(':where(section.where-styling, aside.where-styling, footer.where-styling) a', function () {
-            const selector = ':where(section.where-styling, aside.where-styling, footer.where-styling) a';
+            const selector = ':where(el1.cls, el2.cls, el3.cls) a';
             expect(getTranslation(selector)).to.eq(
-                `An '<a>' element within an element when its a '<section>' element with a class of 'where-styling', an '<aside>' element with a class of 'where-styling' or a '<footer>' element with a class of 'where-styling'`
+                `An '<a>' element within an element when its an '<el1>' element with a class of 'cls', an '<el2>' element with a class of 'cls' or an '<el3>' element with a class of 'cls'`
             );
-            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'div' },
+                { children: [{ tag: 'a' }], classes: ['cls'], tag: 'el1' },
+                { classes: ['cls'], tag: 'el2' },
+                { classes: ['cls'], tag: 'el3' },
+            ]);
         });
         it('main :where(h1, h2, h3)', function () {
             const selector = 'main :where(h1, h2, h3)';
             expect(getTranslation(selector)).to.eq(
                 `An element when its an '<h1>' element, an '<h2>' element or an '<h3>' element within a '<main>' element`
             );
-            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'main', children: [{ tag: 'div' }, { tag: 'h1' }, { tag: 'h2' }, { tag: 'h3' }] },
+            ]);
         });
 
         it(':where(.header, .footer) a', function () {
@@ -391,14 +410,18 @@ describe('Pseudo Class', () => {
             expect(getTranslation(selector)).to.eq(
                 `An '<a>' element within an element with a class of 'header' or with a class of 'footer'`
             );
-            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'div' },
+                { children: [{ tag: 'a' }], classes: ['header'], tag: 'div' },
+                { classes: ['footer'], tag: 'div' },
+            ]);
         });
 
-        it('h3:where(#specific-header)', function () {
-            const selector = 'h3:where(#specific-header)';
-            expect(getTranslation(selector)).to.eq(`An '<h3>' element when its with the id of 'specific-header'`);
-            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
-        });
+        // it.only('h3:where(#some-id, span)', function () {
+        //     const selector = 'h3:where(#some-id, span)';
+        //     expect(getTranslation(selector)).to.eq(`An '<h3>' element when its with the id of 'some-id'`);
+        //     expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        // });
 
         it('.dim-theme :where(button, a)', function () {
             const selector = '.dim-theme :where(button, a)';
@@ -726,6 +749,11 @@ describe('Pseudo Class', () => {
 
         it('nth of not supported', function () {
             expect(getTranslation(':nth-child(2n + 3 of div.cls)')).to.eq('Error: Nth of syntax is not supported');
+        });
+
+        it('h3:where(#some-id, span)', function () {
+            const selector = 'h3:where(#some-id, span)';
+            expect(getTranslation(selector)).to.eq(`Error: You cannot have an 'h3' element who is a 'span' element`);
         });
     });
 });

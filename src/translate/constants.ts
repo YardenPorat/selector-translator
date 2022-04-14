@@ -1,3 +1,5 @@
+import { getVowelPrefix } from './helpers/english';
+
 export const pseudoClassWithNodes = new Set([
     'nth-child',
     'nth-last-child',
@@ -26,4 +28,6 @@ export const ERRORS = {
     NESTED_NOT_PSEUDO_CLASS: 'The pseudo class "not" cannot be nested',
     ABUSED_NOT_PSEUDO_CLASS:
         'Having a universal selector within a not pseudo class is meaningless (select everything which is not everything)',
+    ELEMENT_WHERE_OTHER_ELEMENT: (el1: string, el2: string) =>
+        `You cannot have ${getVowelPrefix(el1)} '${el1}' element who is ${getVowelPrefix(el2)} '${el2}' element`,
 };
