@@ -2391,7 +2391,22 @@ const PSEUDO_ELEMENTS_DESCRIPTORS = {
 };
 const isPseudoElement = (value) => Object.keys(PSEUDO_ELEMENTS_DESCRIPTORS).includes(value);
 
+;// CONCATENATED MODULE: ./src/translate/helpers/english.ts
+function isVowelPrefix(str) {
+    if (['ul'].includes(str)) {
+        return false;
+    }
+    return ['li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(str) || ['a', 'e', 'o', 'i', 'u'].includes(str[0]);
+}
+function getVowelPrefix(str) {
+    if (isVowelPrefix(str)) {
+        return 'an';
+    }
+    return 'a';
+}
+
 ;// CONCATENATED MODULE: ./src/translate/constants.ts
+
 const pseudoClassWithNodes = new Set([
     'nth-child',
     'nth-last-child',
@@ -2418,6 +2433,7 @@ const ERRORS = {
     NTH_OF_NOT_SUPPORTED: 'Nth of syntax is not supported',
     NESTED_NOT_PSEUDO_CLASS: 'The pseudo class "not" cannot be nested',
     ABUSED_NOT_PSEUDO_CLASS: 'Having a universal selector within a not pseudo class is meaningless (select everything which is not everything)',
+    ELEMENT_WHERE_OTHER_ELEMENT: (el1, el2) => `You cannot have ${getVowelPrefix(el1)} '${el1}' element who is ${getVowelPrefix(el2)} '${el2}' element`,
 };
 
 ;// CONCATENATED MODULE: ./src/translate/iterate-compound-selector.ts
@@ -2507,6 +2523,12 @@ function iterateCompoundSelector(compoundSelector) {
                 result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
             }
             else if (value === 'where') {
+                if (result.element) {
+                    const element = checkForInnerElements(nodes);
+                    if (element) {
+                        result.err = ERRORS.ELEMENT_WHERE_OTHER_ELEMENT(result.element, element);
+                    }
+                }
                 const innerSelector = (0,dist.stringifySelectorAst)(nodes); // validated that nodes is not empty
                 const { translation } = translate(innerSelector, { where: true });
                 result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
@@ -2539,8 +2561,18 @@ function iterateCompoundSelector(compoundSelector) {
     }
     return result;
 }
+function checkForInnerElements(nodes) {
+    for (const node of nodes) {
+        for (const innerNode of node.nodes) {
+            if (innerNode.type === 'type') {
+                return innerNode.value;
+            }
+        }
+    }
+}
 
 ;// CONCATENATED MODULE: ./src/translate/translate.ts
+
 
 
 
@@ -2575,7 +2607,7 @@ function translate(selector, options = { not: false, where: false }) {
                     translation.push(PSEUDO_ELEMENTS_DESCRIPTORS[pseudoElement]);
                 }
                 if (element) {
-                    isVowelPrefix(element) ? translation.push('an') : translation.push('a');
+                    translation.push(getVowelPrefix(element));
                     translation.push(`'<${element}>' element`);
                 }
                 else if (!options.where &&
@@ -2633,12 +2665,6 @@ function translate(selector, options = { not: false, where: false }) {
     }
     const translation = capitalizeFirstLetter(joiner(translations, options));
     return errors.length ? { translation: `Error: ${errors[0]}` } : { translation, specificity };
-}
-function isVowelPrefix(str) {
-    if (['ul'].includes(str)) {
-        return false;
-    }
-    return ['li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(str) || ['a', 'e', 'o', 'i', 'u'].includes(str[0]);
 }
 
 ;// CONCATENATED MODULE: ./src/ui/visualization/create-element.ts
