@@ -6,11 +6,10 @@ import { addAttributes, getAttribute, getAttributeName } from './attribute-helpe
 
 const getLastIndex = (arr: any[]) => arr.length - 1;
 
-const baseElement: VisualizationElement = { tag: 'div' };
-
-export function visualize(selector: string) {
-    let currentElement: VisualizationElement | VisualizationElement[];
+export function visualize(selector: string, noBaseTag = false) {
+    let currentElement: VisualizationElement;
     const [selectorList] = parseCssSelector(selector); // first selector, before the ','
+    const baseElement: VisualizationElement = noBaseTag ? {} : { tag: 'div' };
 
     const elements: VisualizationElement[] = [{ ...baseElement }];
     let siblingArrayRef = elements;
@@ -20,8 +19,8 @@ export function visualize(selector: string) {
     let adjacentCount = selector.split('+').length - 1;
 
     for (const selector of selectorList.nodes) {
+        const isLast = selectorList.nodes.indexOf(selector) === selectorList.nodes.length - 1;
         if (selector.type === 'type') {
-            // Tag
             Object.assign(currentElement, { tag: selector.value });
         } else if (selector.type === 'class') {
             currentElement.classes = [...new Set([...(currentElement.classes ?? []), selector.value])];
@@ -52,7 +51,7 @@ export function visualize(selector: string) {
                     currentElement,
                     child: {
                         tag: 'internal',
-                        innerText: `</${currentElement.tag}>`,
+                        innerText: `</${currentElement.tag!}>`,
                         attributes: { style: 'margin-left: -5px' }, // TODO: get this from css
                         hideTag: true,
                     },
@@ -71,10 +70,11 @@ export function visualize(selector: string) {
                 });
                 addSiblings({
                     element: currentElement,
+                    baseElement,
                     siblings: [
                         {
                             tag: currentElement.tag,
-                            innerText: `</${currentElement.tag}>`,
+                            innerText: `</${currentElement.tag!}>`,
                             hideTag: true,
                         },
                     ],
@@ -115,11 +115,12 @@ export function visualize(selector: string) {
                     }
                 }
 
-                const innerElements = selector.nodes!.flatMap((node) => visualize(stringifySelectorAst(node)));
+                const innerElements = selector.nodes!.flatMap((node) => stringifySelectorAst(node).trim());
                 if (parsedPseudoClass.name === 'not') {
+                    const visualizedInnerElements = innerElements.flatMap((el) => visualize(el));
                     currentElement = siblingArrayRef.at(-1) ?? baseElement;
 
-                    const appendOtherElement = innerElements.some(
+                    const appendOtherElement = visualizedInnerElements.some(
                         (notElement) => JSON.stringify(notElement) === JSON.stringify(currentElement)
                     );
 
@@ -130,19 +131,35 @@ export function visualize(selector: string) {
                     if (siblingArrayRef) {
                         addSiblings({
                             element: currentElement,
-                            siblings: innerElements,
+                            siblings: visualizedInnerElements,
                             siblingArrayRef,
+                            baseElement,
                         });
                     }
                 } else if (parsedPseudoClass.name === 'where') {
+                    const visualizedInnerElements = innerElements.flatMap((el) => visualize(el, true));
                     currentElement = siblingArrayRef.at(-1) ?? baseElement;
 
                     if (siblingArrayRef) {
                         const { newSiblingsRef } = addSiblings({
                             element: currentElement,
-                            siblings: innerElements,
+                            siblings: visualizedInnerElements.map((el) => {
+                                if (!el.tag) {
+                                    Object.assign(el, { tag: currentElement.tag ?? 'div' });
+                                }
+                                return el;
+                            }),
                             siblingArrayRef,
+                            baseElement,
                         });
+
+                        if (!isLast) {
+                            /** add same ref for children, in case we have :where(a,b) :where(c,d) */
+                            const children: VisualizationElement[] = [];
+                            for (const sibling of newSiblingsRef) {
+                                sibling.children = children;
+                            }
+                        }
                         currentElement = newSiblingsRef[0];
                     }
                 }
@@ -195,6 +212,7 @@ export function visualize(selector: string) {
             } else if (combinator === '>') {
                 const { siblingArr, newChild } = addChild({
                     parent: currentElement,
+                    child: baseElement,
                     currentElement,
                 });
                 siblingArrayRef = siblingArr;
@@ -212,7 +230,7 @@ export function visualize(selector: string) {
                     duplicateAsSibling = true;
                 }
             } else if (combinator === '~') {
-                const { siblingArr } = addSiblings({ element: currentElement, siblingArrayRef });
+                const { siblingArr } = addSiblings({ element: currentElement, siblingArrayRef, baseElement });
                 currentElement = siblingArr[getLastIndex(siblingArr)];
             }
         } else if (selector.type === 'universal') {
@@ -221,11 +239,13 @@ export function visualize(selector: string) {
                 element: currentElement,
                 siblings: [{ ...baseElement, tag: 'span' }],
                 siblingArrayRef,
+                baseElement,
             });
             addSiblings({
                 element: currentElement,
                 siblings: [{ ...baseElement, tag: 'a' }],
                 siblingArrayRef,
+                baseElement,
             });
         }
 
@@ -291,7 +311,7 @@ interface AddChildOptions {
 /**
  * if no child is given, baseElement will be created as child.
  */
-function addChild({ parent, child = baseElement }: AddChildOptions) {
+function addChild({ parent, child }: AddChildOptions) {
     const newChild = { ...child };
 
     /**
@@ -319,11 +339,12 @@ function addChild({ parent, child = baseElement }: AddChildOptions) {
 interface AddSiblingOptions {
     element: VisualizationElement;
     siblingArrayRef: VisualizationElement[];
+    baseElement: VisualizationElement;
     siblings?: VisualizationElement[];
     adjacent?: boolean;
 }
 
-function addSiblings({ element, siblingArrayRef, siblings, adjacent = false }: AddSiblingOptions) {
+function addSiblings({ element, siblingArrayRef, baseElement, siblings, adjacent = false }: AddSiblingOptions) {
     const newSiblings = siblings?.length ? [...siblings] : [{ ...baseElement }];
     const siblingCount = newSiblings.length;
     const newSiblingsRef: VisualizationElement[] = [];

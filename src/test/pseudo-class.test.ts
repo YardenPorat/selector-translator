@@ -357,17 +357,9 @@ describe('Pseudo Class', () => {
             );
             expect(visualize(selector)).to.deep.eq([
                 { tag: 'div' },
-                {
-                    children: [
-                        {
-                            innerText: 'When its hovered',
-                            tag: 'p',
-                        },
-                    ],
-                    tag: 'a',
-                },
-                { tag: 'b' },
-                { tag: 'c' },
+                { tag: 'a', children: [{ innerText: 'When its hovered', tag: 'p' }] },
+                { tag: 'b', children: [{ innerText: 'When its hovered', tag: 'p' }] },
+                { tag: 'c', children: [{ innerText: 'When its hovered', tag: 'p' }] },
             ]);
         });
 
@@ -383,16 +375,16 @@ describe('Pseudo Class', () => {
             // No visualization due to unknown pseudo class
         });
 
-        it(':where(section.where-styling, aside.where-styling, footer.where-styling) a', function () {
+        it(':where(el1.cls, el2.cls, el3.cls) a', function () {
             const selector = ':where(el1.cls, el2.cls, el3.cls) a';
             expect(getTranslation(selector)).to.eq(
                 `An '<a>' element within an element when its an '<el1>' element with a class of 'cls', an '<el2>' element with a class of 'cls' or an '<el3>' element with a class of 'cls'`
             );
             expect(visualize(selector)).to.deep.eq([
                 { tag: 'div' },
-                { children: [{ tag: 'a' }], classes: ['cls'], tag: 'el1' },
-                { classes: ['cls'], tag: 'el2' },
-                { classes: ['cls'], tag: 'el3' },
+                { tag: 'el1', classes: ['cls'], children: [{ tag: 'a' }] },
+                { tag: 'el2', classes: ['cls'], children: [{ tag: 'a' }] },
+                { tag: 'el3', classes: ['cls'], children: [{ tag: 'a' }] },
             ]);
         });
         it('main :where(h1, h2, h3)', function () {
@@ -412,23 +404,31 @@ describe('Pseudo Class', () => {
             );
             expect(visualize(selector)).to.deep.eq([
                 { tag: 'div' },
-                { children: [{ tag: 'a' }], classes: ['header'], tag: 'div' },
-                { classes: ['footer'], tag: 'div' },
+                { tag: 'div', classes: ['header'], children: [{ tag: 'a' }] },
+                { tag: 'div', classes: ['footer'], children: [{ tag: 'a' }] },
             ]);
         });
 
-        // it.only('h3:where(#some-id, span)', function () {
-        //     const selector = 'h3:where(#some-id, span)';
-        //     expect(getTranslation(selector)).to.eq(`An '<h3>' element when its with the id of 'some-id'`);
-        //     expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
-        // });
+        it('h3:where(#some-id, .cls)', function () {
+            const selector = 'h3:where(#some-id, .cls)';
+            expect(getTranslation(selector)).to.eq(
+                `An '<h3>' element when its with the id of 'some-id' or with a class of 'cls'`
+            );
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'h3' },
+                { tag: 'h3', id: 'some-id' },
+                { tag: 'h3', classes: ['cls'] },
+            ]);
+        });
 
         it('.dim-theme :where(button, a)', function () {
             const selector = '.dim-theme :where(button, a)';
             expect(getTranslation(selector)).to.eq(
                 `An element when its a '<button>' element or an '<a>' element within an element with a class of 'dim-theme'`
             );
-            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'div', classes: ['dim-theme'], children: [{ tag: 'div' }, { tag: 'button' }, { tag: 'a' }] },
+            ]);
         });
 
         it(':where(.dark-theme, .dim-theme) :where(button, a)', function () {
@@ -436,15 +436,19 @@ describe('Pseudo Class', () => {
             expect(getTranslation(selector)).to.eq(
                 `An element when its a '<button>' element or an '<a>' element within an element with a class of 'dark-theme' or with a class of 'dim-theme'`
             );
-            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'div' },
+                { tag: 'div', children: [{ tag: 'div' }, { tag: 'button' }, { tag: 'a' }], classes: ['dark-theme'] },
+                { tag: 'div', classes: ['dim-theme'], children: [{ tag: 'div' }, { tag: 'button' }, { tag: 'a' }] },
+            ]);
         });
 
         it(':where(ol[class])', function () {
-            const selector = ':where(ol[class])';
+            const selector = ':where(ol[attr])';
             expect(getTranslation(selector)).to.eq(
-                `Any element when its an '<ol>' element with an attribute of 'class'`
+                `Any element when its an '<ol>' element with an attribute of 'attr'`
             );
-            // expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'ol', attributes: { attr: '' } }]);
         });
     });
 

@@ -147,9 +147,15 @@ h3 {
   list-style-type: none; /* li */
   font-size: inherit; /* to reset h1-h6 */
   text-align: unset; /* previously centered text */
+  width: 100%; /* align width of different types of elements (button, a) */
 }
+
 #visualization > * {
   margin: 0 0 3px 0;
+}
+
+#visualization button {
+  border: 0; /* button reset */
 }
 
 #visualization textarea,

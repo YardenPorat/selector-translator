@@ -1,5 +1,5 @@
 export interface VisualizationElement {
-    tag: string;
+    tag?: string;
     classes?: string[];
     id?: string;
     children?: VisualizationElement[];
@@ -9,7 +9,7 @@ export interface VisualizationElement {
 }
 
 export function createVisualizationElement(element: VisualizationElement) {
-    const el = document.createElement(element.tag);
+    const el = document.createElement(element.tag ?? 'div');
 
     if (element.classes) el.classList.add(...element.classes);
     if (element.id) el.id = element.id;
