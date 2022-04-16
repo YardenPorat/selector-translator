@@ -1988,11 +1988,11 @@ function parseAttribute(attribute) {
 
 
 const getLastIndex = (arr) => arr.length - 1;
-const baseElement = { tag: 'div' };
-function visualize(selector) {
+function visualize(selector, noBaseTag = false) {
     var _a, _b, _c;
     let currentElement;
     const [selectorList] = (0,dist.parseCssSelector)(selector); // first selector, before the ','
+    const baseElement = noBaseTag ? {} : { tag: 'div' };
     const elements = [Object.assign({}, baseElement)];
     let siblingArrayRef = elements;
     currentElement = elements[0];
@@ -2000,8 +2000,8 @@ function visualize(selector) {
     let duplicateAsSibling = false;
     let adjacentCount = selector.split('+').length - 1;
     for (const selector of selectorList.nodes) {
+        const isLast = selectorList.nodes.indexOf(selector) === selectorList.nodes.length - 1;
         if (selector.type === 'type') {
-            // Tag
             Object.assign(currentElement, { tag: selector.value });
         }
         else if (selector.type === 'class') {
@@ -2055,6 +2055,7 @@ function visualize(selector) {
                 });
                 addSiblings({
                     element: currentElement,
+                    baseElement,
                     siblings: [
                         {
                             tag: currentElement.tag,
@@ -2102,29 +2103,46 @@ function visualize(selector) {
                         });
                     }
                 }
-                const innerElements = selector.nodes.flatMap((node) => visualize((0,dist.stringifySelectorAst)(node)));
+                const innerElements = selector.nodes.flatMap((node) => (0,dist.stringifySelectorAst)(node).trim());
                 if (parsedPseudoClass.name === 'not') {
+                    const visualizedInnerElements = innerElements.flatMap((el) => visualize(el));
                     currentElement = (_b = siblingArrayRef.at(-1)) !== null && _b !== void 0 ? _b : baseElement;
-                    const appendOtherElement = innerElements.some((notElement) => JSON.stringify(notElement) === JSON.stringify(currentElement));
+                    const appendOtherElement = visualizedInnerElements.some((notElement) => JSON.stringify(notElement) === JSON.stringify(currentElement));
                     if (appendOtherElement) {
                         Object.assign(currentElement, { tag: 'some-other-element' });
                     }
                     if (siblingArrayRef) {
                         addSiblings({
                             element: currentElement,
-                            siblings: innerElements,
+                            siblings: visualizedInnerElements,
                             siblingArrayRef,
+                            baseElement,
                         });
                     }
                 }
                 else if (parsedPseudoClass.name === 'where') {
+                    const visualizedInnerElements = innerElements.flatMap((el) => visualize(el, true));
                     currentElement = (_c = siblingArrayRef.at(-1)) !== null && _c !== void 0 ? _c : baseElement;
                     if (siblingArrayRef) {
                         const { newSiblingsRef } = addSiblings({
                             element: currentElement,
-                            siblings: innerElements,
+                            siblings: visualizedInnerElements.map((el) => {
+                                var _a;
+                                if (!el.tag) {
+                                    Object.assign(el, { tag: (_a = currentElement.tag) !== null && _a !== void 0 ? _a : 'div' });
+                                }
+                                return el;
+                            }),
                             siblingArrayRef,
+                            baseElement,
                         });
+                        if (!isLast) {
+                            /** add same ref for children, in case we have :where(a,b) :where(c,d) */
+                            const children = [];
+                            for (const sibling of newSiblingsRef) {
+                                sibling.children = children;
+                            }
+                        }
                         currentElement = newSiblingsRef[0];
                     }
                 }
@@ -2179,6 +2197,7 @@ function visualize(selector) {
             else if (combinator === '>') {
                 const { siblingArr, newChild } = addChild({
                     parent: currentElement,
+                    child: baseElement,
                     currentElement,
                 });
                 siblingArrayRef = siblingArr;
@@ -2197,7 +2216,7 @@ function visualize(selector) {
                 }
             }
             else if (combinator === '~') {
-                const { siblingArr } = addSiblings({ element: currentElement, siblingArrayRef });
+                const { siblingArr } = addSiblings({ element: currentElement, siblingArrayRef, baseElement });
                 currentElement = siblingArr[getLastIndex(siblingArr)];
             }
         }
@@ -2207,11 +2226,13 @@ function visualize(selector) {
                 element: currentElement,
                 siblings: [Object.assign(Object.assign({}, baseElement), { tag: 'span' })],
                 siblingArrayRef,
+                baseElement,
             });
             addSiblings({
                 element: currentElement,
                 siblings: [Object.assign(Object.assign({}, baseElement), { tag: 'a' })],
                 siblingArrayRef,
+                baseElement,
             });
         }
         if (duplicateNext) {
@@ -2250,7 +2271,7 @@ function duplicateElementAsSibling({ element, siblingArrayRef }) {
 /**
  * if no child is given, baseElement will be created as child.
  */
-function addChild({ parent, child = baseElement }) {
+function addChild({ parent, child }) {
     const newChild = Object.assign({}, child);
     /**
      * If parent is array, add same ref as a child for for each element in the array.
@@ -2269,7 +2290,7 @@ function addChild({ parent, child = baseElement }) {
     parent.children.push(newChild);
     return { siblingArr: parent.children, newChild };
 }
-function addSiblings({ element, siblingArrayRef, siblings, adjacent = false }) {
+function addSiblings({ element, siblingArrayRef, baseElement, siblings, adjacent = false }) {
     const newSiblings = (siblings === null || siblings === void 0 ? void 0 : siblings.length) ? [...siblings] : [Object.assign({}, baseElement)];
     const siblingCount = newSiblings.length;
     const newSiblingsRef = [];
@@ -2669,7 +2690,8 @@ function translate(selector, options = { not: false, where: false }) {
 
 ;// CONCATENATED MODULE: ./src/ui/visualization/create-element.ts
 function createVisualizationElement(element) {
-    const el = document.createElement(element.tag);
+    var _a;
+    const el = document.createElement((_a = element.tag) !== null && _a !== void 0 ? _a : 'div');
     if (element.classes)
         el.classList.add(...element.classes);
     if (element.id)
