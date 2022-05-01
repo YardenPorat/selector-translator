@@ -11,6 +11,9 @@ This project wants to help new web developers to learn how to use CSS selectors.
 - [Features](#features)
 - [Audience](#audience)
 - [Using the project](#using-the-project)
+- [Reference Links](#reference-links)
+- [Contributing](#contributing)
+- [Authors](#authors)
 
 ## Features
 
@@ -25,7 +28,7 @@ This project is aimed at anyone who doesn't remember all the tweaks and tricks o
 
 ## Using the project
 
-Write your desired selector within the selector input container
+- Write your desired selector within the selector input container
 
 ## Reference Links
 
