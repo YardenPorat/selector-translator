@@ -4,7 +4,7 @@
 
 ## About
 
-This project wants to help new web developers to learn how to use CSS selectors.
+This project was created to help new web developers learn how to use CSS selectors
 
 ## Features
 
@@ -21,7 +21,7 @@ Anyone who doesn't remember all the tweaks and tricks of CSS selectors and wants
 
 ## Reference Links
 
-Read more on selector on the following links:
+Read more about CSS selectors from the following links
 
 - [MDN - CSS Selectors](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
 - [W3schools - CSS Selectors Reference](https://www.w3schools.com/cssref/css_selectors.asp)
