@@ -1759,8 +1759,8 @@ __webpack_require__.d(__webpack_exports__, {
 // EXTERNAL MODULE: ./node_modules/@tokey/css-selector-parser/dist/index.js
 var dist = __webpack_require__(774);
 ;// CONCATENATED MODULE: ./src/translate/helpers/string-manipulation.ts
-function joiner(items, options = { not: false, where: false }) {
-    const joinWord = options.not || options.where ? 'or' : 'and';
+function joiner(items, options = {}) {
+    const joinWord = options.orJoiner ? 'or' : 'and';
     if (items.length === 2) {
         return `${items[0]} ${joinWord} ${items[1]}`;
     }
@@ -1770,50 +1770,68 @@ function joiner(items, options = { not: false, where: false }) {
     return items[0];
 }
 
+;// CONCATENATED MODULE: ./src/consts.ts
+const WHERE = 'where';
+const IS = 'is';
+const NOT = 'not';
+const pseudoClassWithNodes = new Set([
+    'nth-child',
+    'nth-last-child',
+    'nth-of-type',
+    'nth-last-of-type',
+    'lang',
+    NOT,
+    WHERE,
+]);
+
 ;// CONCATENATED MODULE: ./src/translate/helpers/pseudo-classes.ts
 
-function parseStep(stepString) {
-    const stepSign = stepString.includes('-') ? -1 : 1;
-    return (Number(stepString.toLowerCase().replace('n', '').replace('-', '')) || 1) * stepSign;
-}
+
+const WHEN_ITS = 'when its';
+const CLASSNAME_PREFIX = 'with a';
 const PSEUDO_CLASS_STATE = {
-    hover: { state: 'hovered', text: '' },
-    active: { state: 'active', text: 'Click on me!' },
-    focus: { state: 'focused', text: 'Use with input / textarea' },
-    visited: { state: 'visited', text: 'A link that was already clicked' },
-    empty: { state: 'empty', text: '' },
-    blank: { state: 'blank', text: '' },
-    target: { state: 'targeted', text: '' },
-    checked: { state: 'checked', text: '' },
-    indeterminate: { state: 'indeterminate', text: '' },
-    disabled: { state: 'disabled', text: '' },
-    optional: { state: 'optional', text: 'Not required' },
-    valid: { state: 'valid', text: 'Input value' },
-    invalid: { state: 'invalid', text: '' },
-    required: { state: 'required', text: '', attribute: 'required' },
-    'read-only': { state: 'read-only', text: '', attribute: 'readonly' },
-    'read-write': { state: 'read-write', text: 'Without readonly attribute' },
-    'in-range': { state: 'in-range', text: '' },
-    'out-of-range': { state: 'out-of-range', text: '' },
-    lang: { state: 'language', text: '' },
-    'last-child': { state: 'the last child of its parent', text: '' },
-    'first-child': { state: 'the first child of its parent', text: '' },
-    'only-child': { state: 'the only child of its parent', text: '' },
-    'last-of-type': { state: 'the last child of its type in its parent', text: '' },
-    'first-of-type': { state: 'the first child of its type in its parent', text: '' },
-    'only-of-type': { state: 'the only of its type in its parent', text: '' },
-    'nth-child': { state: 'child of its parent', text: '' },
-    'nth-last-child': { state: 'child from the end of its parent', text: '' },
-    'nth-of-type': { state: 'child of its type in his parent', text: '' },
-    'nth-last-of-type': { state: 'child of its type from the end in his parent', text: '' },
-    not: { state: 'not', text: '' },
-    where: { state: 'where its', text: '' },
+    hover: { state: 'hovered', text: '', prefix: WHEN_ITS },
+    active: { state: 'active', text: 'Click on me!', prefix: WHEN_ITS },
+    focus: { state: 'focused', text: 'Use with input / textarea', prefix: WHEN_ITS },
+    visited: { state: 'visited', text: 'A link that was already clicked', prefix: WHEN_ITS },
+    empty: { state: 'empty', text: '', prefix: WHEN_ITS },
+    blank: { state: 'blank', text: '', prefix: WHEN_ITS },
+    target: { state: 'targeted', text: '', prefix: WHEN_ITS },
+    checked: { state: 'checked', text: '', prefix: WHEN_ITS },
+    indeterminate: { state: 'indeterminate', text: '', prefix: WHEN_ITS },
+    disabled: { state: 'disabled', text: '', prefix: WHEN_ITS },
+    optional: { state: 'optional', text: 'Not required', prefix: WHEN_ITS },
+    valid: { state: 'valid', text: 'Input value', prefix: WHEN_ITS },
+    invalid: { state: 'invalid', text: '', prefix: WHEN_ITS },
+    required: { state: 'required', text: '', attribute: 'required', prefix: WHEN_ITS },
+    'read-only': { state: 'read-only', text: '', attribute: 'readonly', prefix: WHEN_ITS },
+    'read-write': { state: 'read-write', text: 'Without readonly attribute', prefix: WHEN_ITS },
+    'in-range': { state: 'in-range', text: '', prefix: WHEN_ITS },
+    'out-of-range': { state: 'out-of-range', text: '', prefix: WHEN_ITS },
+    lang: { state: 'language', text: '', prefix: WHEN_ITS },
+    'last-child': { state: 'the last child of its parent', text: '', prefix: WHEN_ITS },
+    'first-child': { state: 'the first child of its parent', text: '', prefix: WHEN_ITS },
+    'only-child': { state: 'the only child of its parent', text: '', prefix: WHEN_ITS },
+    'last-of-type': { state: 'the last child of its type in its parent', text: '', prefix: WHEN_ITS },
+    'first-of-type': { state: 'the first child of its type in its parent', text: '', prefix: WHEN_ITS },
+    'only-of-type': { state: 'the only of its type in its parent', text: '', prefix: WHEN_ITS },
+    'nth-child': { state: 'child of its parent', text: '', prefix: WHEN_ITS },
+    'nth-last-child': { state: 'child from the end of its parent', text: '', prefix: WHEN_ITS },
+    'nth-of-type': { state: 'child of its type in his parent', text: '', prefix: WHEN_ITS },
+    'nth-last-of-type': { state: 'child of its type from the end in his parent', text: '', prefix: WHEN_ITS },
+    [NOT]: { state: NOT, text: '', prefix: WHEN_ITS },
+    [WHERE]: { state: 'where its', text: '', prefix: '' },
+    [IS]: { state: 'who', text: '', prefix: '' },
 };
 const PSEUDO_CLASS_ATTRIBUTES = {
     'read-only': 'readonly',
 };
 function offsetDescriptor(value) {
     return `the ${value}${getNumberSuffix(value)}`;
+}
+function parseStep(stepString) {
+    const stepSign = stepString.includes('-') ? -1 : 1;
+    return (Number(stepString.toLowerCase().replace('n', '').replace('-', '')) || 1) * stepSign;
 }
 function stepDescriptor(stepString) {
     if (['odd', 'even'].includes(stepString)) {
@@ -1835,6 +1853,17 @@ function nthAndStepDescriptor({ offset, step: stepString, name }) {
     const nonShown = step < 0 ? ' (non shown because selection starts at 0, going down)' : '';
     return `${stepText} ${PSEUDO_CLASS_STATE[name].state}${directionText}${nonShown}`;
 }
+function getPseudoClassesPrefix(pseudoClasses, pseudoClassString, noPrefix) {
+    if (noPrefix || pseudoClassString.startsWith(CLASSNAME_PREFIX)) {
+        return '';
+    }
+    for (const pseudoClass of pseudoClasses) {
+        if ([IS].some((p) => p === pseudoClass.name)) {
+            return '';
+        }
+    }
+    return `${WHEN_ITS} `;
+}
 function getPseudoClassesString(pseudoClasses) {
     const state = pseudoClasses.map(({ name, value, offset, step }) => {
         var _a;
@@ -1846,14 +1875,20 @@ function getPseudoClassesString(pseudoClasses) {
             return `${name} (unknown pseudo class)`;
         }
         if (value) {
-            if (name === 'not') {
-                const descriptor = `${state}${state ? ' ' : ''}${value}`;
-                return descriptor;
+            if (name === NOT) {
+                return `${state} ${value}`;
             }
-            if (name === 'where') {
+            if ([WHERE].some((pseudoClassName) => pseudoClassName === name)) {
                 return value;
             }
-            // language is en
+            if ([IS].some((pseudoClassName) => pseudoClassName === name)) {
+                if (value.startsWith(CLASSNAME_PREFIX)) {
+                    return value;
+                }
+                // Any element who is a <main> element
+                return `${state} is ${value}`;
+            }
+            // language is 'en'
             return `${state} is '${value}'`;
         }
         return `${state}`;
@@ -1987,6 +2022,7 @@ function parseAttribute(attribute) {
 
 
 
+
 const getLastIndex = (arr) => arr.length - 1;
 function visualize(selector, noBaseTag = false) {
     var _a, _b, _c;
@@ -2104,7 +2140,7 @@ function visualize(selector, noBaseTag = false) {
                     }
                 }
                 const innerElements = selector.nodes.flatMap((node) => (0,dist.stringifySelectorAst)(node).trim());
-                if (parsedPseudoClass.name === 'not') {
+                if (parsedPseudoClass.name === NOT) {
                     const visualizedInnerElements = innerElements.flatMap((el) => visualize(el));
                     currentElement = (_b = siblingArrayRef.at(-1)) !== null && _b !== void 0 ? _b : baseElement;
                     const appendOtherElement = visualizedInnerElements.some((notElement) => JSON.stringify(notElement) === JSON.stringify(currentElement));
@@ -2120,7 +2156,7 @@ function visualize(selector, noBaseTag = false) {
                         });
                     }
                 }
-                else if (parsedPseudoClass.name === 'where') {
+                else if ([WHERE, IS].includes(parsedPseudoClass.name)) {
                     const visualizedInnerElements = innerElements.flatMap((el) => visualize(el, true));
                     currentElement = (_c = siblingArrayRef.at(-1)) !== null && _c !== void 0 ? _c : baseElement;
                     if (siblingArrayRef) {
@@ -2426,17 +2462,9 @@ function getVowelPrefix(str) {
     return 'a';
 }
 
-;// CONCATENATED MODULE: ./src/translate/constants.ts
+;// CONCATENATED MODULE: ./src/translate/errors.ts
 
-const pseudoClassWithNodes = new Set([
-    'nth-child',
-    'nth-last-child',
-    'nth-of-type',
-    'nth-last-of-type',
-    'lang',
-    'not',
-    'where',
-]);
+
 const ERRORS = {
     TWO_IDS: 'An element cannot have two ids',
     EMPTY_CLASS: 'You specified an empty class',
@@ -2458,6 +2486,7 @@ const ERRORS = {
 };
 
 ;// CONCATENATED MODULE: ./src/translate/iterate-compound-selector.ts
+
 
 
 
@@ -2529,30 +2558,33 @@ function iterateCompoundSelector(compoundSelector) {
                 result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
                 break;
             }
-            else if (value === 'not') {
+            else if (value === NOT) {
                 const innerNodes = nodes[0].nodes;
                 if (innerNodes.length === 1 && innerNodes[0].type === 'universal') {
                     result.err = ERRORS.ABUSED_NOT_PSEUDO_CLASS;
                     break;
                 }
-                if (innerNodes.some((node) => node.type === 'pseudo_class' && node.value === 'not')) {
+                if (innerNodes.some((node) => node.type === 'pseudo_class' && node.value === NOT)) {
                     result.err = ERRORS.NESTED_NOT_PSEUDO_CLASS;
                     break;
                 }
                 const innerSelector = (0,dist.stringifySelectorAst)(nodes); // validated that nodes is not empty
-                const { translation } = translate(innerSelector, { not: true });
+                const { translation } = translate(innerSelector, { orJoiner: true });
                 result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
             }
-            else if (value === 'where') {
+            else if ([WHERE, IS].includes(value)) {
                 if (result.element) {
                     const element = checkForInnerElements(nodes);
                     if (element) {
                         result.err = ERRORS.ELEMENT_WHERE_OTHER_ELEMENT(result.element, element);
                     }
                 }
-                const innerSelector = (0,dist.stringifySelectorAst)(nodes); // validated that nodes is not empty
-                const { translation } = translate(innerSelector, { where: true });
-                result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
+                const innerSelector = (0,dist.stringifySelectorAst)(nodes); // already validated that nodes are not empty
+                const { translation } = translate(innerSelector, { noPrefix: true, orJoiner: true });
+                result.pseudoClasses.push({
+                    name: value,
+                    value: translation.toLowerCase(),
+                });
             }
             else if ((nodes === null || nodes === void 0 ? void 0 : nodes.length) && nodes[0].nodes) {
                 const innerNodes = nodes[0].nodes;
@@ -2604,7 +2636,7 @@ function checkForInnerElements(nodes) {
 const capitalizeFirstLetter = (str) => ((str === null || str === void 0 ? void 0 : str.length) ? str.charAt(0).toUpperCase() + str.slice(1) : str);
 const addSingleQuotes = (items) => items.map((item) => `'${item}'`);
 const getClassesString = (cls) => (cls.length > 1 ? `classes ${joiner(cls)}` : `a class of ${cls[0]}`);
-function translate(selector, options = { not: false, where: false }) {
+function translate(selector, options = { orJoiner: false, where: false, noPrefix: false }) {
     const errors = [];
     const selectorList = (0,dist.parseCssSelector)(selector);
     const specificity = selectorList.map((selector) => (0,dist.calcSpecificity)(selector));
@@ -2631,12 +2663,12 @@ function translate(selector, options = { not: false, where: false }) {
                     translation.push(getVowelPrefix(element));
                     translation.push(`'<${element}>' element`);
                 }
-                else if (!options.where &&
+                else if (!options.noPrefix &&
                     (hasUniversal ||
                         (!element && topLevelSelectors.nodes.length === 1 && id.length + classes.size === 0))) {
                     translation.push('any element');
                 }
-                else if (!options.where && !pseudoElement) {
+                else if (!options.noPrefix && !pseudoElement) {
                     translation.push('an element');
                 }
                 if (id.length) {
@@ -2647,7 +2679,7 @@ function translate(selector, options = { not: false, where: false }) {
                 }
                 if (pseudoClasses.length) {
                     const pseudoClassString = getPseudoClassesString(pseudoClasses);
-                    const prefix = !options.where && !pseudoClassString.startsWith('with a') ? 'when its ' : '';
+                    const prefix = getPseudoClassesPrefix(pseudoClasses, pseudoClassString, options.noPrefix);
                     translation.push(prefix + pseudoClassString);
                 }
                 if (attributes.length) {
