@@ -452,6 +452,122 @@ describe('Pseudo Class', () => {
         });
     });
 
+    describe(':is()', function () {
+        it(':is(element)', function () {
+            const selector = ':is(p)';
+            expect(getTranslation(selector)).to.eq(`Any element who is a '<p>' element`);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'p' }]);
+        });
+
+        it(':is(el, el, el)', function () {
+            const selector = ':is(a, b, c)';
+            expect(getTranslation(selector)).to.eq(
+                `Any element who is an '<a>' element, a '<b>' element or a '<c>' element`
+            );
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'a' }, { tag: 'b' }, { tag: 'c' }]);
+        });
+
+        it(':is(el, el, el) el:pseudoClass', function () {
+            const selector = ':is(a, b, c) p:hover';
+            expect(getTranslation(selector)).to.eq(
+                `A '<p>' element when its hovered within an element who is an '<a>' element, a '<b>' element or a '<c>' element`
+            );
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'div' },
+                { tag: 'a', children: [{ innerText: 'When its hovered', tag: 'p' }] },
+                { tag: 'b', children: [{ innerText: 'When its hovered', tag: 'p' }] },
+                { tag: 'c', children: [{ innerText: 'When its hovered', tag: 'p' }] },
+            ]);
+        });
+
+        it(':is(:hover)', function () {
+            const selector = ':is(:hover)';
+            expect(getTranslation(selector)).to.eq(`Any element who is hovered`);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { innerText: 'When its hovered', tag: 'div' }]);
+        });
+
+        it('Forgiving Selector Parsing (:valid, :unsupported)', function () {
+            const selector = ':is(:valid, :unsupported)';
+            expect(getTranslation(selector)).to.eq(`Any element who is valid or unsupported (unknown pseudo class)`);
+            // No visualization due to unknown pseudo class
+        });
+
+        it(':is(el1.cls, el2.cls, el3.cls) a', function () {
+            const selector = ':is(el1.cls, el2.cls, el3.cls) a';
+            expect(getTranslation(selector)).to.eq(
+                `An '<a>' element within an element who is an '<el1>' element with a class of 'cls', an '<el2>' element with a class of 'cls' or an '<el3>' element with a class of 'cls'`
+            );
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'div' },
+                { tag: 'el1', classes: ['cls'], children: [{ tag: 'a' }] },
+                { tag: 'el2', classes: ['cls'], children: [{ tag: 'a' }] },
+                { tag: 'el3', classes: ['cls'], children: [{ tag: 'a' }] },
+            ]);
+        });
+
+        it('main :is(h1, h2, h3)', function () {
+            const selector = 'main :is(h1, h2, h3)';
+            expect(getTranslation(selector)).to.eq(
+                `An element who is an '<h1>' element, an '<h2>' element or an '<h3>' element within a '<main>' element`
+            );
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'main', children: [{ tag: 'div' }, { tag: 'h1' }, { tag: 'h2' }, { tag: 'h3' }] },
+            ]);
+        });
+
+        it(':is(.header, .footer) a', function () {
+            const selector = ':is(.header, .footer) a';
+            expect(getTranslation(selector)).to.eq(
+                `An '<a>' element within an element with a class of 'header' or with a class of 'footer'`
+            );
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'div' },
+                { tag: 'div', classes: ['header'], children: [{ tag: 'a' }] },
+                { tag: 'div', classes: ['footer'], children: [{ tag: 'a' }] },
+            ]);
+        });
+
+        it('h3:is(#some-id, .cls)', function () {
+            const selector = 'h3:is(#some-id, .cls)';
+            expect(getTranslation(selector)).to.eq(
+                `An '<h3>' element who is with the id of 'some-id' or with a class of 'cls'`
+            );
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'h3' },
+                { tag: 'h3', id: 'some-id' },
+                { tag: 'h3', classes: ['cls'] },
+            ]);
+        });
+
+        it('.dim-theme :is(button, a)', function () {
+            const selector = '.dim-theme :is(button, a)';
+            expect(getTranslation(selector)).to.eq(
+                `An element who is a '<button>' element or an '<a>' element within an element with a class of 'dim-theme'`
+            );
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'div', classes: ['dim-theme'], children: [{ tag: 'div' }, { tag: 'button' }, { tag: 'a' }] },
+            ]);
+        });
+
+        it(':is(.dark-theme, .dim-theme) :is(button, a)', function () {
+            const selector = ':is(.dark-theme, .dim-theme) :is(button, a)';
+            expect(getTranslation(selector)).to.eq(
+                `An element who is a '<button>' element or an '<a>' element within an element with a class of 'dark-theme' or with a class of 'dim-theme'`
+            );
+            expect(visualize(selector)).to.deep.eq([
+                { tag: 'div' },
+                { tag: 'div', children: [{ tag: 'div' }, { tag: 'button' }, { tag: 'a' }], classes: ['dark-theme'] },
+                { tag: 'div', classes: ['dim-theme'], children: [{ tag: 'div' }, { tag: 'button' }, { tag: 'a' }] },
+            ]);
+        });
+
+        it(':is(ol[attributeName])', function () {
+            const selector = ':is(ol[attr])';
+            expect(getTranslation(selector)).to.eq(`Any element who is an '<ol>' element with an attribute of 'attr'`);
+            expect(visualize(selector)).to.deep.eq([{ tag: 'div' }, { tag: 'ol', attributes: { attr: '' } }]);
+        });
+    });
+
     describe('Formulas', () => {
         describe('Offset only', () => {
             it('element + nth-child(1)', function () {

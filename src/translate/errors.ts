@@ -1,14 +1,5 @@
+import { pseudoClassWithNodes } from '../consts';
 import { getVowelPrefix } from './helpers/english';
-
-export const pseudoClassWithNodes = new Set([
-    'nth-child',
-    'nth-last-child',
-    'nth-of-type',
-    'nth-last-of-type',
-    'lang',
-    'not',
-    'where',
-]);
 
 export const ERRORS = {
     TWO_IDS: 'An element cannot have two ids',

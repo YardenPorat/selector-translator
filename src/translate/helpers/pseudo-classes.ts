@@ -1,56 +1,58 @@
 import { joiner } from './string-manipulation';
+import { IS, NOT, WHERE } from '../../consts';
 import type { PseudoClass, PseudoClassName } from '../types';
 import type { NthNode, SelectorNodes } from '@tokey/css-selector-parser';
 
-export function parseStep(stepString: string) {
-    const stepSign = stepString.includes('-') ? -1 : 1;
-    return (Number(stepString.toLowerCase().replace('n', '').replace('-', '')) || 1) * stepSign;
-}
+const WHEN_ITS = 'when its';
+const CLASSNAME_PREFIX = 'with a';
 
 export const PSEUDO_CLASS_STATE = {
-    hover: { state: 'hovered', text: '' },
-    active: { state: 'active', text: 'Click on me!' },
-    focus: { state: 'focused', text: 'Use with input / textarea' },
-    visited: { state: 'visited', text: 'A link that was already clicked' },
-    empty: { state: 'empty', text: '' },
-    blank: { state: 'blank', text: '' },
-    target: { state: 'targeted', text: '' },
-    checked: { state: 'checked', text: '' },
-    indeterminate: { state: 'indeterminate', text: '' },
-    disabled: { state: 'disabled', text: '' },
-    optional: { state: 'optional', text: 'Not required' },
-    valid: { state: 'valid', text: 'Input value' },
-    invalid: { state: 'invalid', text: '' },
-    required: { state: 'required', text: '', attribute: 'required' },
-    'read-only': { state: 'read-only', text: '', attribute: 'readonly' },
-    'read-write': { state: 'read-write', text: 'Without readonly attribute' },
-    'in-range': { state: 'in-range', text: '' },
-    'out-of-range': { state: 'out-of-range', text: '' },
-    lang: { state: 'language', text: '' },
-    'last-child': { state: 'the last child of its parent', text: '' },
-    'first-child': { state: 'the first child of its parent', text: '' },
-    'only-child': { state: 'the only child of its parent', text: '' },
-    'last-of-type': { state: 'the last child of its type in its parent', text: '' },
-    'first-of-type': { state: 'the first child of its type in its parent', text: '' },
-    'only-of-type': { state: 'the only of its type in its parent', text: '' },
-    'nth-child': { state: 'child of its parent', text: '' },
-    'nth-last-child': { state: 'child from the end of its parent', text: '' },
-    'nth-of-type': { state: 'child of its type in his parent', text: '' },
-    'nth-last-of-type': { state: 'child of its type from the end in his parent', text: '' },
-    not: { state: 'not', text: '' },
-    where: { state: 'where its', text: '' },
+    hover: { state: 'hovered', text: '', prefix: WHEN_ITS },
+    active: { state: 'active', text: 'Click on me!', prefix: WHEN_ITS },
+    focus: { state: 'focused', text: 'Use with input / textarea', prefix: WHEN_ITS },
+    visited: { state: 'visited', text: 'A link that was already clicked', prefix: WHEN_ITS },
+    empty: { state: 'empty', text: '', prefix: WHEN_ITS },
+    blank: { state: 'blank', text: '', prefix: WHEN_ITS },
+    target: { state: 'targeted', text: '', prefix: WHEN_ITS },
+    checked: { state: 'checked', text: '', prefix: WHEN_ITS },
+    indeterminate: { state: 'indeterminate', text: '', prefix: WHEN_ITS },
+    disabled: { state: 'disabled', text: '', prefix: WHEN_ITS },
+    optional: { state: 'optional', text: 'Not required', prefix: WHEN_ITS },
+    valid: { state: 'valid', text: 'Input value', prefix: WHEN_ITS },
+    invalid: { state: 'invalid', text: '', prefix: WHEN_ITS },
+    required: { state: 'required', text: '', attribute: 'required', prefix: WHEN_ITS },
+    'read-only': { state: 'read-only', text: '', attribute: 'readonly', prefix: WHEN_ITS },
+    'read-write': { state: 'read-write', text: 'Without readonly attribute', prefix: WHEN_ITS },
+    'in-range': { state: 'in-range', text: '', prefix: WHEN_ITS },
+    'out-of-range': { state: 'out-of-range', text: '', prefix: WHEN_ITS },
+    lang: { state: 'language', text: '', prefix: WHEN_ITS },
+    'last-child': { state: 'the last child of its parent', text: '', prefix: WHEN_ITS },
+    'first-child': { state: 'the first child of its parent', text: '', prefix: WHEN_ITS },
+    'only-child': { state: 'the only child of its parent', text: '', prefix: WHEN_ITS },
+    'last-of-type': { state: 'the last child of its type in its parent', text: '', prefix: WHEN_ITS },
+    'first-of-type': { state: 'the first child of its type in its parent', text: '', prefix: WHEN_ITS },
+    'only-of-type': { state: 'the only of its type in its parent', text: '', prefix: WHEN_ITS },
+    'nth-child': { state: 'child of its parent', text: '', prefix: WHEN_ITS },
+    'nth-last-child': { state: 'child from the end of its parent', text: '', prefix: WHEN_ITS },
+    'nth-of-type': { state: 'child of its type in his parent', text: '', prefix: WHEN_ITS },
+    'nth-last-of-type': { state: 'child of its type from the end in his parent', text: '', prefix: WHEN_ITS },
+    [NOT]: { state: NOT, text: '', prefix: WHEN_ITS },
+    [WHERE]: { state: 'where its', text: '', prefix: '' },
+    [IS]: { state: 'who', text: '', prefix: '' },
 };
 
 export const PSEUDO_CLASS_ATTRIBUTES = {
     'read-only': 'readonly',
 };
 
-export type PseudoClassWithDifferentAttributeName = keyof typeof PSEUDO_CLASS_ATTRIBUTES;
-
 function offsetDescriptor(value: number) {
     return `the ${value}${getNumberSuffix(value)}`;
 }
 
+export function parseStep(stepString: string) {
+    const stepSign = stepString.includes('-') ? -1 : 1;
+    return (Number(stepString.toLowerCase().replace('n', '').replace('-', '')) || 1) * stepSign;
+}
 function stepDescriptor(stepString: string) {
     if (['odd', 'even'].includes(stepString)) {
         return `every ${stepString}`;
@@ -81,6 +83,20 @@ function nthAndStepDescriptor({ offset, step: stepString, name }: OffsetAndStepD
     return `${stepText} ${PSEUDO_CLASS_STATE[name].state}${directionText}${nonShown}`;
 }
 
+export function getPseudoClassesPrefix(pseudoClasses: PseudoClass[], pseudoClassString: string, noPrefix?: boolean) {
+    if (noPrefix || pseudoClassString.startsWith(CLASSNAME_PREFIX)) {
+        return '';
+    }
+
+    for (const pseudoClass of pseudoClasses) {
+        if ([IS].some((p) => p === pseudoClass.name)) {
+            return '';
+        }
+    }
+
+    return `${WHEN_ITS} `;
+}
+
 export function getPseudoClassesString(pseudoClasses: PseudoClass[]) {
     const state = pseudoClasses.map(({ name, value, offset, step }) => {
         if (offset || step) {
@@ -93,16 +109,24 @@ export function getPseudoClassesString(pseudoClasses: PseudoClass[]) {
         }
 
         if (value) {
-            if (name === 'not') {
-                const descriptor = `${state}${state ? ' ' : ''}${value}`;
-                return descriptor;
+            if (name === NOT) {
+                return `${state} ${value}`;
             }
 
-            if (name === 'where') {
+            if ([WHERE].some((pseudoClassName) => pseudoClassName === name)) {
                 return value;
             }
 
-            // language is en
+            if ([IS].some((pseudoClassName) => pseudoClassName === name)) {
+                if (value.startsWith(CLASSNAME_PREFIX)) {
+                    return value;
+                }
+
+                // Any element who is a <main> element
+                return `${state} is ${value}`;
+            }
+
+            // language is 'en'
             return `${state} is '${value}'`;
         }
 

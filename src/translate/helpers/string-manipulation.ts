@@ -1,7 +1,7 @@
 import type { TranslateOptions } from '../translate';
 
-export function joiner(items: string[], options: TranslateOptions = { not: false, where: false }) {
-    const joinWord = options.not || options.where ? 'or' : 'and';
+export function joiner(items: string[], options: TranslateOptions = {}) {
+    const joinWord = options.orJoiner ? 'or' : 'and';
     if (items.length === 2) {
         return `${items[0]} ${joinWord} ${items[1]}`;
     }

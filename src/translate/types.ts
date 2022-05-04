@@ -1,4 +1,6 @@
-import type { PSEUDO_CLASS_STATE } from './helpers/pseudo-classes';
+import type { PSEUDO_CLASS_ATTRIBUTES, PSEUDO_CLASS_STATE } from './helpers/pseudo-classes';
+
+export type PseudoClassWithDifferentAttributeName = keyof typeof PSEUDO_CLASS_ATTRIBUTES;
 
 export type PseudoClassName = keyof typeof PSEUDO_CLASS_STATE;
 export interface PseudoClass {

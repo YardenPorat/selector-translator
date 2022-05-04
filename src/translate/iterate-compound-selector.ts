@@ -12,8 +12,8 @@ import { translate } from './translate';
 import { parsePseudoClassNode } from './helpers/pseudo-classes';
 import { parseAttribute, ERROR } from './helpers/parse-attribute';
 import { isPseudoElement, type PseudoElement } from './helpers/pseudo-elements';
-import { ERRORS, pseudoClassWithNodes } from './constants';
-
+import { ERRORS } from './errors';
+import { IS, NOT, pseudoClassWithNodes, WHERE } from '../consts';
 import type { PseudoClass, Attribute, PseudoClassName } from './types';
 
 export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
@@ -64,20 +64,20 @@ export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
             } else if (isPseudoElement(value)) {
                 result.err = ERRORS.PSEUDO_ELEMENT_AS_PSEUDO_CLASS(value);
                 break;
-            } else if (value === 'not') {
+            } else if (value === NOT) {
                 const innerNodes = nodes![0].nodes;
                 if (innerNodes.length === 1 && innerNodes[0].type === 'universal') {
                     result.err = ERRORS.ABUSED_NOT_PSEUDO_CLASS;
                     break;
                 }
-                if (innerNodes.some((node) => node.type === 'pseudo_class' && node.value === 'not')) {
+                if (innerNodes.some((node) => node.type === 'pseudo_class' && node.value === NOT)) {
                     result.err = ERRORS.NESTED_NOT_PSEUDO_CLASS;
                     break;
                 }
                 const innerSelector = stringifySelectorAst(nodes!); // validated that nodes is not empty
-                const { translation } = translate(innerSelector, { not: true });
+                const { translation } = translate(innerSelector, { orJoiner: true });
                 result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
-            } else if (value === 'where') {
+            } else if ([WHERE, IS].includes(value)) {
                 if (result.element) {
                     const element = checkForInnerElements(nodes as SelectorList);
                     if (element) {
@@ -85,9 +85,12 @@ export function iterateCompoundSelector(compoundSelector: CompoundSelector) {
                     }
                 }
 
-                const innerSelector = stringifySelectorAst(nodes!); // validated that nodes is not empty
-                const { translation } = translate(innerSelector, { where: true });
-                result.pseudoClasses.push({ name: value, value: translation.toLowerCase() });
+                const innerSelector = stringifySelectorAst(nodes!); // already validated that nodes are not empty
+                const { translation } = translate(innerSelector, { noPrefix: true, orJoiner: true });
+                result.pseudoClasses.push({
+                    name: value as typeof WHERE | typeof IS,
+                    value: translation.toLowerCase(),
+                });
             } else if (nodes?.length && (nodes[0].nodes as NthNode[])) {
                 const innerNodes = nodes[0].nodes as (NthStep | NthOffset | NthDash | NthOf)[];
 

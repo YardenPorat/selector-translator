@@ -1,10 +1,10 @@
 import { parseCssSelector, groupCompoundSelectors, calcSpecificity } from '@tokey/css-selector-parser';
 import { EXIST, FULL } from './helpers/parse-attribute';
 import { PSEUDO_ELEMENTS_DESCRIPTORS } from './helpers/pseudo-elements';
-import { getPseudoClassesString } from './helpers/pseudo-classes';
+import { getPseudoClassesPrefix, getPseudoClassesString } from './helpers/pseudo-classes';
 import { joiner } from './helpers/string-manipulation';
 import { iterateCompoundSelector } from './iterate-compound-selector';
-import { ERRORS } from './constants';
+import { ERRORS } from './errors';
 import { getVowelPrefix } from './helpers/english';
 
 const capitalizeFirstLetter = (str: string) => (str?.length ? str.charAt(0).toUpperCase() + str.slice(1) : str);
@@ -12,10 +12,14 @@ const addSingleQuotes = (items: string[]) => items.map((item) => `'${item}'`);
 const getClassesString = (cls: string[]) => (cls.length > 1 ? `classes ${joiner(cls)}` : `a class of ${cls[0]}`);
 
 export interface TranslateOptions {
-    not?: boolean;
     where?: boolean;
+    orJoiner?: boolean;
+    noPrefix?: boolean;
 }
-export function translate(selector: string, options: TranslateOptions = { not: false, where: false }) {
+export function translate(
+    selector: string,
+    options: TranslateOptions = { orJoiner: false, where: false, noPrefix: false }
+) {
     const errors: string[] = [];
     const selectorList = parseCssSelector(selector);
     const specificity = selectorList.map((selector) => calcSpecificity(selector));
@@ -44,12 +48,12 @@ export function translate(selector: string, options: TranslateOptions = { not: f
                     translation.push(getVowelPrefix(element));
                     translation.push(`'<${element}>' element`);
                 } else if (
-                    !options.where &&
+                    !options.noPrefix &&
                     (hasUniversal ||
                         (!element && topLevelSelectors.nodes.length === 1 && id.length + classes.size === 0))
                 ) {
                     translation.push('any element');
-                } else if (!options.where && !pseudoElement) {
+                } else if (!options.noPrefix && !pseudoElement) {
                     translation.push('an element');
                 }
                 if (id.length) {
@@ -62,7 +66,7 @@ export function translate(selector: string, options: TranslateOptions = { not: f
 
                 if (pseudoClasses.length) {
                     const pseudoClassString = getPseudoClassesString(pseudoClasses);
-                    const prefix = !options.where && !pseudoClassString.startsWith('with a') ? 'when its ' : '';
+                    const prefix = getPseudoClassesPrefix(pseudoClasses, pseudoClassString, options.noPrefix);
                     translation.push(prefix + pseudoClassString);
                 }
 

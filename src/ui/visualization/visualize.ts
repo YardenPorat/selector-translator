@@ -1,8 +1,9 @@
 import { parseCssSelector, PseudoClass, stringifySelectorAst } from '@tokey/css-selector-parser';
 import { parsePseudoClassNode, parseStep, PSEUDO_CLASS_STATE } from '../../translate/helpers/pseudo-classes';
+import { addAttributes, getAttribute, getAttributeName } from './attribute-helpers';
+import { IS, NOT, WHERE } from '../../consts';
 import type { VisualizationElement } from './create-element';
 import type { PseudoClassName } from '../../translate/types';
-import { addAttributes, getAttribute, getAttributeName } from './attribute-helpers';
 
 const getLastIndex = (arr: any[]) => arr.length - 1;
 
@@ -116,7 +117,7 @@ export function visualize(selector: string, noBaseTag = false) {
                 }
 
                 const innerElements = selector.nodes!.flatMap((node) => stringifySelectorAst(node).trim());
-                if (parsedPseudoClass.name === 'not') {
+                if (parsedPseudoClass.name === NOT) {
                     const visualizedInnerElements = innerElements.flatMap((el) => visualize(el));
                     currentElement = siblingArrayRef.at(-1) ?? baseElement;
 
@@ -136,7 +137,7 @@ export function visualize(selector: string, noBaseTag = false) {
                             baseElement,
                         });
                     }
-                } else if (parsedPseudoClass.name === 'where') {
+                } else if ([WHERE, IS].includes(parsedPseudoClass.name)) {
                     const visualizedInnerElements = innerElements.flatMap((el) => visualize(el, true));
                     currentElement = siblingArrayRef.at(-1) ?? baseElement;
 
@@ -348,6 +349,7 @@ function addSiblings({ element, siblingArrayRef, baseElement, siblings, adjacent
     const newSiblings = siblings?.length ? [...siblings] : [{ ...baseElement }];
     const siblingCount = newSiblings.length;
     const newSiblingsRef: VisualizationElement[] = [];
+
     if (adjacent) {
         const indices: number[] = [];
         let currentIndex = siblingArrayRef.indexOf(element);
