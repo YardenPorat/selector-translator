@@ -35,6 +35,7 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({
             template: './src/ui/template.html',
+            favicon: './src/ui/favicon.ico',
             minify: {
                 minifyJS: !isDev,
             },
