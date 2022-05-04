@@ -133,7 +133,8 @@ h3 {
 
 #visualization {
   font-size: 1rem;
-  margin: 0 auto;
+  align-self: flex-start;
+  position: relative;
 }
 
 #visualization * {
