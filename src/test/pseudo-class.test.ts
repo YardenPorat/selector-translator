@@ -12,7 +12,24 @@ describe('Pseudo Class', () => {
     it('element + active', function () {
         const selector = 'a:active';
         expect(getTranslation(selector), selector).to.eq(`An '<a>' element when its active`);
-        expect(visualize(selector)).to.deep.eq([{ tag: 'a', innerText: 'When its active (Click on me!)' }]);
+        expect(visualize(selector)).to.deep.eq([
+            {
+                tag: 'a',
+                innerText: 'When its active (Click on me!)',
+            },
+        ]);
+    });
+
+    it('element + link', function () {
+        const selector = 'a:link';
+        expect(getTranslation(selector), selector).to.eq(`An '<a>' element when its a link`);
+        expect(visualize(selector)).to.deep.eq([
+            {
+                tag: 'a',
+                attributes: { href: 'http://google.com' },
+                innerText: `When its with href attribute ('a' or 'area' element)`,
+            },
+        ]);
     });
 
     it('element + focus', function () {

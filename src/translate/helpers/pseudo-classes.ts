@@ -4,10 +4,12 @@ import type { PseudoClass, PseudoClassName } from '../types';
 import type { NthNode, SelectorNodes } from '@tokey/css-selector-parser';
 
 const WHEN_ITS = 'when its';
+const WHEN_ITS_A = WHEN_ITS + ' a';
 const CLASSNAME_PREFIX = 'with a';
 
 export const PSEUDO_CLASS_STATE = {
     hover: { state: 'hovered', text: '', prefix: WHEN_ITS },
+    link: { state: 'a link', text: `'a' or 'area' element`, prefix: WHEN_ITS_A },
     active: { state: 'active', text: 'Click on me!', prefix: WHEN_ITS },
     focus: { state: 'focused', text: 'Use with input / textarea', prefix: WHEN_ITS },
     visited: { state: 'visited', text: 'A link that was already clicked', prefix: WHEN_ITS },

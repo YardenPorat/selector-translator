@@ -11,3 +11,5 @@ export const pseudoClassWithNodes = new Set([
     NOT,
     WHERE,
 ]);
+
+export const INPUT = 'input';

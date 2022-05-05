@@ -181,6 +181,9 @@ export function visualize(selector: string, noBaseTag = false) {
                     currentElement,
                 });
                 mainText = value;
+            } else if (value === 'link') {
+                addAttributes({ keyValues: [['href', 'http://google.com']], currentElement });
+                mainText = 'with href attribute';
             } else {
                 mainText = PSEUDO_CLASS_STATE[value].state;
             }

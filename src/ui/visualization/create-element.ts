@@ -1,3 +1,5 @@
+import { INPUT } from '../../consts';
+
 export interface VisualizationElement {
     tag?: string;
     classes?: string[];
@@ -29,17 +31,25 @@ export function createVisualizationElement(element: VisualizationElement) {
 const escapeChars = (str: string) => str.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 const unescapeChars = (str: string) => str.replaceAll('&lt;', '<').replaceAll('&gt;', '>');
 const getStartingTag = (el: HTMLElement) => el.outerHTML.slice(0, el.outerHTML.indexOf('>') + 1);
-const hasEndingTag = (el: HTMLElement) =>
-    el.outerHTML.slice(-(el.tagName.length + 3)).includes(`/${el.tagName.toLowerCase()}`);
+const hasEndingTag = (el: HTMLElement) => {
+    const outerHTML = el.outerHTML.slice(-(el.tagName.length + 3));
+    return outerHTML.includes(`/${el.tagName.toLowerCase()}`);
+};
 
 function getInnerHtml(el: HTMLElement, element: VisualizationElement) {
     const { innerText, hideTag } = element;
     if (!hideTag) {
-        const gotEndingTag = hasEndingTag(el);
+        const outerHtml = [];
         const startingTag = getStartingTag(el);
+        outerHtml.push(startingTag);
+        const gotEndingTag = hasEndingTag(el);
         const ending = gotEndingTag ? el.outerHTML.slice(-1 * (el.tagName.length + 3)) : el.outerHTML.slice(-1);
-        const outerHtml = `${startingTag}${innerText && gotEndingTag ? innerText + ending : ''}`;
-        return escapeChars(outerHtml);
+
+        if (innerText && element.tag !== INPUT) {
+            outerHtml.push(`${innerText}${ending}`);
+        }
+
+        return escapeChars(outerHtml.join(''));
     }
     return escapeChars(innerText ?? '');
 }
@@ -61,7 +71,7 @@ const calculateLength = (str: string) => str.length - Math.ceil(countShortChars(
 function addHiddenAttributes(element: VisualizationElement, el: HTMLElement, innerHTML: string) {
     const { tag, innerText } = element;
     const unescaped = unescapeChars(innerHTML);
-    if (tag === 'input') {
+    if (tag === INPUT) {
         // move inner text to value
         const escapedWithInnerText = innerText ? `${unescaped.slice(0, -1)} value="${innerText}">` : unescaped;
         el.innerText = '';
@@ -74,6 +84,10 @@ function addHiddenAttributes(element: VisualizationElement, el: HTMLElement, inn
     if (tag === 'textarea') {
         el.setAttribute('cols', `${calculateLength(unescaped)}`);
         el.setAttribute('spellcheck', 'false');
+    }
+
+    if ((tag === 'area' || tag === 'a') && element.attributes?.href) {
+        el.setAttribute('target', '_blank');
     }
 }
 
