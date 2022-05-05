@@ -2832,16 +2832,14 @@ class App {
         this.previousInput = '';
         this.initiate = () => {
             const input = this.input.value.trim();
-            if (input) {
-                if (this.validateInput(input)) {
-                    return;
-                }
-                this.translate(input);
-                this.previousInput = input;
-            }
-            else {
+            if (!input) {
                 this.clear();
             }
+            if (this.validateInput(input)) {
+                return;
+            }
+            this.translate(input);
+            this.previousInput = input;
         };
         this.validateInput = (input) => {
             return input === this.previousInput || input.endsWith(',');
@@ -2861,20 +2859,22 @@ class App {
     }
     translate(value) {
         const { translation, specificity } = translate(value);
-        const taggedTranslation = this.getTags(translation);
+        const taggedTranslation = this.getTaggedTranslation(translation);
         this.result.innerHTML = taggedTranslation;
         this.updateQueryParam(value);
         this.visualization.innerHTML = '';
+        this.addSpecificity(value, specificity);
         const unsupportedMessage = this.validateInputForVisualization(specificity !== null && specificity !== void 0 ? specificity : [], translation);
         if (unsupportedMessage) {
             this.visualization.innerHTML = unsupportedMessage;
+            return;
         }
-        else {
-            this.specificityLink.href = `https://polypane.app/css-specificity-calculator/#selector=${encodeURIComponent(value)}`;
-            this.specificityLink.innerText = 'Specificity';
-            this.specificityResult.innerText = `: [${specificity.join('], [ ')}]`;
-            this.visualize(value);
-        }
+        this.visualize(value);
+    }
+    addSpecificity(value, specificity = []) {
+        this.specificityLink.href = `https://polypane.app/css-specificity-calculator/#selector=${encodeURIComponent(value)}`;
+        this.specificityLink.innerText = 'Specificity';
+        this.specificityResult.innerText = `: [${specificity.join('], [ ')}]`;
     }
     validateInputForVisualization(specificity, translation) {
         if (translation.includes('Error')) {
@@ -2906,17 +2906,19 @@ class App {
         this.visualizationStyle.innerHTML = '';
         this.visualization.innerHTML = '';
         this.previousInput = '';
+        this.specificityLink.innerText = '';
+        this.specificityResult.innerText = '';
         this.updateQueryParam('');
     }
     fillInputFromURL() {
         const params = new URLSearchParams(window.location.search);
         if (params.has('s')) {
-            const value = decodeURIComponent(params.get('s'));
-            this.input.value = value;
-            this.translate(value);
+            const inputValue = decodeURIComponent(params.get('s'));
+            this.input.value = inputValue;
+            this.translate(inputValue);
         }
     }
-    getTags(value) {
+    getTaggedTranslation(value) {
         const tagged = [];
         const escaped = value.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
         for (const [index, part] of escaped.split("'").entries()) {
