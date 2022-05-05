@@ -2789,6 +2789,7 @@ function addHiddenAttributes(element, el, innerHTML) {
         const escapedWithInnerText = innerText ? `${unescaped.slice(0, -1)} value="${innerText}">` : unescaped;
         el.innerText = '';
         el.setAttribute('type', 'text');
+        el.setAttribute('spellcheck', 'false');
         el.setAttribute('value', escapedWithInnerText);
         el.setAttribute('size', `${calculateLength(escapedWithInnerText)}`);
     }
@@ -2820,16 +2821,17 @@ function getVisualizationStyle(rootSelector, inputSelector) {
         background-color: var(--primary);
         box-shadow: rgb(0 0 0 / 35%) 0px -50px 36px -28px inset;
         color: black;
+        padding-top: 2px;
+        padding-right: 2px;
         text-shadow: none;
         ${before || after ? `content: '${after}${before}';` : ''}
     }
     ${rootSelector} ${selector} * { 
-        background-color: rgb(0 0 0 / 50%);
+        background-color: black;
         color: white;
     }
     ${rootSelector} :not(${selector}){
         color: white;
-        text-shadow: 0 0 5px black;
     }
     `.trim();
 }
