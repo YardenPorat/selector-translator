@@ -23,15 +23,17 @@ export class App {
 
     private initiate = () => {
         const input = this.input.value.trim();
-        if (input) {
-            if (this.validateInput(input)) {
-                return;
-            }
-            this.translate(input);
-            this.previousInput = input;
-        } else {
+
+        if (!input) {
             this.clear();
         }
+
+        if (this.validateInput(input)) {
+            return;
+        }
+
+        this.translate(input);
+        this.previousInput = input;
     };
 
     private validateInput = (input: string) => {
@@ -40,24 +42,29 @@ export class App {
 
     private translate(value: string) {
         const { translation, specificity } = translate(value);
-        const taggedTranslation = this.getTags(translation);
+        const taggedTranslation = this.getTaggedTranslation(translation);
 
         this.result.innerHTML = taggedTranslation;
-
         this.updateQueryParam(value);
         this.visualization.innerHTML = '';
+
+        this.addSpecificity(value, specificity);
 
         const unsupportedMessage = this.validateInputForVisualization(specificity ?? [], translation);
         if (unsupportedMessage) {
             this.visualization.innerHTML = unsupportedMessage;
-        } else {
-            this.specificityLink.href = `https://polypane.app/css-specificity-calculator/#selector=${encodeURIComponent(
-                value
-            )}`;
-            this.specificityLink.innerText = 'Specificity';
-            this.specificityResult.innerText = `: [${specificity!.join('], [ ')}]`;
-            this.visualize(value);
+            return;
         }
+
+        this.visualize(value);
+    }
+
+    private addSpecificity(value: string, specificity = <Specificity[]>[]) {
+        this.specificityLink.href = `https://polypane.app/css-specificity-calculator/#selector=${encodeURIComponent(
+            value
+        )}`;
+        this.specificityLink.innerText = 'Specificity';
+        this.specificityResult.innerText = `: [${specificity.join('], [ ')}]`;
     }
 
     private validateInputForVisualization(specificity: Specificity[], translation: string) {
@@ -91,21 +98,23 @@ export class App {
         this.visualizationStyle.innerHTML = '';
         this.visualization.innerHTML = '';
         this.previousInput = '';
+        this.specificityLink.innerText = '';
+        this.specificityResult.innerText = '';
+
         this.updateQueryParam('');
     }
 
     private fillInputFromURL() {
         const params = new URLSearchParams(window.location.search);
         if (params.has('s')) {
-            const value = decodeURIComponent(params.get('s')!);
-            this.input.value = value;
-            this.translate(value);
+            const inputValue = decodeURIComponent(params.get('s')!);
+            this.input.value = inputValue;
+            this.translate(inputValue);
         }
     }
 
-    private getTags(value: string) {
+    private getTaggedTranslation(value: string) {
         const tagged = [];
-
         const escaped = value.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
         for (const [index, part] of escaped.split("'").entries()) {
             tagged.push(index % 2 ? `<mark>${part}</mark>` : part);
