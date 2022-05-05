@@ -19,8 +19,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-a:link,
-a:visited {
+:where(#specificity, #footer) :where(a:link, a:visited) {
   color: var(--textPrimary);
   text-decoration: none;
   border-bottom: 1px solid currentColor;
