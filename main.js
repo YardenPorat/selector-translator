@@ -1783,14 +1783,17 @@ const pseudoClassWithNodes = new Set([
     NOT,
     WHERE,
 ]);
+const INPUT = 'input';
 
 ;// CONCATENATED MODULE: ./src/translate/helpers/pseudo-classes.ts
 
 
 const WHEN_ITS = 'when its';
+const WHEN_ITS_A = WHEN_ITS + ' a';
 const CLASSNAME_PREFIX = 'with a';
 const PSEUDO_CLASS_STATE = {
     hover: { state: 'hovered', text: '', prefix: WHEN_ITS },
+    link: { state: 'a link', text: `'a' or 'area' element`, prefix: WHEN_ITS_A },
     active: { state: 'active', text: 'Click on me!', prefix: WHEN_ITS },
     focus: { state: 'focused', text: 'Use with input / textarea', prefix: WHEN_ITS },
     visited: { state: 'visited', text: 'A link that was already clicked', prefix: WHEN_ITS },
@@ -2202,6 +2205,10 @@ function visualize(selector, noBaseTag = false) {
                     currentElement,
                 });
                 mainText = value;
+            }
+            else if (value === 'link') {
+                addAttributes({ keyValues: [['href', 'http://google.com']], currentElement });
+                mainText = 'with href attribute';
             }
             else {
                 mainText = PSEUDO_CLASS_STATE[value].state;
@@ -2721,6 +2728,7 @@ function translate(selector, options = { orJoiner: false, where: false, noPrefix
 }
 
 ;// CONCATENATED MODULE: ./src/ui/visualization/create-element.ts
+
 function createVisualizationElement(element) {
     var _a;
     const el = document.createElement((_a = element.tag) !== null && _a !== void 0 ? _a : 'div');
@@ -2741,15 +2749,22 @@ function createVisualizationElement(element) {
 const escapeChars = (str) => str.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 const unescapeChars = (str) => str.replaceAll('&lt;', '<').replaceAll('&gt;', '>');
 const getStartingTag = (el) => el.outerHTML.slice(0, el.outerHTML.indexOf('>') + 1);
-const hasEndingTag = (el) => el.outerHTML.slice(-(el.tagName.length + 3)).includes(`/${el.tagName.toLowerCase()}`);
+const hasEndingTag = (el) => {
+    const outerHTML = el.outerHTML.slice(-(el.tagName.length + 3));
+    return outerHTML.includes(`/${el.tagName.toLowerCase()}`);
+};
 function getInnerHtml(el, element) {
     const { innerText, hideTag } = element;
     if (!hideTag) {
-        const gotEndingTag = hasEndingTag(el);
+        const outerHtml = [];
         const startingTag = getStartingTag(el);
+        outerHtml.push(startingTag);
+        const gotEndingTag = hasEndingTag(el);
         const ending = gotEndingTag ? el.outerHTML.slice(-1 * (el.tagName.length + 3)) : el.outerHTML.slice(-1);
-        const outerHtml = `${startingTag}${innerText && gotEndingTag ? innerText + ending : ''}`;
-        return escapeChars(outerHtml);
+        if (innerText && element.tag !== INPUT) {
+            outerHtml.push(`${innerText}${ending}`);
+        }
+        return escapeChars(outerHtml.join(''));
     }
     return escapeChars(innerText !== null && innerText !== void 0 ? innerText : '');
 }
@@ -2766,9 +2781,10 @@ const countShortChars = (str) => { var _a; return ((_a = str.match(/(i|l|"|t|r|f
 const calculateLength = (str) => str.length - Math.ceil(countShortChars(str) / 3);
 /** This attributes will be hidden from the user */
 function addHiddenAttributes(element, el, innerHTML) {
+    var _a;
     const { tag, innerText } = element;
     const unescaped = unescapeChars(innerHTML);
-    if (tag === 'input') {
+    if (tag === INPUT) {
         // move inner text to value
         const escapedWithInnerText = innerText ? `${unescaped.slice(0, -1)} value="${innerText}">` : unescaped;
         el.innerText = '';
@@ -2779,6 +2795,9 @@ function addHiddenAttributes(element, el, innerHTML) {
     if (tag === 'textarea') {
         el.setAttribute('cols', `${calculateLength(unescaped)}`);
         el.setAttribute('spellcheck', 'false');
+    }
+    if ((tag === 'area' || tag === 'a') && ((_a = element.attributes) === null || _a === void 0 ? void 0 : _a.href)) {
+        el.setAttribute('target', '_blank');
     }
 }
 const replacements = {
