@@ -1965,14 +1965,14 @@ function getNumberSuffix(n) {
 ;// CONCATENATED MODULE: ./src/ui/visualization/attribute-helpers.ts
 
 function addAttributes({ keyValues, currentElement }) {
-    if (!(currentElement === null || currentElement === void 0 ? void 0 : currentElement.attributes)) {
+    if (!currentElement.attributes) {
         currentElement.attributes = {};
     }
     for (const [key, value] of keyValues) {
         currentElement.attributes[key] = value;
     }
 }
-function getAttributeName(value) {
+function getAttributeDomName(value) {
     if (Object.keys(PSEUDO_CLASS_ATTRIBUTES).includes(value)) {
         return PSEUDO_CLASS_ATTRIBUTES[value];
     }
@@ -2188,7 +2188,7 @@ function visualize(selector, noBaseTag = false) {
             }
             else if (['disabled', 'required', 'read-only'].includes(value)) {
                 //Adds boolean attributes for the pseudo class
-                const attrName = getAttributeName(value);
+                const attrName = getAttributeDomName(value);
                 addAttributes({ keyValues: [[attrName, 'true']], currentElement });
                 mainText = value;
             }
@@ -2646,6 +2646,10 @@ const getClassesString = (cls) => (cls.length > 1 ? `classes ${joiner(cls)}` : `
 function translate(selector, options = { orJoiner: false, where: false, noPrefix: false }) {
     const errors = [];
     const selectorList = (0,dist.parseCssSelector)(selector);
+    const inputError = checkForErrors(selectorList);
+    if (inputError) {
+        return { translation: `Error: Invalid input - '${inputError}'` };
+    }
     const specificity = selectorList.map((selector) => (0,dist.calcSpecificity)(selector));
     const compoundSelectorList = (0,dist.groupCompoundSelectors)(selectorList);
     const translations = [];
@@ -2725,6 +2729,15 @@ function translate(selector, options = { orJoiner: false, where: false, noPrefix
     }
     const translation = capitalizeFirstLetter(joiner(translations, options));
     return errors.length ? { translation: `Error: ${errors[0]}` } : { translation, specificity };
+}
+function checkForErrors(selectorList) {
+    for (const selector of selectorList) {
+        for (const node of selector.nodes) {
+            if (node.type === 'invalid') {
+                return node.value;
+            }
+        }
+    }
 }
 
 ;// CONCATENATED MODULE: ./src/ui/visualization/create-element.ts
@@ -2884,7 +2897,9 @@ class App {
         this.result.innerHTML = taggedTranslation;
         this.updateQueryParam(value);
         this.visualization.innerHTML = '';
-        this.addSpecificity(value, specificity);
+        if (specificity) {
+            this.addSpecificity(value, specificity);
+        }
         const unsupportedMessage = this.validateInputForVisualization(specificity !== null && specificity !== void 0 ? specificity : [], translation);
         if (unsupportedMessage) {
             this.visualization.innerHTML = unsupportedMessage;
@@ -2892,7 +2907,7 @@ class App {
         }
         this.visualize(value);
     }
-    addSpecificity(value, specificity = []) {
+    addSpecificity(value, specificity) {
         this.specificityLink.href = `https://polypane.app/css-specificity-calculator/#selector=${encodeURIComponent(value)}`;
         this.specificityLink.innerText = 'Specificity';
         this.specificityResult.innerText = `: [${specificity.join('], [ ')}]`;
