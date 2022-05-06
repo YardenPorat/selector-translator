@@ -6,7 +6,7 @@ export interface AddAttributesArgs {
     currentElement: VisualizationElement;
 }
 export function addAttributes({ keyValues, currentElement }: AddAttributesArgs) {
-    if (!currentElement?.attributes) {
+    if (!currentElement.attributes) {
         currentElement.attributes = {};
     }
 
@@ -15,7 +15,7 @@ export function addAttributes({ keyValues, currentElement }: AddAttributesArgs) 
     }
 }
 
-export function getAttributeName(value: string) {
+export function getAttributeDomName(value: string) {
     if (Object.keys(PSEUDO_CLASS_ATTRIBUTES).includes(value)) {
         return PSEUDO_CLASS_ATTRIBUTES[value as keyof typeof PSEUDO_CLASS_ATTRIBUTES];
     }

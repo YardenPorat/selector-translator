@@ -18,7 +18,6 @@ export function createVisualizationElement(element: VisualizationElement) {
     addVisibleAttributes(element, el);
     const innerHTML = getInnerHtml(el, element);
     el.innerHTML = innerHTML;
-
     addHiddenAttributes(element, el, innerHTML);
     addVisibleAttributes(element, el); // visible attributes should override hidden ones
 

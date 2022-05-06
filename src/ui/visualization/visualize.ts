@@ -1,6 +1,6 @@
 import { parseCssSelector, PseudoClass, stringifySelectorAst } from '@tokey/css-selector-parser';
 import { parsePseudoClassNode, parseStep, PSEUDO_CLASS_STATE } from '../../translate/helpers/pseudo-classes';
-import { addAttributes, getAttribute, getAttributeName } from './attribute-helpers';
+import { addAttributes, getAttribute, getAttributeDomName } from './attribute-helpers';
 import { IS, NOT, WHERE } from '../../consts';
 import type { VisualizationElement } from './create-element';
 import type { PseudoClassName } from '../../translate/types';
@@ -166,7 +166,7 @@ export function visualize(selector: string, noBaseTag = false) {
                 }
             } else if (['disabled', 'required', 'read-only'].includes(value)) {
                 //Adds boolean attributes for the pseudo class
-                const attrName = getAttributeName(value);
+                const attrName = getAttributeDomName(value);
                 addAttributes({ keyValues: [[attrName, 'true']], currentElement });
                 mainText = value;
             } else if (value === 'invalid') {
