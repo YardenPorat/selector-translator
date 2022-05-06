@@ -1,4 +1,4 @@
-import { parseCssSelector, groupCompoundSelectors, calcSpecificity } from '@tokey/css-selector-parser';
+import { parseCssSelector, groupCompoundSelectors, calcSpecificity, SelectorList } from '@tokey/css-selector-parser';
 import { EXIST, FULL } from './helpers/parse-attribute';
 import { PSEUDO_ELEMENTS_DESCRIPTORS } from './helpers/pseudo-elements';
 import { getPseudoClassesPrefix, getPseudoClassesString } from './helpers/pseudo-classes';
@@ -22,6 +22,10 @@ export function translate(
 ) {
     const errors: string[] = [];
     const selectorList = parseCssSelector(selector);
+    const inputError = checkForErrors(selectorList);
+    if (inputError) {
+        return { translation: `Error: Invalid input - '${inputError}'` };
+    }
     const specificity = selectorList.map((selector) => calcSpecificity(selector));
     const compoundSelectorList = groupCompoundSelectors(selectorList);
     const translations: string[] = [];
@@ -100,4 +104,14 @@ export function translate(
     }
     const translation = capitalizeFirstLetter(joiner(translations, options));
     return errors.length ? { translation: `Error: ${errors[0]}` } : { translation, specificity };
+}
+
+function checkForErrors(selectorList: SelectorList) {
+    for (const selector of selectorList) {
+        for (const node of selector.nodes) {
+            if (node.type === 'invalid') {
+                return node.value;
+            }
+        }
+    }
 }

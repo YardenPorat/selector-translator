@@ -200,5 +200,13 @@ describe('Attributes', () => {
             expect(getTranslation('[]')).to.eq(`Error: Empty attribute selector: '[]'`);
             expect(getTranslation('[ ]')).to.eq(`Error: Empty attribute selector: '[ ]'`);
         });
+
+        it('Missing ending bracket', function () {
+            expect(getTranslation('[a="b"')).to.eq(`Error: Invalid input - '[a="b"'`);
+        });
+
+        it('Missing ending quote', function () {
+            expect(getTranslation('[a="b')).to.eq(`Error: Invalid input - '[a="b'`);
+        });
     });
 });

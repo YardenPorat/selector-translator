@@ -48,7 +48,9 @@ export class App {
         this.updateQueryParam(value);
         this.visualization.innerHTML = '';
 
-        this.addSpecificity(value, specificity);
+        if (specificity) {
+            this.addSpecificity(value, specificity);
+        }
 
         const unsupportedMessage = this.validateInputForVisualization(specificity ?? [], translation);
         if (unsupportedMessage) {
@@ -59,7 +61,7 @@ export class App {
         this.visualize(value);
     }
 
-    private addSpecificity(value: string, specificity = <Specificity[]>[]) {
+    private addSpecificity(value: string, specificity: Specificity[]) {
         this.specificityLink.href = `https://polypane.app/css-specificity-calculator/#selector=${encodeURIComponent(
             value
         )}`;
