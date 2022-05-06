@@ -147,7 +147,7 @@ html > body > .container > #form > #visualization {
   font-weight: 400;
   line-height: 1;
   margin-left: 18px;
-  padding: 0 0 0 4px;
+  padding-left: 4px;
   display: block;
   text-decoration: none; /* s */
   list-style-type: none; /* li */
@@ -179,6 +179,7 @@ html > body > .container > #form > #visualization {
   /* Hide scrollbar for IE, Edge and Firefox */
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
+  padding-bottom: 2px !important;
 }
 /* Hide scrollbar for Chrome, Safari and Opera */
 #visualization textarea::-webkit-scrollbar {
