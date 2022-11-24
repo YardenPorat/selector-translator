@@ -124,6 +124,7 @@ export function getVisualizationStyle(rootSelector: string, inputSelector: strin
     }
     ${rootSelector} :not(${selector}){
         color: white;
+        background-color: transparent;
     }
     `.trim();
 }
