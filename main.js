@@ -2845,6 +2845,7 @@ function getVisualizationStyle(rootSelector, inputSelector) {
     }
     ${rootSelector} :not(${selector}){
         color: white;
+        background-color: transparent;
     }
     `.trim();
 }
