@@ -1,6 +1,6 @@
 # Selectors Translated
 
-![example image](docs/images/example-1.png)
+![image](https://user-images.githubusercontent.com/56086371/204091624-e1b48d89-e9ad-4b41-b336-8b8767dccc45.png)
 
 ## About
 
