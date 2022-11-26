@@ -6684,8 +6684,9 @@ void (() => __awaiter(void 0, void 0, void 0, function* () {
         background: { color: black },
         particles: {
             links: {
-                distance: 125,
                 enable: true,
+                color: deepPink,
+                distance: 125,
                 // creates triangles between particles
                 triangles: {
                     enable: true,
