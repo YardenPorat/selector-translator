@@ -48,21 +48,6 @@ html > body > .container {
   min-height: calc(100vh - 40px);
 }
 
-html > body > .container > #form > header {
-  position: relative;
-}
-
-html > body > .container > #form > header::after {
-  content: '';
-  position: absolute;
-  width: 10em;
-  height: 2px;
-  background-image: linear-gradient(to right, var(--transparent), var(--primary), var(--transparent));
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: -15px;
-}
-
 html > body > .container > #footer {
   z-index: 1;
   margin-top: auto;
@@ -92,7 +77,22 @@ html > body > .container > #form {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: clamp(300px, 50vw, 600px);
+  max-width: 600px;
+}
+
+html > body > .container > #form > header {
+  position: relative;
+}
+
+html > body > .container > #form > header::after {
+  content: '';
+  position: absolute;
+  width: 10em;
+  height: 2px;
+  background-image: linear-gradient(to right, var(--transparent), var(--primary), var(--transparent));
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -15px;
 }
 
 html > body > .container > #form > .input-group {
@@ -189,9 +189,6 @@ html > body > .container > #form > #visualization {
 }
 
 @media screen and (max-width: 768px) {
-  :root {
-    --primary: #48f2e3;
-  }
   header::after {
     height: 1px;
   }

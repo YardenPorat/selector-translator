@@ -13,10 +13,12 @@ void (async () => {
         preset: 'triangles',
         fpsLimit: 75,
         background: { color: black },
+
         particles: {
             links: {
-                distance: 125,
                 enable: true,
+                color: deepPink,
+                distance: 125,
                 // creates triangles between particles
                 triangles: {
                     enable: true,
