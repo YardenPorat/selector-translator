@@ -9,7 +9,7 @@ module.exports = {
     mode: isDev ? 'development' : 'production',
     entry: {
         main: './src/index.ts',
-        particles: './src/ui/particles.js',
+        particles: './src/ui/particles.ts',
     },
     output: {
         path: path.join(__dirname, 'lib'),

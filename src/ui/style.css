@@ -30,12 +30,14 @@ body {
 }
 
 /* Particles.js */
-#background {
+#tsparticles {
   position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+#tsparticles canvas {
   display: block;
-  top: 0;
-  left: 0;
-  z-index: 0;
 }
 
 html > body > .container {

@@ -26,7 +26,9 @@
   "author": "Yarden Porat",
   "license": "MIT",
   "dependencies": {
-    "@tokey/css-selector-parser": "^0.6.0"
+    "@tokey/css-selector-parser": "^0.6.0",
+    "tsparticles-engine": "^2.5.2",
+    "tsparticles-preset-triangles": "^2.5.3"
   },
   "devDependencies": {
     "@ts-tools/node": "^3.0.1",
