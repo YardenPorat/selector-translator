@@ -7,7 +7,10 @@ const isDev = process.env.NODE_ENV !== 'production';
 
 module.exports = {
     mode: isDev ? 'development' : 'production',
-    entry: './src/index.ts',
+    entry: {
+        main: './src/index.ts',
+        particles: './src/ui/particles.js',
+    },
     output: {
         path: path.join(__dirname, 'lib'),
         library: 'Translator',
