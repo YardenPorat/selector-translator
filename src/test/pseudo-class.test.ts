@@ -335,6 +335,19 @@ describe('Pseudo Class', () => {
             ]);
         });
 
+        // it.only(':not(:first-of-type)', function () {
+        //     const selector = ':not(:first-of-type)';
+        //     expect(getTranslation(selector)).to.eq(
+        //         `Any element when its not any element when its the first child of its type in its parent`
+        //     );
+        //     // expect(visualize(selector)).to.deep.eq([
+        //     //     {
+        //     //         tag: 'h2',
+        //     //         children: [{ tag: 'div' }, { tag: 'span', classes: ['foo'] }],
+        //     //     },
+        //     // ]);
+        // });
+
         describe('Errors', function () {
             it(':not()', function () {
                 const selector = ':not()';

@@ -11,5 +11,6 @@
 - [x] Support where
 - [x] Support is
 - [x] favicon
+- [ ] .car-id-3:not(:first-of-type)
 - [ ] allow history back\forward functionality
 - [ ] throttle input changes
